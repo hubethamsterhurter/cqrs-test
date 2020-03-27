@@ -1,0 +1,7 @@
+.new-chat {
+  display: flex;
+}
+
+.new-chat input {
+  width: 100%;
+}

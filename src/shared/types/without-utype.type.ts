@@ -1,0 +1,1 @@
+export type WithoutUType<T extends { _type: any }> = Omit<T, '_type'>
