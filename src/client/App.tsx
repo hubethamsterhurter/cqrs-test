@@ -3,15 +3,32 @@ import './App.css';
 import { WsProvider } from './components/ws-provider';
 import { AppStateDataProvider } from './components/app-state-data-provider';
 import { ChatSection } from './components/chat-section';
-import { UserForm } from './components/user-form';
+import { SignupPage } from './components/signup-form';
+import { AppAuthProvider } from './components/app-auth-provider';
+import { ClientList } from './components/client-list';
 
 function App() {
   return (
     <div className="App">
       <WsProvider>
         <AppStateDataProvider>
-          <UserForm />
-          <ChatSection />
+          <AppAuthProvider>
+            {({ authenticated }) => (
+              <>
+                {authenticated && (
+                  <>
+                    <ClientList />
+                    <ChatSection />
+                  </>
+                )}
+                {!authenticated && (
+                  <>
+                    <SignupPage />
+                  </>
+                )}
+              </>
+            )}
+          </AppAuthProvider>
         </AppStateDataProvider>
       </WsProvider>
     </div>

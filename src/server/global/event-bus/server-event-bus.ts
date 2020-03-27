@@ -24,7 +24,7 @@ export class ServerEventBus {
     __created__ = true;
     this._heartbeatInterval = setInterval(
       () => this.fire(new ServerEventAppHeartbeat({ at: new Date() })),
-      7500
+      10000
     );
   }
 

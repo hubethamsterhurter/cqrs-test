@@ -9,3 +9,11 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+.user-name { color: rgba(255, 255, 255, 0.75); }
+.user-name.blue { color: #A1F9FF; }
+.user-name.green { color: #92E8A9; }
+.user-name.red { color: #EA8D75; }
+.user-name.pink { color: #FFCBF2; }
+.user-name.orange { color: #E8B292; }
+.user-name.purple { color: #9BE892; }

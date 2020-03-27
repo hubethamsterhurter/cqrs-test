@@ -11,8 +11,8 @@ export class ServerMessageUserUpdated implements ServerMessageType<VER['_0_1'], 
   static get _v() { return _v; }
   static get _t() { return _t; }
 
-  @Equals(() => _v) readonly _v = ServerMessageUserUpdated._v;
-  @Equals(() => _t) readonly _t = ServerMessageUserUpdated._t;
+  @Equals( _v) readonly _v = ServerMessageUserUpdated._v;
+  @Equals( _t) readonly _t = ServerMessageUserUpdated._t;
 
   @IsObject()
   @ValidateNested()

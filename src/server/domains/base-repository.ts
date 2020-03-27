@@ -1,30 +1,38 @@
-import { ModelType } from '../../shared/domains/model.type';
+import * as op from 'rxjs/operators';
+import fs from 'fs';
 import { IdFactory } from "../../shared/helpers/id.factory";
 import { ClassType } from "class-transformer/ClassTransformer";
 import { plainToClass, classToPlain } from "class-transformer";
-import { $DANGER } from "../../shared/types/danger.type";
 import { ServerEventBus } from "../global/event-bus/server-event-bus";
 import { Model } from "../../shared/domains/model";
 import { ServerEventModelCreated } from "../events/models/server-event.model-created";
 import { ServerEventModelUpdated } from "../events/models/server-event.model-updated";
 import { ServerEventModelDeleted } from "../events/models/server-event.model-deleted";
-import { WithoutId } from '../../shared/types/without-id.type';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
-
-function cloneFromPlain<M extends ModelType>(Ctor: ClassType<M>, rawModel: WithoutId<ModelType>, id: string): M {
-  const cloned = plainToClass(Ctor, rawModel) as $DANGER<M>;
-  (cloned as $DANGER<any>).id = id;
-  return cloned;
-}
+import { UnsavedModel } from '../../shared/types/unsaved-model.type';
+import { $FIX_ME } from '../../shared/types/fix-me.type';
+import { Subject, timer } from "rxjs";
+import { $DANGER } from '../../shared/types/danger.type';
 
 function cloneFromClass<M>(Ctor: ClassType<M>, model: M): M {
   const cloned = plainToClass(Ctor, classToPlain(model));
   return cloned;
 }
 
+const TABLE_DIR = `${__dirname}/../../../db`;
+
+// 5 sec
+const SYNC_THROTTLE_TIME = 5000;
+
+/**
+ * TODO: soft delete scope
+ * TODO: sync to FS & serialize on reboot
+ */
 export abstract class BaseRepository<M extends Model> {
   private readonly _log = new ClassLogger(this);
-  private readonly _table: Map<string, M> = new Map();
+  private readonly _table: Map<string, M>;
+  private readonly _save$: Subject<undefined> = new Subject();
+  private readonly _tableFile: string;
 
   /**
    * @constructor
@@ -36,7 +44,40 @@ export abstract class BaseRepository<M extends Model> {
     protected readonly _idFactory: IdFactory,
     protected readonly _ModelCTor: ClassType<M>,
     protected readonly _eb: ServerEventBus,
-  ) {}
+  ) {
+    this._tableFile = `${TABLE_DIR}/${this._ModelCTor.name.toLowerCase()}.json`;
+    // 1 -
+    // read sync from FS on boot
+    // TODO: find more efficient way to do this...
+    try {
+      const result = JSON.parse(fs.readFileSync(this._tableFile, { }).toString());
+      // TODO: validate result shape (should be entries)
+      this._log.info(`loaded table ${this._ModelCTor.name.toLowerCase()} from fs`, result)
+      this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
+    } catch (err) {
+      // TODO: check if file is readable & lock instead of try catch
+      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs.`, err);
+      this._table = new Map();
+    }
+
+    // 2 - set throttled syncs to fs
+    // TODO: find more efficient way to do this...
+    this
+      ._save$
+      .pipe(op.throttle(() => timer(SYNC_THROTTLE_TIME), { leading: true, trailing: true }))
+      .subscribe(async () => {
+        const entries = Array.from(this._table.entries());
+        const entriesStr = JSON.stringify(entries, null, 2);
+        new Promise((res, rej) => fs.writeFile(
+          this._tableFile,
+          entriesStr,
+          (err) => (err) ? rej(err) : res(),
+        )).then(
+          () => { this._log.info(`Write ${this._ModelCTor.name} to db`); },
+          (err) => { this._log.error(`Failed writing ${this._ModelCTor.name} to db`, err); },
+        );
+      });
+  }
 
   /**
    * @description
@@ -44,13 +85,22 @@ export abstract class BaseRepository<M extends Model> {
    *
    * @param rawModel
    */
-  async create(rawModel: WithoutId<M>): Promise<M> {
-    const id = this._idFactory.create();
-    const cloned = cloneFromPlain(this._ModelCTor, classToPlain(rawModel), id);
+  async create(rawModel: UnsavedModel<M>, forceId?: string): Promise<M> {
+    const id = forceId || this._idFactory.create();
+    const now = new Date();
+    const preparedModel: M = {
+      id,
+      created_at: now,
+      updated_at: now,
+      deleted_at: null,
+      ...rawModel,
+    } as unknown as $FIX_ME<M>
+    const clonedModel = plainToClass(this._ModelCTor, preparedModel);
     this._log.info(`Creating`, id, this._ModelCTor.name);
-    this._table.set(cloned.id, cloned);
-    this._eb.fire(new ServerEventModelCreated({ CTor: this._ModelCTor, model: cloned }));
-    return cloned;
+    this._table.set(clonedModel.id, clonedModel);
+    this._eb.fire(new ServerEventModelCreated({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, clonedModel) }));
+    this._save$.next();
+    return cloneFromClass(this._ModelCTor, clonedModel);
   }
 
   /**
@@ -62,9 +112,11 @@ export abstract class BaseRepository<M extends Model> {
   async upsert(model: M): Promise<M> {
     const cloned = cloneFromClass(this._ModelCTor, model);
     this._log.info(`Upserting ${this._ModelCTor.name} - ${model.id}`);
-    this._table.set(cloned.id, model);
-    this._eb.fire(new ServerEventModelUpdated({ CTor: this._ModelCTor, model: cloned }));
-    return cloned;
+    cloned.updated_at = new Date();
+    this._table.set(cloned.id, cloned);
+    this._eb.fire(new ServerEventModelUpdated({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, cloned) }));
+    this._save$.next();
+    return cloneFromClass(this._ModelCTor, cloned);
   }
 
   /**
@@ -83,6 +135,19 @@ export abstract class BaseRepository<M extends Model> {
 
   /**
    * @description
+   * Find one
+   *
+   * @param id
+   */
+  async findOneOrFail(id: string): Promise<M> {
+    this._log.info(`Finding (or failing)`, id, this._ModelCTor.name);
+    let found = this._table.get(id);
+    if (!found) throw new ReferenceError(`Unable to find ${this._ModelCTor.name} with id ${id}`);
+    return cloneFromClass(this._ModelCTor, found);
+  }
+
+  /**
+   * @description
    * Find all
    *
    * @param id
@@ -92,6 +157,7 @@ export abstract class BaseRepository<M extends Model> {
     const result = Array
       .from(this._table)
       .map(([,model]) => cloneFromClass(this._ModelCTor, model));
+    console.log(result);
     return result;
   }
 
@@ -99,13 +165,32 @@ export abstract class BaseRepository<M extends Model> {
    * @description
    * Delete one
    *
-   * @param id
+   * only soft delete
+   * 
+   * ensure no side effects
+   *
+   * @param model
    */
-  async delete(id: string): Promise<boolean> {
-    this._log.info('Deleting', id, this._ModelCTor.name);
-    const had = this._table.has(id);
-    this._table.delete(id);
-    if (had) this._eb.fire(new ServerEventModelDeleted({ CTor: this._ModelCTor, id, }));
-    return had;
+  async delete(inputModel: M): Promise<M | null> {
+    this._log.info('Deleting', inputModel.id, this._ModelCTor.name);
+    let model = this._table.get(inputModel.id);
+
+    //not found
+    if (!model) { return null; }
+
+    const clone = cloneFromClass(this._ModelCTor, model);
+
+    // already deleted
+    if (clone.deleted_at) { return clone; }
+
+    clone.deleted_at = new Date();
+    this._table.set(clone.id, clone);
+    this._save$.next();
+
+    this
+      ._eb
+      .fire(new ServerEventModelDeleted({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, clone), }));
+
+    return cloneFromClass(this._ModelCTor, clone);
   }
 }

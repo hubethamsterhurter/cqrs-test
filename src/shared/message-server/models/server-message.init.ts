@@ -4,6 +4,7 @@ import { UserModel } from "../../domains/user/user.model";
 import { ChatModel } from "../../domains/chat/chat.model";
 import { ValidateNested, IsArray, Equals } from "class-validator";
 import { Type } from "class-transformer";
+import { ClientModel } from "../../domains/connected-client/client.model";
 
 const _v = VER._0_1
 const _t = SERVER_MESSAGE_TYPE.INIT;
@@ -25,6 +26,11 @@ export class ServerMessageInit implements ServerMessageType<VER['_0_1'], SERVER_
   @Type(() => ChatModel)
   chats!: ChatModel[];
 
+  @IsArray()
+  @ValidateNested()
+  @Type(() => ClientModel)
+  clients!: ClientModel[];
+
 
   /**
    * @constructor
@@ -32,11 +38,13 @@ export class ServerMessageInit implements ServerMessageType<VER['_0_1'], SERVER_
    * @param props
    */
   constructor(props: {
+    clients: ClientModel[],
     users: UserModel[],
     chats: ChatModel[],
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
+      this.clients = props.clients;
       this.users = props.users;
       this.chats = props.chats;
     }

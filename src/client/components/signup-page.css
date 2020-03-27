@@ -1,0 +1,36 @@
+.signup-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-form {
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  grid-gap: 0.25em;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.25em 1em 0.25em 1em;
+  max-width: 30em;
+}
+
+.signup-form label {
+  grid-column: 1 / 2;
+  text-align: center;
+  margin-right: 1em;
+}
+.signup-form label::after {
+  content: ':'
+}
+
+.signup-form input {
+  grid-column: 2 / 3;
+}
+
+.signup-form button {
+  grid-column: 2 / 3;
+}
+
+.signup-form button:hover {
+  background: gold;
+}

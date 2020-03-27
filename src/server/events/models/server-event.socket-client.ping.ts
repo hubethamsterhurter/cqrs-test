@@ -3,8 +3,10 @@ import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-typ
 import { VER } from "../../../shared/constants/ver";
 import { SocketClient } from "../../global/socket-client/socket-client";
 
-export class ServerEventSocketClientPing implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_PING'], { client: SocketClient }> {
+interface Payload { socket: SocketClient };
+
+export class ServerEventSocketClientPing implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_PING'], Payload> {
   readonly _v = VER._0_1;
   readonly _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_PING;
-  constructor(readonly _p: { client: SocketClient }) {}
+  constructor(readonly _p: Payload) {}
 }

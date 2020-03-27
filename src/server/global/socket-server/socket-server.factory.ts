@@ -32,8 +32,6 @@ export class SocketServerFactory implements Factory<SocketServer> {
       wss,
       this._eb,
       this._es,
-      this._wscFactory,
-      this._idFactory,
     );
 
     return socketServer;

@@ -25,6 +25,7 @@ export class ChatModel implements ModelType {
   @IsOptional() @IsDate() @Type(() => Date) deleted_at!: Date | null;
 
   constructor(props: {
+    id: string;
     author_id: string | null;
     content: string;
     sent_at: Date;
@@ -33,6 +34,7 @@ export class ChatModel implements ModelType {
     deleted_at: Date | null;
   }) {
     if (props) {
+      this.id = props.id;
       this.author_id = props.author_id;
       this.content = props.content;
       this.sent_at = props.sent_at;

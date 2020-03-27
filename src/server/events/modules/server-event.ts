@@ -19,6 +19,9 @@ import { ServerEventModelUpdated } from '../models/server-event.model-updated';
 import { ServerEventModelDeleted } from '../models/server-event.model-deleted';
 import { Model } from '../../../shared/domains/model';
 import { ServerEventModelCreated } from '../models/server-event.model-created';
+import { ServerEventUserSignedUp } from '../models/server-event.user.signed-up';
+import { ServerEventUserLoggedIn } from '../models/server-event.user.logged-in';
+import { ServerEventUserLoggedOut } from '../models/server-event.user.logged-out';
 
 export type ServerEvent =
   | Readonly<ServerEventAppHeartbeat>
@@ -41,3 +44,6 @@ export type ServerEvent =
   | Readonly<ServerEventModelCreated<Model>>
   | Readonly<ServerEventModelUpdated<Model>>
   | Readonly<ServerEventModelDeleted<Model>>
+  | Readonly<ServerEventUserSignedUp>
+  | Readonly<ServerEventUserLoggedIn>
+  | Readonly<ServerEventUserLoggedOut>

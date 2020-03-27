@@ -29,6 +29,7 @@ export class UserModel implements ModelType {
   @IsOptional() @IsDate() @Type(() => Date) deleted_at!: Date | null;
 
   constructor(props: {
+    id: string,
     user_name: string;
     password: string;
     colour: A_USER_COLOUR;
@@ -37,6 +38,7 @@ export class UserModel implements ModelType {
     deleted_at: Date | null;
   }) {
     if (props) {
+      this.id = props.id;
       this.user_name = props.user_name;
       this.password = props.password;
       this.colour = props.colour;

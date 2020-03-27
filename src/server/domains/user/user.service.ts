@@ -12,6 +12,9 @@ import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { randomElement } from "../../../shared/helpers/random-element";
 import { USER_COLOURS } from "../../../shared/constants/user-colour";
+import { ClientMessageSignUp } from "../../../shared/message-client/models/client-message.sign-up";
+import { ServerEventUserSignedUp } from "../../events/models/server-event.user.signed-up";
+import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 
 
 let __created__ = false;
@@ -25,15 +28,34 @@ export class UserService {
    *
    * @param _eb
    * @param _es
-   * @param _repository
+   * @param _userRepo
    */
   constructor(
     @Inject(() => ServerEventBus) readonly _eb: ServerEventBus,
     @Inject(() => ServerEventStream) readonly _es: ServerEventStream,
-    @Inject(() => UserRepository) readonly _repository: UserRepository,
+    @Inject(() => UserRepository) readonly _userRepo: UserRepository,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
+
+    // sign-up user
+    this
+      ._es
+      .of(ServerEventSocketClientMessageParsed)
+      .pipe(op.filter(ofClientMessage(ClientMessageSignUp)))
+      .subscribe(async (evt) => {
+        const rawUser: UnsavedModel<UserModel> = {
+          user_name: evt._p.message.user_name,
+          password: evt._p.message.password,
+          colour: randomElement(USER_COLOURS),
+        };
+        const user = await this._userRepo.create(rawUser);
+
+        this
+          ._eb
+          .fire(new ServerEventUserSignedUp({ user, socket: evt._p.socket }));
+      });
+
 
     // create user
     this
@@ -41,16 +63,12 @@ export class UserService {
       .of(ServerEventSocketClientMessageParsed)
       .pipe(op.filter(ofClientMessage(ClientMessageCreateUser)))
       .subscribe(async (evt) => {
-        const now = new Date();
-        const user = new UserModel({
+        const rawUser: UnsavedModel<UserModel> = {
           user_name: evt._p.message.user_name,
           password: evt._p.message.password,
           colour: randomElement(USER_COLOURS),
-          updated_at: now,
-          created_at: now,
-          deleted_at: null,
-        });
-        await this._repository.create(user);
+        };
+        await this._userRepo.create(rawUser);
       });
 
     // update user
@@ -59,13 +77,11 @@ export class UserService {
       .of(ServerEventSocketClientMessageParsed)
       .pipe(op.filter(ofClientMessage(ClientMessageUpdateUser)))
       .subscribe(async (evt) => {
-        const now = new Date();
-        const oldUser = await this._repository.findOne(evt._p.message.id);
+        const oldUser = await this._userRepo.findOne(evt._p.message.id);
         if (oldUser) {
           if (evt._p.message.user_name) oldUser.user_name = evt._p.message.user_name;
           if (evt._p.message.password) oldUser.password = evt._p.message.password;
-          oldUser.updated_at = now;
-          this._repository.upsert(oldUser);
+          this._userRepo.upsert(oldUser);
         } else {
           this._log.warn(`Tried ot update non-existant user ${evt._p.message.id}`);
         }

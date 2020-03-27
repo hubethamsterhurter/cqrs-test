@@ -4,7 +4,7 @@ import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-typ
 import { Model } from "../../../shared/domains/model";
 import { ClassType } from "class-transformer/ClassTransformer";
 
-interface Payload<M> { id: string, CTor: ClassType<M> }
+interface Payload<M> { model: M, CTor: ClassType<M> }
 
 export class ServerEventModelDeleted<M extends Model = Model> implements EventType<VER['_0_1'], SERVER_EVET_TYPE['MODEL_DELETED'], Payload<M>> {
   static get _v() { return VER._0_1; }

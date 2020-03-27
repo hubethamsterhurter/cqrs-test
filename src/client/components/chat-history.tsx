@@ -23,7 +23,7 @@ export const ChatHistory: React.FC = function ChatHistory(props) {
               chat.sent_at.getMinutes().toString().padStart(2, '0'),
               chat.sent_at.getSeconds().toString().padStart(2, '0'),
             ].join(':')}</span>
-            <span className={classnames("user-name", `user-colour-${colour}`)}>{authorName}</span>
+            <span className={classnames("user-name", `${colour}`)}>{authorName}</span>
             <span className="content">{chat.content}</span>
           </div>
         )}

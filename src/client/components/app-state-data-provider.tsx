@@ -10,6 +10,10 @@ import { ServerMessageUserUpdated } from '../../shared/message-server/models/ser
 import { ServerMessageChatCreated } from '../../shared/message-server/models/server-message.chat.created';
 import { ServerMessageInit } from '../../shared/message-server/models/server-message.init';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
+import { ClientModel } from '../../shared/domains/connected-client/client.model';
+import { ServerMessageClientUpdated } from '../../shared/message-server/models/server-message.client.updated';
+import { ServerMessageClientDeleted } from '../../shared/message-server/models/server-message.client.deleted';
+import { ServerMessageClientCreated } from '../../shared/message-server/models/server-message.client.created';
 
 
 interface AppStateDataContextValue {
@@ -21,6 +25,10 @@ interface AppStateDataContextValue {
     byId: Record<string, UserModel>;
     ids: string[],
   };
+  clients: {
+    byId: Record<string, ClientModel>;
+    ids: string[],
+  };
 }
 
 const initialAppStateDataContext: AppStateDataContextValue = {
@@ -29,6 +37,10 @@ const initialAppStateDataContext: AppStateDataContextValue = {
     ids: [],
   },
   users: {
+    byId: {},
+    ids: [],
+  },
+  clients: {
     byId: {},
     ids: [],
   },
@@ -57,11 +69,17 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
           ids: message.chats.map(chat => chat.id),
         },
         users: {
-          byId: Object.fromEntries(message.users.map(chat => [chat.id, chat] as const)),
+          byId: Object.fromEntries(message.users.map(user => [user.id, user] as const)),
           ids: message.users.map(chat => chat.id),
+        },
+        clients: {
+          byId: Object.fromEntries(message.clients.map(client => [client.id, client] as const)),
+          ids: message.clients.map(chat => chat.id),
         },
       }))
     ));
+
+    // TODO: clean this stuff up
 
     // users created
     subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageUserCreated)))
@@ -98,6 +116,46 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
           ids: message.model.id in prev.chats.ids ? prev.chats.ids : prev.chats.ids.concat(message.model.id),
         }})
         _log.info(`Updating from ${ServerMessageChatCreated.name}`, { prev, next });
+        return next;
+      }
+    )));
+
+    // client created
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientCreated)))
+      .subscribe(message => setAppStateData(prev => {
+        const next = ({ ...prev, clients: {
+          ...prev.clients,
+          byId: { ...prev.clients.byId, [message.model.id]: message.model, },
+          ids: message.model.id in prev.clients.ids ? prev.clients.ids : prev.clients.ids.concat(message.model.id),
+        }});
+        _log.info(`Updating from ${ServerMessageUserCreated.name}`, { prev, next });
+        return next;
+      }
+    )));
+
+    // client updated
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientUpdated)))
+      .subscribe(message => setAppStateData(prev => {
+        const next = ({ ...prev, clients: {
+          ...prev.clients,
+          byId: { ...prev.clients.byId, [message.model.id]: message.model, },
+          ids: message.model.id in prev.clients.ids ? prev.clients.ids : prev.clients.ids.concat(message.model.id),
+        }});
+        _log.info(`Updating from ${ServerMessageUserUpdated.name}`, { prev, next });
+        return next;
+      }
+    )));
+
+    // client deleted
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientDeleted)))
+      .subscribe(message => setAppStateData(prev => {
+        const { [message.model.id]: deletedModel, ...remainingModels } = prev.clients.byId;
+        const next = ({ ...prev, clients: {
+          ...prev.clients,
+          byId: remainingModels,
+          ids: prev.clients.ids.filter(id => id !== message.model.id),
+        }});
+        _log.info(`Updating from ${ServerMessageUserUpdated.name}`, { prev, next });
         return next;
       }
     )));

@@ -1,6 +1,7 @@
 .chat-history {
   display: flex;
   flex-direction: column;
+  min-height: 2em;
   height: 50vh;
   max-height: 10em;
   border-style: solid;
@@ -17,12 +18,4 @@
 .chat-history span { margin: 0 0.15em 0 0.15em; }
 
 .chat-history .sent-at { color: rgba(255, 255, 255, 0.25); }
-.chat-history .user-name { color: rgba(255, 255, 255, 0.75); }
-
-.user-name.user-colour-blue { color: #A1F9FF; }
-.user-name.user-colour-green { color: #92E8A9; }
-.user-name.user-colour-red { color: #EA8D75; }
-.user-name.user-colour-pink { color: #FFCBF2; }
-.user-name.user-colour-orange { color: #E8B292; }
-.user-name.user-colour-purple { color: #9BE892; }
 .user-name.user-colour-black { color: rgba(150, 150, 150, 0.75); }

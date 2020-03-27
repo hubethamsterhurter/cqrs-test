@@ -10,11 +10,11 @@ import { ServerEventSocketClientMessageParsed } from './events/models/server-eve
 import { ServerEventSocketClientMessageInvalid } from './events/models/server-event.socket-client.message-invalid';
 import { ServerEventSocketClientMessageMalformed } from './events/models/server-event.socket-client.message-errored';
 import { SocketServer } from './global/socket-server/socket-server';
-import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
 import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { ClassLogger } from '../shared/helpers/class-logger.helper';
 import { UserService } from './domains/user/user.service';
 import { ChatService } from './domains/chat/chat.service';
+import { ClientService } from './domains/client/client.service';
 
 
 
@@ -26,10 +26,10 @@ async function start() {
   Container.set(ServerEventBus, eb);
   const es = Container.get(ServerEventStream);
   Container.set(SocketServer, Container.get(SocketServerFactory).create());
-  Container.get(SocketWarehouse);
   Container.get(ServerWatcher);
   Container.get(UserService);
   Container.get(ChatService);
+  Container.get(ClientService);
 
   es
     .of(ServerEventAppHeartbeat)

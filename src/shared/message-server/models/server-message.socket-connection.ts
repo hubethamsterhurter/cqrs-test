@@ -1,8 +1,10 @@
 import { Type } from 'class-transformer';
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
 import { VER } from "../../constants/ver";
-import { IsDate, IsString } from "class-validator";
+import { IsObject, ValidateNested } from "class-validator";
+import { ClientModel } from '../../domains/connected-client/client.model';
 
+// @note: this class is technically deprecated...? can just use the model repos "created" event...
 export class ServerMessageSocketConnection implements ServerMessageType<VER['_0_1'], SERVER_MESSAGE_TYPE['SOCKET_CONNECTED']> {
   static get _v() { return VER._0_1; }
   static get _t() { return SERVER_MESSAGE_TYPE.SOCKET_CONNECTED; }
@@ -10,23 +12,20 @@ export class ServerMessageSocketConnection implements ServerMessageType<VER['_0_
   readonly _v = ServerMessageSocketConnection._v;
   readonly _t = ServerMessageSocketConnection._t;
 
-  @IsString()
-  readonly uuid!: string;
-
-  @IsDate()
-  @Type(() => Date)
-  readonly connected_at!: Date;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => ClientModel)
+  readonly model!: ClientModel;
 
   /**
    * @constructor
    *
    * @param props
    */
-  constructor(props: { uuid: string, connected_at: Date }) {
+  constructor(props: { model: ClientModel }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.uuid = props.uuid
-      this.connected_at = props.connected_at;
+      this.model = props.model
     }
   }
 }

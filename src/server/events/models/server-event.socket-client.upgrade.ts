@@ -4,8 +4,10 @@ import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-typ
 import { VER } from "../../../shared/constants/ver";
 import { SocketClient } from "../../global/socket-client/socket-client";
 
-export class ServerEventSocketClientUpgrade implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_UGPRADE'], { client: SocketClient }> {
+interface Payload { socket: SocketClient };
+
+export class ServerEventSocketClientUpgrade implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_UGPRADE'], Payload> {
   readonly _v = VER._0_1;
   readonly _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_UGPRADE;
-  constructor(readonly _p: { client: SocketClient }) {}
+  constructor(readonly _p: Payload) {}
 }

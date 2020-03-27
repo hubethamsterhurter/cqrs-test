@@ -8,6 +8,11 @@ import { ServerMessageChatCreated } from "../models/server-message.chat.created"
 import { ServerMessageSocketConnection } from "../models/server-message.socket-connection";
 import { ServerMessageInit } from '../models/server-message.init';
 import { ServerMessageServerHeartbeat } from "../models/server-message.server-heartbeat";
+import { ServerMessageAuthenticated } from "../models/server-message.authenticated";
+import { ServerMessageLoggedOut } from "../models/server-message.logged-out";
+import { ServerMessageClientCreated } from "../models/server-message.client.created";
+import { ServerMessageClientUpdated } from "../models/server-message.client.updated";
+import { ServerMessageClientDeleted } from "../models/server-message.client.deleted";
 
 export type ServerMessage =
   | ServerMessageUserCreated
@@ -16,7 +21,12 @@ export type ServerMessage =
   | ServerMessageChatCreated
   | ServerMessageSocketConnection
   | ServerMessageInit
-  | ServerMessageServerHeartbeat;
+  | ServerMessageServerHeartbeat
+  | ServerMessageAuthenticated
+  | ServerMessageLoggedOut
+  | ServerMessageClientCreated
+  | ServerMessageClientUpdated
+  | ServerMessageClientDeleted;
 
 // map
 export const serverMessageRegistry = createMessageRegistry<A_VER, A_SERVER_MESSAGE_TYPE, ServerMessage>();
@@ -28,3 +38,8 @@ registerMessage(serverMessageRegistry, ServerMessageChatCreated);
 registerMessage(serverMessageRegistry, ServerMessageSocketConnection);
 registerMessage(serverMessageRegistry, ServerMessageInit);
 registerMessage(serverMessageRegistry, ServerMessageServerHeartbeat);
+registerMessage(serverMessageRegistry, ServerMessageAuthenticated);
+registerMessage(serverMessageRegistry, ServerMessageLoggedOut);
+registerMessage(serverMessageRegistry, ServerMessageClientCreated);
+registerMessage(serverMessageRegistry, ServerMessageClientUpdated);
+registerMessage(serverMessageRegistry, ServerMessageClientDeleted);

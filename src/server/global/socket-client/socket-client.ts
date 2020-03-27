@@ -25,7 +25,7 @@ export class SocketClient {
   /**
    * @constructor
    * 
-   * @param uuid
+   * @param id
    * @param connected_at
    * @param _ws
    * @param _eb
@@ -34,8 +34,10 @@ export class SocketClient {
    * @param _sWarehouse
    */
   constructor(
-    readonly uuid: string,
-    readonly connected_at: Date,
+    readonly id: string,
+    // avoid circular reference
+    // readonly client_id: ClientModel['id'],
+    readonly client_id: string,
     private readonly _ws: ws,
     private readonly _eb: ServerEventBus,
     private readonly _es: ServerEventStream,
@@ -45,12 +47,12 @@ export class SocketClient {
 
     // close
     this._ws.on(WS_EVENT.CLOSE, (code, reason) => {
-      this._eb.fire(new ServerEventSocketClientClose({ client: this, code, reason }));
+      this._eb.fire(new ServerEventSocketClientClose({ socket: this, code, reason }));
     });
 
     // error
     this._ws.on(WS_EVENT.ERROR, (err) => {
-      this._eb.fire(new ServerEventSocketClientError({ client: this, err }));
+      this._eb.fire(new ServerEventSocketClientError({ socket: this, err }));
     });
 
     // message
@@ -58,36 +60,36 @@ export class SocketClient {
       const result = this._parser.fromString(data.toString());
 
       if (result.status === 'malformed') {
-        this._eb.fire(new ServerEventSocketClientMessageMalformed({ client: this, err: result.err, }));
+        this._eb.fire(new ServerEventSocketClientMessageMalformed({ socket: this, err: result.err, }));
       }
 
       else if (result.status === 'invalid') {
-        this._eb.fire(new ServerEventSocketClientMessageInvalid({ client: this, errs: result.errs, Ctor: result.Ctor, }));
+        this._eb.fire(new ServerEventSocketClientMessageInvalid({ socket: this, errs: result.errs, Ctor: result.Ctor, }));
       }
 
       else if (result.status === 'success') {
-        this._eb.fire(new ServerEventSocketClientMessageParsed({ client: this, message: result.message, Ctor: result.Ctor, }));
+        this._eb.fire(new ServerEventSocketClientMessageParsed({ socket: this, message: result.message, Ctor: result.Ctor, }));
       }
     });
 
     // open
     this._ws.on(WS_EVENT.OPEN, () => {
-      this._eb.fire(new ServerEventSocketClientOpen({ client: this }));
+      this._eb.fire(new ServerEventSocketClientOpen({ socket: this }));
     });
 
     // ping
     this._ws.on(WS_EVENT.PING, () => {
-      this._eb.fire(new ServerEventSocketClientPing({ client: this }));
+      this._eb.fire(new ServerEventSocketClientPing({ socket: this }));
     });
 
     // pong
     this._ws.on(WS_EVENT.PONG, () => {
-      this._eb.fire(new ServerEventSocketClientPong({ client: this }));
+      this._eb.fire(new ServerEventSocketClientPong({ socket: this }));
     });
 
     // upgrade
     this._ws.on(WS_EVENT.UGPRADE, () => {
-      this._eb.fire(new ServerEventSocketClientUpgrade({ client: this }));
+      this._eb.fire(new ServerEventSocketClientUpgrade({ socket: this }));
     });
 
     // unexpected response
@@ -108,7 +110,7 @@ export class SocketClient {
    */
   send(msg: ServerMessage) {
     const strMsg = JSON.stringify(msg);
-    this._log.info(`Sending Message ${msg.constructor.name} to ${this.uuid}`);
+    this._log.info(`Sending Message ${msg.constructor.name} to ${this.id}`);
     this._ws.send(strMsg);
   }
 }

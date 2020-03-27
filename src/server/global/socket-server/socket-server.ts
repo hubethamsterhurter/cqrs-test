@@ -23,15 +23,11 @@ export class SocketServer {
    * @param _wss
    * @param _eb
    * @param _es
-   * @param _wscFactory
-   * @param _idFactory
    */
   constructor(
     private _wss: ws.Server,
     private _eb: ServerEventBus,
     private _es: ServerEventStream,
-    private _wscFactory: SocketClientFactory,
-    private _idFactory: IdFactory,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
@@ -43,8 +39,7 @@ export class SocketServer {
 
     // connection
     this._wss.on(WSS_EVENT.CONNECTION, (socket, req) => {
-      const wsc = this._wscFactory.create({ socket, uuid: this._idFactory.create(), connected_at: new Date(), });
-      this._eb.fire(new ServerEventSocketServerConnection({ req, wsc }));
+      this._eb.fire(new ServerEventSocketServerConnection({ req, rawWebSocket: socket }));
     });
 
     // error

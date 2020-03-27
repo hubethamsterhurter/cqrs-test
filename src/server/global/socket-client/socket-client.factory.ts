@@ -5,10 +5,13 @@ import { ServerEventStream } from "../event-stream/server-event-stream";
 import { Factory } from '../../../shared/types/factory.type';
 import { SocketClient } from './socket-client';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
+import { ClientModel } from '../../../shared/domains/connected-client/client.model';
+
+interface Payload { rawWebSocket: ws, id: string, client_id: ClientModel['id'] };
 
 let __created__ = false;
 @Service({ global: true })
-export class SocketClientFactory implements Factory<SocketClient, { socket: ws, uuid: string, connected_at: Date }> {
+export class SocketClientFactory implements Factory<SocketClient, Payload> {
   constructor(
     @Inject(() => ServerEventBus) private _eb: ServerEventBus,
     @Inject(() => ServerEventStream) private _es: ServerEventStream,
@@ -18,11 +21,11 @@ export class SocketClientFactory implements Factory<SocketClient, { socket: ws, 
     __created__ = true;
   }
 
-  create(using: { socket: ws, uuid: string, connected_at: Date }): SocketClient {
+  create(using: Payload): SocketClient {
     const client = new SocketClient(
-      using.uuid,
-      using.connected_at,
-      using.socket,
+      using.id,
+      using.client_id,
+      using.rawWebSocket,
       this._eb,
       this._es,
       this._clientMessageParser,

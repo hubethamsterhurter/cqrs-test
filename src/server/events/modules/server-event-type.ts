@@ -26,6 +26,9 @@ export const SERVER_EVENT_TYPE = {
   MODEL_UPDATED: 'model_updated',
   MODEL_DELETED: 'model_deleted',
 
+  USER_SIGNED_UP: 'user_signed_up',
+  USER_LOGGED_IN: 'user_logged_in',
+  USER_LOGGED_OUT: 'user_logged_out',
 } as const;
 export type SERVER_EVET_TYPE = typeof SERVER_EVENT_TYPE;
 export type A_SERVER_EVENT_TYPE = SERVER_EVET_TYPE[keyof SERVER_EVET_TYPE];

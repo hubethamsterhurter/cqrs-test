@@ -3,8 +3,10 @@ import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-typ
 import { VER } from "../../../shared/constants/ver";
 import { SocketClient } from "../../global/socket-client/socket-client";
 
-export class ServerEventSocketClientError implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_ERROR'], { client: SocketClient, err: Error }> {
+interface Payload { socket: SocketClient, err: Error };
+
+export class ServerEventSocketClientError implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_ERROR'], Payload> {
   readonly _v = VER._0_1;
   readonly _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_ERROR;
-  constructor(readonly _p: { client: SocketClient, err: Error }) {}
+  constructor(readonly _p: Payload) {}
 }
