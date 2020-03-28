@@ -1,11 +1,6 @@
 import { ClassType } from "class-transformer/ClassTransformer";
+import { Has_t } from "./has-_t.type";
+import { Has_o } from "./has-_o.type";
 
-export interface MessageType<V, T> {
-  readonly _v: V,
-  readonly _t: T,
-}
-
-export interface MessageCtorType<M extends MessageType<any, any>> extends ClassType<M> {
-  readonly _v: M['_v'],
-  readonly _t: M['_t'],
-}
+export interface MessageType<T> extends Has_t<T>, Has_o {}
+export interface MessageCtorType<T> extends ClassType<MessageType<T>>, Has_t<T> {}

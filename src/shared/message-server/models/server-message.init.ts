@@ -1,35 +1,36 @@
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
-import { VER } from "../../constants/ver";
 import { UserModel } from "../../domains/user/user.model";
 import { ChatModel } from "../../domains/chat/chat.model";
-import { ValidateNested, IsArray, Equals } from "class-validator";
+import { ValidateNested, IsArray, Equals, IsObject } from "class-validator";
 import { Type } from "class-transformer";
-import { ClientModel } from "../../domains/connected-client/client.model";
+import { SessionModel } from "../../domains/session/session.model";
+import { Trace } from "../../helpers/Tracking.helper";
 
-const _v = VER._0_1
 const _t = SERVER_MESSAGE_TYPE.INIT;
 
-export class ServerMessageInit implements ServerMessageType<VER['_0_1'], SERVER_MESSAGE_TYPE['INIT']> {
-  static get _v() { return VER._0_1; }
+export class ServerMessageInit implements ServerMessageType<SERVER_MESSAGE_TYPE['INIT']> {
   static get _t() { return SERVER_MESSAGE_TYPE.INIT; }
-
-  @Equals(_v) readonly _v = ServerMessageInit._v;
   @Equals(_t) readonly _t = ServerMessageInit._t;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Trace)
+  readonly _o!: Trace;
 
   @IsArray()
   @ValidateNested()
   @Type(() => UserModel)
-  users!: UserModel[];
+  readonly users!: UserModel[];
 
   @IsArray()
   @ValidateNested()
   @Type(() => ChatModel)
-  chats!: ChatModel[];
+  readonly chats!: ChatModel[];
 
   @IsArray()
   @ValidateNested()
-  @Type(() => ClientModel)
-  clients!: ClientModel[];
+  @Type(() => SessionModel)
+  readonly clients!: SessionModel[];
 
 
   /**
@@ -38,12 +39,14 @@ export class ServerMessageInit implements ServerMessageType<VER['_0_1'], SERVER_
    * @param props
    */
   constructor(props: {
-    clients: ClientModel[],
+    _o: Trace,
+    clients: SessionModel[],
     users: UserModel[],
     chats: ChatModel[],
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
+      this._o = props._o;
       this.clients = props.clients;
       this.users = props.users;
       this.chats = props.chats;

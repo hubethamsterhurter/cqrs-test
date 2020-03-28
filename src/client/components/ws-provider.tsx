@@ -1,18 +1,21 @@
 import * as op from 'rxjs/operators'; 
 import React, { createContext } from 'react';
 import { ClientMessageParser } from '../../shared/message-client/modules/client-message-parser';
-import { ClientMessage } from '../../shared/message-client/modules/client-message-registry';
-import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
+import { ClientMessageCtor, ClientMessageRegistry, ClientMessage } from '../../shared/message-client/modules/client-message-registry';
+import { ServerMessageCtor, ServerMessageRegistry, ServerMessage } from '../../shared/message-server/modules/server-message-registry';
 import { ServerMessageParser } from '../../shared/message-server/modules/server-message-parser';
-import { MessageParseResponse } from '../../shared/helpers/message-parser.helper';
 import { Subject, Observable } from 'rxjs';
 import { ValidationError } from 'class-validator';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
+import { ParseResult, ParseInvalidPayload, ParseMalformedPayload } from '../../shared/helpers/parse-result.helper';
 
 // const messageStream = Subject
 
-const clientMsgParser = new ClientMessageParser();
-const serverMsgParser = new ServerMessageParser();
+const clientMessageRegistry = new ClientMessageRegistry();
+const serverMessageRegistry = new ServerMessageRegistry();
+
+const clientMessageParser = new ClientMessageParser(clientMessageRegistry);
+const serverMessageParser = new ServerMessageParser(serverMessageRegistry);
 
 const ws = new WebSocket('ws://localhost:5500');
 
@@ -70,50 +73,60 @@ const stateChange$ = new Observable<{ old: WsState, new: WsState }>(function sub
 });
 
 const open$ = new Observable<Event>(function subscribe(subscriber) {
-  const subscription = wsOpenSubj.subscribe((evt) => subscriber.next(evt));
+  const subscription = wsOpenSubj.subscribe((evt) => { subscriber.next(evt) });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const close$ = new Observable<CloseEvent>(function subscribe(subscriber) {
-  const subscription = wsCloseSubj.subscribe((evt) => subscriber.next(evt));
+  const subscription = wsCloseSubj.subscribe((evt) => { subscriber.next(evt) });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const rawMessage$ = new Observable<MessageEvent>(function subscribe(subscriber) {
-  const subscription = wsMessageSubj.subscribe((evt) => subscriber.next(evt));
+  const subscription = wsMessageSubj.subscribe((evt) => { subscriber.next(evt) });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const error$ = new Observable<Event>(function subscribe(subscriber) {
-  const subscription = wsErrorSubj.subscribe((evt) => subscriber.next(evt));
+  const subscription = wsErrorSubj.subscribe((evt) => { subscriber.next(evt) });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
-const messageParse$ = new Observable<MessageParseResponse<ServerMessage>>(function subscribe(subscriber) {
+const messageParse$ = new Observable<ParseResult<ServerMessageCtor>>(function subscribe(subscriber) {
   const subscription = wsMessageSubj.subscribe((evt) => {
-    const parsed = serverMsgParser.fromString(String(evt.data));
+    const parsed = serverMessageParser.fromString(String(evt.data));
     subscriber.next(parsed);
   });
+
   return { unsubscribe() { subscription.unsubscribe(); } }
 });
 
 const message$ = new Observable<ServerMessage>(function subscribe(subscriber) {
   const subscription = messageParse$.subscribe(messageParse => {
-    if (messageParse.status === 'success') { subscriber.next(messageParse.message) }
+    if (messageParse.success()) {
+      subscriber.next(messageParse._u.instance)
+    }
   });
-    return { unsubscribe() { subscription.unsubscribe(); } }
+
+  return { unsubscribe() { subscription.unsubscribe(); } }
 });
 
-const messageInvalid$ = new Observable<ValidationError[]>(function subscribe(subscriber) {
+const messageInvalid$ = new Observable<ParseInvalidPayload<ServerMessageCtor>>(function subscribe(subscriber) {
   const subscription = messageParse$.subscribe(messageParse => {
-    if (messageParse.status === 'invalid') { subscriber.next(messageParse.errs) };
+    if (messageParse.invalid()) {
+      subscriber.next(messageParse._u);
+    };
+
     return { unsubscribe() { subscription.unsubscribe(); } }
   });
 });
 
-const messageMalformed$ = new Observable<Error>(function subscribe(subscriber) {
+const messageMalformed$ = new Observable<ParseMalformedPayload>(function subscribe(subscriber) {
   const subscription = messageParse$.subscribe(messageParse => {
-    if (messageParse.status === 'malformed') { subscriber.next(messageParse.err); };
+    if (messageParse.malformed()) {
+      subscriber.next(messageParse._u);
+    };
+
     return { unsubscribe() { subscription.unsubscribe(); } }
   });
 });

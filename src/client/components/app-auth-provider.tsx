@@ -14,6 +14,12 @@ const initialAppAuthContext: AppAuthContextValue = { user_id: null, authenticate
 export const AppAuthContext = createContext<AppAuthContextValue>(initialAppAuthContext);
 const _log = new ClassLogger('AppAuthProvider');
 
+/**
+ * @description
+ * AppAuthProvider
+ * 
+ * @param props
+ */
 export const AppAuthProvider: React.FC<{ children: (props: AppAuthContextValue) => React.ReactNode }> = function AppAuthProvider(props) {
   const wsCtx = useContext(WsContext);
   const [appAuth, setAppAuth] = useState(initialAppAuthContext);
@@ -24,14 +30,28 @@ export const AppAuthProvider: React.FC<{ children: (props: AppAuthContextValue) 
     const subs: Subscription[] = [];
 
     // authenticate
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageAuthenticated)))
-      .subscribe(message => setAppAuth({ user_id: message.you.id, authenticated: true })
-    ));
+    subs.push(wsCtx
+      .message$
+      .pipe(op.filter(ofServerMessage(ServerMessageAuthenticated)))
+      .subscribe(message => {
+        setAppAuth({
+          user_id: message.you.id,
+          authenticated: true,
+        });
+      })
+    );
 
     // log-out
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageLoggedOut)))
-      .subscribe(message => setAppAuth({ user_id: null, authenticated: false })
-    ));
+    subs.push(wsCtx
+      .message$
+      .pipe(op.filter(ofServerMessage(ServerMessageLoggedOut)))
+      .subscribe(message => {
+        setAppAuth({
+          user_id: null,
+          authenticated: false,
+        });
+      })
+    );
 
     return () => {
       subs.forEach(sub => sub.unsubscribe());

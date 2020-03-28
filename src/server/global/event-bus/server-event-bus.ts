@@ -7,6 +7,7 @@ import { ServerEventAppHeartbeat } from "../../events/models/server-event.app-he
 import { $DANGER } from "../../../shared/types/danger.type";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Trace } from "../../../shared/helpers/Tracking.helper";
 
 let __created__ = false;
 @Service({ global: true })
@@ -23,7 +24,12 @@ export class ServerEventBus {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
     this._heartbeatInterval = setInterval(
-      () => this.fire(new ServerEventAppHeartbeat({ at: new Date() })),
+      () => this.fire(new ServerEventAppHeartbeat({
+        _p: {
+          at: new Date(),
+        },
+        _o: new Trace(),
+      })),
       10000
     );
   }
@@ -39,7 +45,7 @@ export class ServerEventBus {
     const Ctor = evt.constructor as ClassType<ServerEvent>;
 
     if ((Ctor as $FIX_ME<any>) === Object) {
-      throw new TypeError(`Attempted to fire unserialized event "${evt._v}::${evt._t}"`);
+      throw new TypeError(`Attempted to fire unserialized event "${evt._t}"`);
     }
 
     setImmediate(async () => {

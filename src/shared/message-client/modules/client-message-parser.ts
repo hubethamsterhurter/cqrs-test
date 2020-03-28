@@ -1,14 +1,20 @@
-import { MessageParser } from "../../helpers/message-parser.helper";
-import { A_VER } from "../../constants/ver";
-import { A_CLIENT_MESSAGE_TYPE } from "./client-message-type";
-import { ClientMessage, clientMessageRegistry } from "./client-message-registry";
-import { Service } from "typedi";
+import { RegistryParser } from "../../helpers/registry-parser.helper";
+import { Service, Inject } from "typedi";
+import { ClientMessageRegistry, ClientMessageCtor } from "./client-message-registry";
+import { LogConstruction } from "../../decorators/log-construction.decorator";
 
 let __created__ = false;
 @Service({ global: true })
-export class ClientMessageParser extends MessageParser<A_VER, A_CLIENT_MESSAGE_TYPE, ClientMessage> {
-  constructor() {
-    super(clientMessageRegistry);
+@LogConstruction()
+export class ClientMessageParser extends RegistryParser<ClientMessageCtor> {
+
+  /**
+   * @constructor
+   *
+   * @param registry 
+   */
+  constructor(@Inject(() => ClientMessageRegistry) registry: ClientMessageRegistry) {
+    super(registry);
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }

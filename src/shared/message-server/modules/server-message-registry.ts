@@ -1,11 +1,7 @@
-import { A_VER } from "../../constants/ver";
-import { A_SERVER_MESSAGE_TYPE } from "./server-message-type";
-import { createMessageRegistry, registerMessage } from "../../helpers/message-registry.helper";
 import { ServerMessageUserCreated } from "../models/server-message.user.created";
 import { ServerMessageUserUpdated } from "../models/server-message.user.updated";
 import { ServerMessageUserTyping } from "../models/server-message.user.typing";
 import { ServerMessageChatCreated } from "../models/server-message.chat.created";
-import { ServerMessageSocketConnection } from "../models/server-message.socket-connection";
 import { ServerMessageInit } from '../models/server-message.init';
 import { ServerMessageServerHeartbeat } from "../models/server-message.server-heartbeat";
 import { ServerMessageAuthenticated } from "../models/server-message.authenticated";
@@ -13,33 +9,61 @@ import { ServerMessageLoggedOut } from "../models/server-message.logged-out";
 import { ServerMessageClientCreated } from "../models/server-message.client.created";
 import { ServerMessageClientUpdated } from "../models/server-message.client.updated";
 import { ServerMessageClientDeleted } from "../models/server-message.client.deleted";
+import { ServerMessageError } from "../models/server-message.error";
+import { Service } from "typedi";
+import { Registry } from "../../helpers/registry.helper";
+import { LogConstruction } from "../../decorators/log-construction.decorator";
+import { UToKV } from "../../types/u-to-kv.type";
+import { ServerMessageClientMessageInvalid } from "../models/server-message.client-message-invalid";
+import { ServerMessageClientMessageMalformed } from "../models/server-message.client-message-malformed";
 
-export type ServerMessage =
-  | ServerMessageUserCreated
-  | ServerMessageUserUpdated
-  | ServerMessageUserTyping
-  | ServerMessageChatCreated
-  | ServerMessageSocketConnection
-  | ServerMessageInit
-  | ServerMessageServerHeartbeat
-  | ServerMessageAuthenticated
-  | ServerMessageLoggedOut
-  | ServerMessageClientCreated
-  | ServerMessageClientUpdated
-  | ServerMessageClientDeleted;
+export type ServerMessageCtor = 
+  | typeof ServerMessageUserCreated
+  | typeof ServerMessageUserUpdated
+  | typeof ServerMessageUserTyping
+  | typeof ServerMessageChatCreated
+  | typeof ServerMessageInit
+  | typeof ServerMessageServerHeartbeat
+  | typeof ServerMessageAuthenticated
+  | typeof ServerMessageLoggedOut
+  | typeof ServerMessageClientCreated
+  | typeof ServerMessageClientUpdated
+  | typeof ServerMessageClientDeleted
+  | typeof ServerMessageClientMessageInvalid
+  | typeof ServerMessageClientMessageMalformed
+  | typeof ServerMessageError;
 
-// map
-export const serverMessageRegistry = createMessageRegistry<A_VER, A_SERVER_MESSAGE_TYPE, ServerMessage>();
+export type ServerMessage = ServerMessageCtor['prototype']; 
 
-registerMessage(serverMessageRegistry, ServerMessageUserCreated);
-registerMessage(serverMessageRegistry, ServerMessageUserUpdated);
-registerMessage(serverMessageRegistry, ServerMessageUserTyping);
-registerMessage(serverMessageRegistry, ServerMessageChatCreated);
-registerMessage(serverMessageRegistry, ServerMessageSocketConnection);
-registerMessage(serverMessageRegistry, ServerMessageInit);
-registerMessage(serverMessageRegistry, ServerMessageServerHeartbeat);
-registerMessage(serverMessageRegistry, ServerMessageAuthenticated);
-registerMessage(serverMessageRegistry, ServerMessageLoggedOut);
-registerMessage(serverMessageRegistry, ServerMessageClientCreated);
-registerMessage(serverMessageRegistry, ServerMessageClientUpdated);
-registerMessage(serverMessageRegistry, ServerMessageClientDeleted);
+const SERVER_MESSAGE_CTOR_MAP: UToKV<ServerMessageCtor, '_t'> = {
+  [ServerMessageUserCreated._t]: ServerMessageUserCreated,
+  [ServerMessageUserUpdated._t]: ServerMessageUserUpdated,
+  [ServerMessageUserTyping._t]: ServerMessageUserTyping,
+  [ServerMessageChatCreated._t]: ServerMessageChatCreated,
+  [ServerMessageInit._t]: ServerMessageInit,
+  [ServerMessageServerHeartbeat._t]: ServerMessageServerHeartbeat,
+  [ServerMessageAuthenticated._t]: ServerMessageAuthenticated,
+  [ServerMessageLoggedOut._t]: ServerMessageLoggedOut,
+  [ServerMessageClientCreated._t]: ServerMessageClientCreated,
+  [ServerMessageClientUpdated._t]: ServerMessageClientUpdated,
+  [ServerMessageClientDeleted._t]: ServerMessageClientDeleted,
+  [ServerMessageClientMessageInvalid._t]: ServerMessageClientMessageInvalid,
+  [ServerMessageClientMessageMalformed._t]: ServerMessageClientMessageMalformed,
+  [ServerMessageError._t]: ServerMessageError,
+}
+
+const SERVER_MESSAGE_CTORS: ServerMessageCtor[] = Object.values(SERVER_MESSAGE_CTOR_MAP);
+
+let __created__ = false;
+@Service({ global: true })
+@LogConstruction()
+export class ServerMessageRegistry extends Registry<ServerMessageCtor, '_t'> {
+  /**
+   * @constructor
+   */
+  constructor() {
+    super(SERVER_MESSAGE_CTORS, '_t');
+    if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
+    __created__ = true;
+  }
+}

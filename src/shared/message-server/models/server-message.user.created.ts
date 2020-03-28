@@ -1,32 +1,37 @@
 import { Type } from 'class-transformer';
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
-import { ValidateNested, IsObject, Equals } from "class-validator";
-import { VER } from "../../constants/ver";
+import { ValidateNested, IsObject, Equals, } from "class-validator";
 import { UserModel } from '../../domains/user/user.model';
+import { Trace } from '../../helpers/Tracking.helper';
 
-const _v = VER._0_1;
 const _t = SERVER_MESSAGE_TYPE.USER_CREATED
 
-export class ServerMessageUserCreated implements ServerMessageType<VER['_0_1'], SERVER_MESSAGE_TYPE['USER_CREATED']> {
-  static get _v() { return _v; }
+export class ServerMessageUserCreated implements ServerMessageType<SERVER_MESSAGE_TYPE['USER_CREATED']> {
   static get _t() { return _t; }
-
-  @Equals( _v) readonly _v = ServerMessageUserCreated._v;
   @Equals( _t) readonly _t = ServerMessageUserCreated._t;
 
   @IsObject()
   @ValidateNested()
+  @Type(() => Trace)
+  readonly _o!: Trace;
+
+  @IsObject()
+  @ValidateNested()
   @Type(() => UserModel)
-  model!: UserModel;
+  readonly model!: UserModel;
 
   /**
    * @constructor
    *
    * @param props
    */
-  constructor(props: { model: UserModel }) {
+  constructor(props: {
+    _o: Trace,
+    model: UserModel,
+  }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
+      this._o = props._o;
       this.model = props.model;
     }
   }

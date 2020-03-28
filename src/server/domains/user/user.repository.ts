@@ -24,4 +24,16 @@ export class UserRepository extends BaseRepository<UserModel> {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }
+
+  /**
+   * @description
+   * Find a user by user_name
+   * 
+   * @param user_name 
+   */
+  async findByUserName(user_name: string): Promise<UserModel | null> {
+    const users = await this.findAll();
+    const targetUser = users.find(user => user.user_name === user_name);
+    return targetUser ?? null;
+  }
 }

@@ -10,7 +10,7 @@ import { ServerMessageUserUpdated } from '../../shared/message-server/models/ser
 import { ServerMessageChatCreated } from '../../shared/message-server/models/server-message.chat.created';
 import { ServerMessageInit } from '../../shared/message-server/models/server-message.init';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
-import { ClientModel } from '../../shared/domains/connected-client/client.model';
+import { SessionModel } from '../../shared/domains/session/session.model';
 import { ServerMessageClientUpdated } from '../../shared/message-server/models/server-message.client.updated';
 import { ServerMessageClientDeleted } from '../../shared/message-server/models/server-message.client.deleted';
 import { ServerMessageClientCreated } from '../../shared/message-server/models/server-message.client.created';
@@ -26,7 +26,7 @@ interface AppStateDataContextValue {
     ids: string[],
   };
   clients: {
-    byId: Record<string, ClientModel>;
+    byId: Record<string, SessionModel>;
     ids: string[],
   };
 }

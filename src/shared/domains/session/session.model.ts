@@ -4,7 +4,7 @@ import { ModelType } from "../model.type";
 import { Type } from "class-transformer";
 import { ID_DEFINITION } from "../id.definition";
 
-export class ClientModel implements ModelType {
+export class SessionModel implements ModelType {
   @MinLength(ID_DEFINITION.id.minLength)
   @MaxLength(ID_DEFINITION.id.maxLength)
   @IsString()

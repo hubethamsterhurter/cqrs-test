@@ -1,8 +1,16 @@
 import './signup-page.css';
+import * as op from 'rxjs/operators';
 import React, { useState, useEffect, useContext } from 'react';
 import { Formik } from 'formik';
 import { WsContext } from './ws-provider';
 import { ClientMessageSignUp } from '../../shared/message-client/models/client-message.sign-up';
+import { Trace } from '../../shared/helpers/Tracking.helper';
+import { of, timer } from 'rxjs';
+import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
+import { ServerMessageClientMessageInvalid } from '../../shared/message-server/models/server-message.client-message-invalid';
+import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
+import { ServerMessageClientMessageMalformed } from '../../shared/message-server/models/server-message.client-message-malformed';
+import { ServerMessageError } from '../../shared/message-server/models/server-message.error';
 
 
 interface NewUser {
@@ -22,16 +30,36 @@ export const SignupPage: React.FC = function SignupPage(props) {
         // TODO: validate
         validate={() => []}
         onSubmit={(values, opts) => {
+          const trace = new Trace();
+
           wsCtx.send(new ClientMessageSignUp({
             user_name: values.user_name,
-            password: values.password
+            password: values.password,
+            _o: trace,
           }));
-          // full CQRS - submitting always false...?
 
-          // setTimeout(() => {
-          //   console.log(values);
-          //   opts.setSubmitting(false);
-          // }, 400);
+          of(undefined)
+            .pipe(
+              op.race<undefined | ServerMessage>(
+                of(undefined).pipe(op.delay(5000)),
+                wsCtx.message$.pipe(op.filter(evt => evt._o.id === trace.id)),
+              ),
+              op.take(1),
+            )
+            .subscribe((evt) => {
+              if (!evt) {
+                console.log('No response from server...');
+              } else if (evt._t === ServerMessageClientMessageInvalid._t) {
+                console.log('Message Invalid', evt);
+              } else if (evt._t === ServerMessageClientMessageMalformed._t) {
+                console.log('Message Malformed', evt);
+              } else if (evt._t === ServerMessageError._t) {
+                console.log('Message Error', evt);
+              } else {
+                console.log('Unhandled evt', evt);
+              }
+              opts.setSubmitting(false);
+            });
         }}
       >
         {({

@@ -14,22 +14,33 @@ import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { ClassLogger } from '../shared/helpers/class-logger.helper';
 import { UserService } from './domains/user/user.service';
 import { ChatService } from './domains/chat/chat.service';
-import { ClientService } from './domains/client/client.service';
+import { SessionService } from './domains/client/session.service';
+import { ServerMessageRegistry } from '../shared/message-server/modules/server-message-registry';
+import { ServerMessageParser } from '../shared/message-server/modules/server-message-parser';
+import { ClientMessageRegistry } from '../shared/message-client/modules/client-message-registry';
+import { ClientMessageParser } from '../shared/message-client/modules/client-message-parser';
+import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
+import { SessionBroadcaster } from './domains/client/session.broadcaster';
 
 
 
 
-async function start() {
-  const _log = new ClassLogger(start);
+async function bootstrap() {
+  const _log = new ClassLogger(bootstrap);
 
-  const eb = new ServerEventBus();
-  Container.set(ServerEventBus, eb);
+  Container.get(ServerEventBus);
   const es = Container.get(ServerEventStream);
   Container.set(SocketServer, Container.get(SocketServerFactory).create());
   Container.get(ServerWatcher);
   Container.get(UserService);
   Container.get(ChatService);
-  Container.get(ClientService);
+  Container.get(SessionService);
+  Container.get(ServerMessageRegistry);
+  Container.get(ServerMessageParser);
+  Container.get(ClientMessageRegistry);
+  Container.get(ClientMessageParser);
+  Container.get(SocketWarehouse);
+  Container.get(SessionBroadcaster);
 
   es
     .of(ServerEventAppHeartbeat)
@@ -60,4 +71,4 @@ async function start() {
     .subscribe((evt) => _log.info('Message invalid:', evt._p.err));
 }
 
-start();
+bootstrap();

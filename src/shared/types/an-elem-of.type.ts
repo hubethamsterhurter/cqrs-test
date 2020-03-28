@@ -1,0 +1,1 @@
+export type AnElemOf<T> = T extends Readonly<infer U>[] ? U : never;

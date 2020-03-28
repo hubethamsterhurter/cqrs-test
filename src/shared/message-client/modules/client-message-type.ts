@@ -1,4 +1,4 @@
-import { A_VER } from "../../constants/ver";
+import { MessageType } from "../../types/message.type";
 
 export const CLIENT_MESSAGE_TYPE = {
   USER_CREATE: 'user_create',
@@ -12,7 +12,4 @@ export const CLIENT_MESSAGE_TYPE = {
 export type CLIENT_MESSAGE_TYPE = typeof CLIENT_MESSAGE_TYPE;
 export type A_CLIENT_MESSAGE_TYPE = CLIENT_MESSAGE_TYPE[keyof CLIENT_MESSAGE_TYPE];
 
-export interface ClientMessageType<V extends A_VER = A_VER, T extends A_CLIENT_MESSAGE_TYPE = A_CLIENT_MESSAGE_TYPE> {
-  readonly _v: V,
-  readonly _t: T,
-}
+export type ClientMessageType<T extends A_CLIENT_MESSAGE_TYPE> = MessageType<T>;

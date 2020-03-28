@@ -10,8 +10,7 @@ import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { ClientRepository } from "../client/client.repository";
-import { UserRepository } from "../user/user.repository";
+import { SessionRepository } from "../client/session.repository";
 
 
 let __created__ = false;
@@ -19,6 +18,7 @@ let __created__ = false;
 @LogConstruction()
 export class ChatService {
   private readonly _log = new ClassLogger(ChatService)
+
 
   /**
    * @constructor
@@ -28,11 +28,9 @@ export class ChatService {
    * @param _chatRepo
    */
   constructor(
-    @Inject(() => ServerEventBus) readonly _eb: ServerEventBus,
-    @Inject(() => ServerEventStream) readonly _es: ServerEventStream,
-    @Inject(() => ChatRepository) readonly _chatRepo: ChatRepository,
-    @Inject(() => ClientRepository) readonly _clientRepo: ClientRepository,
-    @Inject(() => UserRepository) readonly _userRepo: UserRepository,
+    @Inject(() => ServerEventStream) private readonly _es: ServerEventStream,
+    @Inject(() => ChatRepository) private readonly _chatRepo: ChatRepository,
+    @Inject(() => SessionRepository) private readonly _clientRepo: SessionRepository,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
@@ -43,13 +41,13 @@ export class ChatService {
       .of(ServerEventSocketClientMessageParsed)
       .pipe(op.filter(ofClientMessage(ClientMessageCreateChat)))
       .subscribe(async (evt) => {
-        const client = await this._clientRepo.findOneOrFail(evt._p.socket.client_id);
+        const client = await this._clientRepo.findOneOrFail(evt._p.socket.session_id);
         const chat: UnsavedModel<ChatModel> = {
           author_id: client.user_id ?? null,
           content: evt._p.message.content,
           sent_at: evt._p.message.sent_at,
         };
-        this._chatRepo.create(chat);
+        this._chatRepo.create(chat, undefined, evt._o);
       });
   }
 }

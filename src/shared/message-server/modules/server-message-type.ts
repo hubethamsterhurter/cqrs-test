@@ -1,4 +1,4 @@
-import { A_VER } from "../../constants/ver";
+import { MessageType } from "../../types/message.type";
 
 export const SERVER_MESSAGE_TYPE = {
   MODEL_CREATED: 'model_created',
@@ -16,11 +16,11 @@ export const SERVER_MESSAGE_TYPE = {
   HEARTBEAT: 'heartbeat',
   AUTHENTICATED: 'authenticated',
   LOGGED_OUT: 'logged_out',
+  CLIENT_MESSAGE_MALFORMED: 'client_message_malformed',
+  CLIENT_MESSAGE_INVALID: 'client_message_invalid',
+  ERROR: 'error',
 } as const;
 export type SERVER_MESSAGE_TYPE = typeof SERVER_MESSAGE_TYPE;
 export type A_SERVER_MESSAGE_TYPE = SERVER_MESSAGE_TYPE[keyof SERVER_MESSAGE_TYPE];
 
-export interface ServerMessageType<V extends A_VER = A_VER, T extends A_SERVER_MESSAGE_TYPE = A_SERVER_MESSAGE_TYPE> {
-  readonly _v: V,
-  readonly _t: T,
-}
+export type ServerMessageType<T extends A_SERVER_MESSAGE_TYPE> = MessageType<T>

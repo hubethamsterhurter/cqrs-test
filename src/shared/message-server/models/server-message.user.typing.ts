@@ -1,17 +1,18 @@
 import { Type } from 'class-transformer';
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
-import { VER } from "../../constants/ver";
-import { IsString, IsDate, IsBoolean, Equals } from "class-validator";
+import { IsString, IsDate, IsBoolean, Equals, IsObject, ValidateNested } from "class-validator";
+import { Trace } from '../../helpers/Tracking.helper';
 
-const _v = VER._0_1
 const _t = SERVER_MESSAGE_TYPE.USER_TYPING;
 
-export class ServerMessageUserTyping implements ServerMessageType<VER['_0_1'], SERVER_MESSAGE_TYPE['USER_TYPING']> {
-  static get _v() { return _v; }
+export class ServerMessageUserTyping implements ServerMessageType<SERVER_MESSAGE_TYPE['USER_TYPING']> {
   static get _t() { return _t; }
-
-  @Equals(_v) readonly _v = ServerMessageUserTyping._v;
   @Equals(_t) readonly _t = ServerMessageUserTyping._t;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Trace)
+  readonly _o!: Trace;
 
   @IsString()
   readonly user_name!: string;
@@ -28,9 +29,15 @@ export class ServerMessageUserTyping implements ServerMessageType<VER['_0_1'], S
    *
    * @param props
    */
-  constructor(props: { user_name: string, typing: boolean, timestamp: Date }) {
+  constructor(props: {
+    _o: Trace,
+    user_name: string,
+    typing: boolean,
+    timestamp: Date,
+  }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
+      this._o = props._o;
       this.user_name = props.user_name;
       this.typing = props.typing;
       this.timestamp = props.timestamp;

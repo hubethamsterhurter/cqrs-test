@@ -13,6 +13,7 @@ import { UnsavedModel } from '../../shared/types/unsaved-model.type';
 import { $FIX_ME } from '../../shared/types/fix-me.type';
 import { Subject, timer } from "rxjs";
 import { $DANGER } from '../../shared/types/danger.type';
+import { Trace } from '../../shared/helpers/Tracking.helper';
 
 function cloneFromClass<M>(Ctor: ClassType<M>, model: M): M {
   const cloned = plainToClass(Ctor, classToPlain(model));
@@ -39,6 +40,7 @@ export abstract class BaseRepository<M extends Model> {
    *
    * @param _idFactory
    * @param _ModelCTor
+   * @param _eb
    */
   constructor(
     protected readonly _idFactory: IdFactory,
@@ -79,13 +81,20 @@ export abstract class BaseRepository<M extends Model> {
       });
   }
 
+
   /**
    * @description
    * Create a model
    *
    * @param rawModel
+   * @param forceId
+   * @param trace
    */
-  async create(rawModel: UnsavedModel<M>, forceId?: string): Promise<M> {
+  async create(
+    rawModel: UnsavedModel<M>,
+    forceId: string | undefined = undefined,
+    trace: Trace,
+  ): Promise<M> {
     const id = forceId || this._idFactory.create();
     const now = new Date();
     const preparedModel: M = {
@@ -98,26 +107,44 @@ export abstract class BaseRepository<M extends Model> {
     const clonedModel = plainToClass(this._ModelCTor, preparedModel);
     this._log.info(`Creating`, id, this._ModelCTor.name);
     this._table.set(clonedModel.id, clonedModel);
-    this._eb.fire(new ServerEventModelCreated({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, clonedModel) }));
+    this._eb.fire(new ServerEventModelCreated({
+      _p: {
+        CTor: this._ModelCTor,
+        model: cloneFromClass(this._ModelCTor, clonedModel)
+      },
+      _o: trace.clone(),
+    }));
     this._save$.next();
     return cloneFromClass(this._ModelCTor, clonedModel);
   }
+
 
   /**
    * @description
    * Upsert a model
    *
    * @param model 
+   * @param trace
    */
-  async upsert(model: M): Promise<M> {
+  async upsert(
+    model: M,
+    trace: Trace,
+  ): Promise<M> {
     const cloned = cloneFromClass(this._ModelCTor, model);
     this._log.info(`Upserting ${this._ModelCTor.name} - ${model.id}`);
     cloned.updated_at = new Date();
     this._table.set(cloned.id, cloned);
-    this._eb.fire(new ServerEventModelUpdated({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, cloned) }));
+    this._eb.fire(new ServerEventModelUpdated({
+      _p: {
+        CTor: this._ModelCTor,
+        model: cloneFromClass(this._ModelCTor, cloned)
+      },
+      _o: trace.clone(),
+    }));
     this._save$.next();
     return cloneFromClass(this._ModelCTor, cloned);
   }
+
 
   /**
    * @description
@@ -133,6 +160,7 @@ export abstract class BaseRepository<M extends Model> {
     return result;
   }
 
+
   /**
    * @description
    * Find one
@@ -146,11 +174,10 @@ export abstract class BaseRepository<M extends Model> {
     return cloneFromClass(this._ModelCTor, found);
   }
 
+
   /**
    * @description
    * Find all
-   *
-   * @param id
    */
   async findAll(): Promise<M[]> {
     this._log.info(`Finding all`, this._ModelCTor.name);
@@ -161,6 +188,7 @@ export abstract class BaseRepository<M extends Model> {
     return result;
   }
 
+
   /**
    * @description
    * Delete one
@@ -170,8 +198,12 @@ export abstract class BaseRepository<M extends Model> {
    * ensure no side effects
    *
    * @param model
+   * @param trace
    */
-  async delete(inputModel: M): Promise<M | null> {
+  async delete(
+    inputModel: M,
+    trace: Trace,
+  ): Promise<M | null> {
     this._log.info('Deleting', inputModel.id, this._ModelCTor.name);
     let model = this._table.get(inputModel.id);
 
@@ -189,7 +221,13 @@ export abstract class BaseRepository<M extends Model> {
 
     this
       ._eb
-      .fire(new ServerEventModelDeleted({ CTor: this._ModelCTor, model: cloneFromClass(this._ModelCTor, clone), }));
+      .fire(new ServerEventModelDeleted({
+        _p: {
+          CTor: this._ModelCTor,
+          model: cloneFromClass(this._ModelCTor, clone),
+        },
+        _o: trace.clone()
+      }));
 
     return cloneFromClass(this._ModelCTor, clone);
   }

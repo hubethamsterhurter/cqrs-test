@@ -1,14 +1,18 @@
 import { Type } from 'class-transformer';
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
-import { VER } from "../../constants/ver";
-import { IsDate } from "class-validator";
+import { IsDate, IsObject, ValidateNested, Equals } from "class-validator";
+import { Trace } from '../../helpers/Tracking.helper';
 
-export class ServerMessageServerHeartbeat implements ServerMessageType<VER['_0_1'], SERVER_MESSAGE_TYPE['HEARTBEAT']> {
-  static get _v() { return VER._0_1; }
-  static get _t() { return SERVER_MESSAGE_TYPE.HEARTBEAT; }
+const _t = SERVER_MESSAGE_TYPE.HEARTBEAT
 
-  readonly _v = ServerMessageServerHeartbeat._v;
-  readonly _t = ServerMessageServerHeartbeat._t;
+export class ServerMessageServerHeartbeat implements ServerMessageType<SERVER_MESSAGE_TYPE['HEARTBEAT']> {
+  static get _t() { return _t; }
+  @Equals(_t) readonly _t = ServerMessageServerHeartbeat._t;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Trace)
+  readonly _o!: Trace;
 
   @IsDate()
   @Type(() => Date)
@@ -19,10 +23,14 @@ export class ServerMessageServerHeartbeat implements ServerMessageType<VER['_0_1
    *
    * @param props
    */
-  constructor(props: { at: Date }) {
+  constructor(props: {
+    _o: Trace,
+    at: Date
+  }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.at = props.at
+      this._o = props._o;
+      this.at = props.at;
     }
   }
 }

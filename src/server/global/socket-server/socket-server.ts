@@ -7,10 +7,9 @@ import { ServerEventSocketServerClose } from '../../events/models/server-event.s
 import { ServerEventSocketServerConnection } from '../../events/models/server-event.socket-server.connection';
 import { ServerEventSocketServerError } from '../../events/models/server-event.socket-server.error';
 import { ServerEventSocketServerListening } from '../../events/models/server-event.socket-server.listening';
-import { SocketClientFactory } from '../socket-client/socket-client.factory';
-import { IdFactory } from '../../../shared/helpers/id.factory';
 import { ServerEventSocketServerHeaders } from '../../events/models/server-event.socket-server.headers';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
+import { Trace } from '../../../shared/helpers/Tracking.helper';
 
 
 let __created__ = false;
@@ -34,27 +33,50 @@ export class SocketServer {
 
     // close
     this._wss.on(WSS_EVENT.CLOSE, () => {
-      this._eb.fire(new ServerEventSocketServerClose());
+      this._eb.fire(new ServerEventSocketServerClose({
+        _p: undefined,
+        _o: new Trace(),
+      }));
     });
 
     // connection
     this._wss.on(WSS_EVENT.CONNECTION, (socket, req) => {
-      this._eb.fire(new ServerEventSocketServerConnection({ req, rawWebSocket: socket }));
+      this._eb.fire(new ServerEventSocketServerConnection({
+        _p: {
+          req,
+          rawWebSocket: socket,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // error
     this._wss.on(WSS_EVENT.ERROR, (err) => {
-      this._eb.fire(new ServerEventSocketServerError({ err }));
+      this._eb.fire(new ServerEventSocketServerError({
+        _p: {
+          err,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // headers
     this._wss.on(WSS_EVENT.HEADERS, (headers, req) => {
-      this._eb.fire(new ServerEventSocketServerHeaders({ headers, req }));
+      this._eb.fire(new ServerEventSocketServerHeaders({
+        _p: {
+          headers,
+          req,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // listening
     this._wss.on(WSS_EVENT.LISTENING, () => {
-      this._eb.fire(new ServerEventSocketServerListening());
+      this._eb.fire(new ServerEventSocketServerListening({
+        _p: undefined,
+        _o: new Trace(),
+      }));
     });
   }
 }

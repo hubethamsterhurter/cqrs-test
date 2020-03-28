@@ -1,12 +1,34 @@
 import { EventType } from "../../../shared/types/event.type";
 import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-type";
-import { VER } from "../../../shared/constants/ver";
 import { SocketClient } from "../../global/socket-client/socket-client";
+import { Equals, IsObject, ValidateNested } from "class-validator";
+import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { Type } from "class-transformer";
 
-interface Payload { socket: SocketClient, err: Error };
+interface Payload {
+  readonly socket: SocketClient,
+  readonly err: Error,
+};
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_MALFORMED;
 
-export class ServerEventSocketClientMessageMalformed implements EventType<VER['_0_1'], SERVER_EVET_TYPE['SOCKET_CLIENT_MESSAGE_MALFORMED'], Payload> {
-  readonly _v = VER._0_1;
-  readonly _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_MALFORMED;
-  constructor(readonly _p: Payload) {}
+export class ServerEventSocketClientMessageMalformed implements EventType<SERVER_EVET_TYPE['SOCKET_CLIENT_MESSAGE_MALFORMED'], Payload> {
+  static get _t() { return _t; }
+  @Equals(_t) readonly _t = ServerEventSocketClientMessageMalformed._t;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Trace)
+  readonly _o!: Trace;
+
+  readonly _p!: Payload;
+
+  constructor(props: {
+    _p: Payload,
+    _o: Trace,
+  }) {
+    if (props) {
+      this._o = props._o;
+      this._p = props._p;
+    }
+  }
 }

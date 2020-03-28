@@ -15,10 +15,13 @@ import { ServerEventSocketClientPing } from '../../events/models/server-event.so
 import { ServerMessage } from '../../../shared/message-server/modules/server-message-registry';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
+import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
+import { Trace } from '../../../shared/helpers/Tracking.helper';
 
 
 
 
+@LogConstruction()
 export class SocketClient {
   private _log = new ClassLogger(this);
 
@@ -35,9 +38,7 @@ export class SocketClient {
    */
   constructor(
     readonly id: string,
-    // avoid circular reference
-    // readonly client_id: ClientModel['id'],
-    readonly client_id: string,
+    readonly session_id: string,
     private readonly _ws: ws,
     private readonly _eb: ServerEventBus,
     private readonly _es: ServerEventStream,
@@ -46,55 +47,119 @@ export class SocketClient {
     // emissions
 
     // close
-    this._ws.on(WS_EVENT.CLOSE, (code, reason) => {
-      this._eb.fire(new ServerEventSocketClientClose({ socket: this, code, reason }));
+    this._ws.on(WS_EVENT.CLOSE, async (code, reason) => {
+      this._eb.fire(new ServerEventSocketClientClose({
+        _p: {
+          socket: this,
+          code,
+          reason,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // error
-    this._ws.on(WS_EVENT.ERROR, (err) => {
-      this._eb.fire(new ServerEventSocketClientError({ socket: this, err }));
+    this._ws.on(WS_EVENT.ERROR, async (err) => {
+      this._eb.fire(new ServerEventSocketClientError({
+        _p: {
+          socket: this,
+          err,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // message
-    this._ws.on(WS_EVENT.MESSAGE, (data) => {
+    this._ws.on(WS_EVENT.MESSAGE, async (data) => {
       const result = this._parser.fromString(data.toString());
 
-      if (result.status === 'malformed') {
-        this._eb.fire(new ServerEventSocketClientMessageMalformed({ socket: this, err: result.err, }));
+      if (result.malformed()) {
+        // message -> malformed
+
+        this._eb.fire(new ServerEventSocketClientMessageMalformed({
+          _p: {
+            socket: this,
+            err: result._u.err,
+          },
+          _o: new Trace(),
+        }));
       }
 
-      else if (result.status === 'invalid') {
-        this._eb.fire(new ServerEventSocketClientMessageInvalid({ socket: this, errs: result.errs, Ctor: result.Ctor, }));
+      else if (result.invalid()) {
+        // message -> invalid
+
+        this._eb.fire(new ServerEventSocketClientMessageInvalid({
+          _p: {
+            socket: this,
+            errs: result._u.errs,
+            Ctor: result._u.Ctor,
+          },
+          _o: result._u._o?.clone() ?? new Trace(),
+        }));
       }
 
-      else if (result.status === 'success') {
-        this._eb.fire(new ServerEventSocketClientMessageParsed({ socket: this, message: result.message, Ctor: result.Ctor, }));
+      else if (result.success()) {
+        // message -> success
+
+        this._eb.fire(new ServerEventSocketClientMessageParsed({
+          _p: {
+            socket: this,
+            message: result._u.instance,
+            Ctor: result._u.Ctor,
+          },
+          _o: result._u.instance._o.clone(),
+        }));
       }
     });
 
     // open
-    this._ws.on(WS_EVENT.OPEN, () => {
-      this._eb.fire(new ServerEventSocketClientOpen({ socket: this }));
+    this._ws.on(WS_EVENT.OPEN, async () => {
+      this._eb.fire(new ServerEventSocketClientOpen({
+        _p: {
+          socket: this,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // ping
-    this._ws.on(WS_EVENT.PING, () => {
-      this._eb.fire(new ServerEventSocketClientPing({ socket: this }));
+    this._ws.on(WS_EVENT.PING, async () => {
+      this._eb.fire(new ServerEventSocketClientPing({
+        _p: {
+          socket: this,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // pong
-    this._ws.on(WS_EVENT.PONG, () => {
-      this._eb.fire(new ServerEventSocketClientPong({ socket: this }));
+    this._ws.on(WS_EVENT.PONG, async () => {
+      this._eb.fire(new ServerEventSocketClientPong({
+        _p: {
+          socket: this
+        },
+        _o: new Trace(),
+      }));
     });
 
     // upgrade
-    this._ws.on(WS_EVENT.UGPRADE, () => {
-      this._eb.fire(new ServerEventSocketClientUpgrade({ socket: this }));
+    this._ws.on(WS_EVENT.UGPRADE, async () => {
+      this._eb.fire(new ServerEventSocketClientUpgrade({
+        _p: {
+          socket: this,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // unexpected response
-    this._ws.on(WS_EVENT.UNEXPECTED_RESPONSE, () => {
-      this._eb.fire(new ServerEventSocketClientUnexpectedResponse({ client: this }));
+    this._ws.on(WS_EVENT.UNEXPECTED_RESPONSE, async () => {
+      this._eb.fire(new ServerEventSocketClientUnexpectedResponse({
+        _p: {
+          socket: this,
+        },
+        _o: new Trace(),
+      }));
     });
 
     // listeners
