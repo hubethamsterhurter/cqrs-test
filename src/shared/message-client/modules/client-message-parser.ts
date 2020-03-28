@@ -1,5 +1,5 @@
 import { RegistryParser } from "../../helpers/registry-parser.helper";
-import { Service, Inject } from "typedi";
+import Container, { Service, Inject } from "typedi";
 import { ClientMessageRegistry, ClientMessageCtor } from "./client-message-registry";
 import { LogConstruction } from "../../decorators/log-construction.decorator";
 
@@ -13,8 +13,12 @@ export class ClientMessageParser extends RegistryParser<ClientMessageCtor> {
    *
    * @param registry 
    */
-  constructor(@Inject(() => ClientMessageRegistry) registry: ClientMessageRegistry) {
-    super(registry);
+  constructor(
+    // @Inject(() => ClientMessageRegistry) registry: ClientMessageRegistry
+  ) {
+    // @fix for CRA decorator support
+    // super(registry);
+    super(Container.get(ClientMessageRegistry));
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }

@@ -1,21 +1,16 @@
 import * as op from 'rxjs/operators'; 
 import React, { createContext } from 'react';
 import { ClientMessageParser } from '../../shared/message-client/modules/client-message-parser';
-import { ClientMessageCtor, ClientMessageRegistry, ClientMessage } from '../../shared/message-client/modules/client-message-registry';
-import { ServerMessageCtor, ServerMessageRegistry, ServerMessage } from '../../shared/message-server/modules/server-message-registry';
+import { ClientMessage } from '../../shared/message-client/modules/client-message-registry';
+import { ServerMessageCtor, ServerMessage } from '../../shared/message-server/modules/server-message-registry';
 import { ServerMessageParser } from '../../shared/message-server/modules/server-message-parser';
 import { Subject, Observable } from 'rxjs';
-import { ValidationError } from 'class-validator';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
 import { ParseResult, ParseInvalidPayload, ParseMalformedPayload } from '../../shared/helpers/parse-result.helper';
 
 // const messageStream = Subject
-
-const clientMessageRegistry = new ClientMessageRegistry();
-const serverMessageRegistry = new ServerMessageRegistry();
-
-const clientMessageParser = new ClientMessageParser(clientMessageRegistry);
-const serverMessageParser = new ServerMessageParser(serverMessageRegistry);
+const clientMessageParser = new ClientMessageParser();
+const serverMessageParser = new ServerMessageParser();
 
 const ws = new WebSocket('ws://localhost:5500');
 
@@ -156,8 +151,8 @@ interface WsContextValue {
   close$: Observable<CloseEvent>;
   error$: Observable<Event>;
   message$: Observable<ServerMessage>;
-  messageInvalid$: Observable<ValidationError[]>;
-  messageMalformed$: Observable<Error>;
+  messageInvalid$: Observable<ParseInvalidPayload<ServerMessageCtor>>;
+  messageMalformed$: Observable<ParseMalformedPayload>;
 }
 
 

@@ -13,7 +13,7 @@ import { ClassLogger } from "./class-logger.helper";
 
 
 @LogConstruction()
-export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Has_o> & Has_t<PropertyKey>> {
+export class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Has_o> & Has_t<PropertyKey>> {
   _log = new ClassLogger(this);
   #registry: Registry<C, '_t'>;
 
