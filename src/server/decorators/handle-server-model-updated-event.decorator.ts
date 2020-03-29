@@ -18,7 +18,7 @@ export function HandleServerModelUpdatedEvent<M extends Model>(ModelCtor: ClassT
       .get(ServerEventStream)
       .of(ServerEventModelUpdated)
       .pipe(filter(serverModelUpdatedEventOf(ModelCtor)))
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+      .subscribe((evt) => descriptor.value.apply(target, evt));
   }
 
   return doHandleServerModelEvent;

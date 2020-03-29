@@ -1,3 +1,4 @@
+import { autobind } from 'core-decorators';
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SessionService } from "./session.service";
@@ -38,7 +39,6 @@ export class SessionGateway {
     @Inject(() => UserService) private readonly _userService: UserService,
     @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
     @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
-    @Inject(() => SocketWarehouse) private readonly _socketWarehouse: SocketWarehouse,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
@@ -51,6 +51,7 @@ export class SessionGateway {
    * 
    * @param evt 
    */
+  @autobind
   @HandleClientMessage(ClientMessageSignUp)
   async handleClientSignUp(evt: ServerEventSocketClientMessageParsed<ClientMessageSignUp>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
@@ -71,6 +72,7 @@ export class SessionGateway {
    * 
    * @param evt 
    */
+  @autobind
   @HandleClientMessage(ClientMessageCreateUser)
   async handleClientCreateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageCreateUser>) {
     await this._userService.create(
@@ -90,6 +92,7 @@ export class SessionGateway {
    * 
    * @param evt 
    */
+  @autobind
   @HandleClientMessage(ClientMessageUpdateUser)
   async handleClientUpdateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageUpdateUser>) {
     const user = await this._userRepo.findOne(evt._p.message.id);
@@ -115,8 +118,11 @@ export class SessionGateway {
    * @description
    * Fired when a user attempts to log in
    * 
+   * @note have to decorate the class and reflect on the methods metadata to bind these methods, or something
+   * 
    * @param evt 
    */
+  @autobind
   @HandleClientMessage(ClientMessageLogIn)
   async handleClientMessageLogIn(evt: ServerEventSocketClientMessageParsed<ClientMessageLogIn>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
@@ -161,6 +167,7 @@ export class SessionGateway {
    * 
    * @param evt 
    */
+  @autobind
   @HandleClientMessage(ClientMessageLogOut)
   async handleClientMessageLogOut(evt: ServerEventSocketClientMessageParsed<ClientMessageLogOut>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);

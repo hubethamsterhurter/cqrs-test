@@ -18,7 +18,7 @@ export function HandleServerModelDeletedEvent<M extends Model>(ModelCtor: ClassT
       .get(ServerEventStream)
       .of(ServerEventModelDeleted)
       .pipe(filter(serverModelDeletedEventOf(ModelCtor)))
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+      .subscribe((evt) => descriptor.value.apply(target, evt));
   }
 
   return doHandleServerModelEvent;

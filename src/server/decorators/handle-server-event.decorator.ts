@@ -14,7 +14,7 @@ export function HandleServerEvent<E extends ServerEvent>(ServerEventCtor: ClassT
     const subscription = Container
       .get(ServerEventStream)
       .of(ServerEventCtor)
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+      .subscribe((evt) => descriptor.value.apply(target, evt));
   }
 
   return doHandleServerEvent;

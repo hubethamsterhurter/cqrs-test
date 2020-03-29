@@ -18,7 +18,7 @@ export function HandleClientMessage<M extends ClientMessage>(MessageCtor: ClassT
       .get(ServerEventStream)
       .of(ServerEventSocketClientMessageParsed)
       .pipe(filter(ofClientMessage(MessageCtor)))
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+      .subscribe((evt) => (descriptor.value as Function).call(target, evt));
   }
 
   return doHandleClientMessage;

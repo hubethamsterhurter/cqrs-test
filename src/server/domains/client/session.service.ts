@@ -1,3 +1,4 @@
+import { autobind } from 'core-decorators';
 import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { UserModel } from "../../../shared/domains/user/user.model";
@@ -54,6 +55,7 @@ export class SessionService {
    *
    * @param evt
    */
+  @autobind
   @HandleServerEvent(ServerEventSocketServerConnection)
   private async _handleSocketClientConnection(evt: ServerEventSocketServerConnection) {
     // create a "client" for the socket
@@ -86,6 +88,7 @@ export class SessionService {
    * 
    * @param evt 
    */
+  @autobind
   @HandleServerEvent(ServerEventSocketClientClose)
   private async _handleSocketClientClose(evt: ServerEventSocketClientClose) {
     this._log.info(`Removing closed socket ${evt._p.socket.id} (code: "${evt._p.code}", reason: "${evt._p.reason}")`);
@@ -102,6 +105,7 @@ export class SessionService {
    * 
    * @param evt 
    */
+  @autobind
   @HandleServerEvent(ServerEventUserSignedUp)
   private async _handleClientMessageSignUp(evt: ServerEventUserSignedUp) {
     this._eb.fire(new ServerEventUserLoggedIn({
