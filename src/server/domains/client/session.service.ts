@@ -16,13 +16,15 @@ import { HandleServerEvent } from "../../decorators/handle-server-event.decorato
 import { ServerEventUserLoggedOut } from "../../events/models/server-event.user.logged-out";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 
 
 // TODO: timeout clients regularly with heartbeat
 
 let __created__ = false;
-@Service({ global: true })
 @LogConstruction()
+@Service({ global: true })
+@ServerEventConsumer()
 export class SessionService {
   private readonly _log = new ClassLogger(this);
 
@@ -57,7 +59,7 @@ export class SessionService {
   @HandleServerEvent(ServerEventSocketServerConnection)
   private async _handleSocketClientConnection(evt: ServerEventSocketServerConnection) {
     // create a "client" for the socket
-    this._log.info('socket connected');
+    this._log.info('socket connected', this);
     const clientId = this._idFactory.create();
     const clientSocket = this._wscFactory.create({
       id: this._idFactory.create(),

@@ -21,6 +21,7 @@ import { ClientMessageRegistry } from '../shared/message-client/modules/client-m
 import { ClientMessageParser } from '../shared/message-client/modules/client-message-parser';
 import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
 import { SessionBroadcaster } from './domains/client/session.broadcaster';
+import { SessionGateway } from './domains/client/session.gateway';
 
 
 
@@ -41,6 +42,7 @@ async function bootstrap() {
   Container.get(ClientMessageParser);
   Container.get(SocketWarehouse);
   Container.get(SessionBroadcaster);
+  Container.get(SessionGateway);
 
   es
     .of(ServerEventAppHeartbeat)

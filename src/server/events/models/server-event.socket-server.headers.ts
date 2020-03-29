@@ -1,5 +1,5 @@
 import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-type";
+import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { IncomingMessage } from "http";
 import { Equals, IsObject, ValidateNested } from "class-validator";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
@@ -11,7 +11,7 @@ interface Payload {
 }
 const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_HEADERS;
 
-export class ServerEventSocketServerHeaders implements EventType<SERVER_EVET_TYPE['SOCKET_SERVER_HEADERS'], Payload> {
+export class ServerEventSocketServerHeaders implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_HEADERS'], Payload> {
   static get _t() { return _t; }
   @Equals(_t) readonly _t = ServerEventSocketServerHeaders._t;
 

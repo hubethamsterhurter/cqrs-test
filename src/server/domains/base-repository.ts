@@ -58,7 +58,7 @@ export abstract class BaseRepository<M extends Model> {
       this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
     } catch (err) {
       // TODO: check if file is readable & lock instead of try catch
-      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs.`, err);
+      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`);
       this._table = new Map();
     }
 

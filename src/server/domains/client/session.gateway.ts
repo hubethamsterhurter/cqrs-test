@@ -16,11 +16,13 @@ import { ClientMessageUpdateUser } from '../../../shared/message-client/models/c
 import { UserService } from '../user/user.service';
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
+import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
+@ServerEventConsumer()
 export class SessionGateway {
   private _log = new ClassLogger(this);
 

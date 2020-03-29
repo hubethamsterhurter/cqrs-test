@@ -1,5 +1,5 @@
 import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-type";
+import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
 import { ClientMessage } from "../../../shared/message-client/modules/client-message-registry";
 import { ClassType } from "class-transformer/ClassTransformer";
@@ -14,7 +14,7 @@ interface Payload<M> {
 };
 const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_PARSED;
 
-export class ServerEventSocketClientMessageParsed<M extends ClientMessage = ClientMessage> implements EventType<SERVER_EVET_TYPE['SOCKET_CLIENT_MESSAGE_PARSED'], Payload<M>> {
+export class ServerEventSocketClientMessageParsed<M extends ClientMessage = ClientMessage> implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_PARSED'], Payload<M>> {
   static get _t() { return _t; }
   @Equals(_t) readonly _t = ServerEventSocketClientMessageParsed._t;
 

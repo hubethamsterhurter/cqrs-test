@@ -1,5 +1,5 @@
 import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-type";
+import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Equals, IsObject, ValidateNested } from "class-validator";
@@ -12,7 +12,7 @@ interface Payload {
 }
 const _t = SERVER_EVENT_TYPE.USER_SIGNED_UP;
 
-export class ServerEventUserSignedUp implements EventType<SERVER_EVET_TYPE['USER_SIGNED_UP'], Payload> {
+export class ServerEventUserSignedUp implements EventType<SERVER_EVENT_TYPE['USER_SIGNED_UP'], Payload> {
   static get _t() { return _t; }
   @Equals(_t) readonly _t = ServerEventUserSignedUp._t;
 

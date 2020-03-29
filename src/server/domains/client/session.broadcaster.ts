@@ -1,4 +1,3 @@
-import * as op from "rxjs/operators";
 import { Service, Inject } from "typedi";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
@@ -29,12 +28,14 @@ import { ServerEventSocketClientMessageInvalid } from "../../events/models/serve
 import { ServerMessageClientMessageInvalid } from "../../../shared/message-server/models/server-message.client-message-invalid";
 import { ServerEventSocketClientMessageMalformed } from "../../events/models/server-event.socket-client.message-errored";
 import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
+import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
+@ServerEventConsumer()
 export class SessionBroadcaster {
   private readonly _log = new ClassLogger(this);
 

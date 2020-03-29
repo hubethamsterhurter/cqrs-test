@@ -1,5 +1,4 @@
 import { Service, Inject } from "typedi";
-import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { UserRepository } from "./user.repository";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
@@ -11,6 +10,7 @@ import { randomElement } from "../../../shared/helpers/random-element";
 import { USER_COLOURS, A_USER_COLOUR } from "../../../shared/constants/user-colour";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 
 
 let __created__ = false;

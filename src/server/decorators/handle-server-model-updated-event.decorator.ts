@@ -1,24 +1,34 @@
-import Container from "typedi";
-import { ServerEventStream } from "../global/event-stream/server-event-stream";
 import { ClassType } from "class-transformer/ClassTransformer";
 import { Model } from "../../shared/domains/model";
-import { filter } from "rxjs/operators";
-import { serverModelUpdatedEventOf } from '../helpers/server-model-event-filter.helper';
-import { ServerEventModelUpdated } from "../events/models/server-event.model-updated";
+import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
+import { ServerModelUpdatedEventHandlerMetadata } from "./meatadata/server-model-updated-event-handler.metadata";
+import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+
+const _log = new ClassLogger(HandleServerModelUpdatedEvent);
 
 export function HandleServerModelUpdatedEvent<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
   const doHandleServerModelEvent = function doHandleServerModelEvent(
-    this: any,
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) {
-    // TODO: cleanup
-    const subscription = Container
-      .get(ServerEventStream)
-      .of(ServerEventModelUpdated)
-      .pipe(filter(serverModelUpdatedEventOf(ModelCtor)))
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+    _log.info(`Registering metadata for ${target.constructor.name}.${propertyKey.toString()}`);
+    Reflect.defineMetadata(
+      SERVER_METADATA_KEY.MODEL_UPDATED_EVENT_HANDLER,
+      new ServerModelUpdatedEventHandlerMetadata(
+        ModelCtor,
+        propertyKey,
+        descriptor,
+      ),
+      target,
+      propertyKey,
+    );
+
+    // const subscription = Container
+    //   .get(ServerEventStream)
+    //   .of(ServerEventModelUpdated)
+    //   .pipe(filter(serverModelUpdatedEventOf(ModelCtor)))
+    //   .subscribe((evt) => descriptor.value.apply(this, evt));
   }
 
   return doHandleServerModelEvent;

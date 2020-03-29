@@ -11,11 +11,11 @@ import { ParseResult, ParseInvalidPayload, ParseMalformedPayload } from '../../s
 
 // const messageStream = Subject
 
-const clientMessageRegistry = new ClientMessageRegistry();
-const serverMessageRegistry = new ServerMessageRegistry();
+// const clientMessageRegistry = new ClientMessageRegistry();
+// const serverMessageRegistry = new ServerMessageRegistry();
 
-const clientMessageParser = new ClientMessageParser(clientMessageRegistry);
-const serverMessageParser = new ServerMessageParser(serverMessageRegistry);
+const clientMessageParser = new ClientMessageParser();
+const serverMessageParser = new ServerMessageParser();
 
 const ws = new WebSocket('ws://localhost:5500');
 
@@ -34,6 +34,7 @@ const wsOpenSubj = new Subject<Event>();
 const wsCloseSubj = new Subject<CloseEvent>();
 const wsMessageSubj = new Subject<MessageEvent>();
 const wsErrorSubj = new Subject<Event>();
+
 
 ws.onopen = function onWsOpen(this: WebSocket, openEvt) {
   if (this.readyState !== wsPrevState) {
@@ -67,28 +68,40 @@ ws.onerror = function wsOnError(this: WebSocket, errorEvt: Event) {
   wsErrorSubj.next(errorEvt);
 }
 
+
+
 const stateChange$ = new Observable<{ old: WsState, new: WsState }>(function subscribe(subscriber) {
   const subscription = wsStateChangeSubj.subscribe((stateDelta) => subscriber.next(stateDelta));
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
+
+
 const open$ = new Observable<Event>(function subscribe(subscriber) {
-  const subscription = wsOpenSubj.subscribe((evt) => { subscriber.next(evt) });
+  const subscription = wsOpenSubj.subscribe((evt) => {
+    subscriber.next(evt);
+  });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const close$ = new Observable<CloseEvent>(function subscribe(subscriber) {
-  const subscription = wsCloseSubj.subscribe((evt) => { subscriber.next(evt) });
+  const subscription = wsCloseSubj.subscribe((evt) => {
+    subscriber.next(evt)
+  });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const rawMessage$ = new Observable<MessageEvent>(function subscribe(subscriber) {
-  const subscription = wsMessageSubj.subscribe((evt) => { subscriber.next(evt) });
+  const subscription = wsMessageSubj.subscribe((evt) => {
+    subscriber.next(evt)
+  });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
 const error$ = new Observable<Event>(function subscribe(subscriber) {
-  const subscription = wsErrorSubj.subscribe((evt) => { subscriber.next(evt) });
+  const subscription = wsErrorSubj.subscribe((evt) => {
+    subscriber.next(evt)
+  });
   return { unsubscribe() { subscription.unsubscribe() } };
 });
 
@@ -156,8 +169,8 @@ interface WsContextValue {
   close$: Observable<CloseEvent>;
   error$: Observable<Event>;
   message$: Observable<ServerMessage>;
-  messageInvalid$: Observable<ValidationError[]>;
-  messageMalformed$: Observable<Error>;
+  messageInvalid$: Observable<ParseInvalidPayload<ServerMessageCtor>>;
+  messageMalformed$: Observable<ParseMalformedPayload>;
 }
 
 

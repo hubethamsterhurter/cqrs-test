@@ -1,20 +1,35 @@
-import Container from "typedi";
-import { ServerEventStream } from "../global/event-stream/server-event-stream";
-import { ClassType } from "class-transformer/ClassTransformer";
-import { ServerEvent } from "../events/modules/server-event";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ServerEventCtor } from "../events/modules/server-event";
+import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
+import { ServerEventHandlerMetadata } from "./meatadata/server-event-handler.metadata";
+import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 
-export function HandleServerEvent<E extends ServerEvent>(ServerEventCtor: ClassType<E>): MethodDecorator {
-  const doHandleServerEvent = function doHandleServerEvent(
-    this: any,
+const _log = new ClassLogger(HandleServerEvent);
+
+export function HandleServerEvent(ServerEventCtor: ServerEventCtor): MethodDecorator {
+  /**
+   * @decorator
+   *
+   * @param target          prototype for instance member, constructor for static member
+   * @param propertyKey     name of the member
+   * @param descriptor      property descriptor for the member
+   */
+  const doHandleServerEvent: MethodDecorator = function doHandleServerEvent(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) {
-    // TODO: cleanup
-    const subscription = Container
-      .get(ServerEventStream)
-      .of(ServerEventCtor)
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+    _log.info(`Registering metadata for ${target.constructor.name}.${propertyKey.toString()}`);
+    Reflect.defineMetadata(
+      SERVER_METADATA_KEY.SERVER_EVENT_HANDLER,
+      new ServerEventHandlerMetadata(
+        ServerEventCtor,
+        propertyKey,
+        descriptor,
+      ),
+      target,
+      propertyKey,
+    );
   }
 
   return doHandleServerEvent;

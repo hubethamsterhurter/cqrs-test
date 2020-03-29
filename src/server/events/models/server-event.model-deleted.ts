@@ -1,5 +1,5 @@
 import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVET_TYPE, SERVER_EVENT_TYPE } from "../modules/server-event-type";
+import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { Model } from "../../../shared/domains/model";
 import { ClassType } from "class-transformer/ClassTransformer";
 import { Equals, IsObject, ValidateNested } from "class-validator";
@@ -12,7 +12,7 @@ interface Payload<M> {
 }
 const _t = SERVER_EVENT_TYPE.MODEL_DELETED;
 
-export class ServerEventModelDeleted<M extends Model = Model> implements EventType<SERVER_EVET_TYPE['MODEL_DELETED'], Payload<M>> {
+export class ServerEventModelDeleted<M extends Model = Model> implements EventType<SERVER_EVENT_TYPE['MODEL_DELETED'], Payload<M>> {
   static get _t() { return _t; }
   @Equals(_t) readonly _t = ServerEventModelDeleted._t;
 

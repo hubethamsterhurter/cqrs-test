@@ -1,24 +1,45 @@
-import Container from "typedi";
-import { ServerEventStream } from "../global/event-stream/server-event-stream";
-import { ServerEventSocketClientMessageParsed } from "../events/models/server-event.socket-client.message-parsed";
-import { ofClientMessage } from "../helpers/server-client-message-event-filter.helper";
-import { filter } from "rxjs/operators";
-import { ClientMessage } from "../../shared/message-client/modules/client-message-registry";
-import { ClassType } from "class-transformer/ClassTransformer";
+import { ClientMessageCtor } from "../../shared/message-client/modules/client-message-registry";
+import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
+import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
+import { A_CLIENT_MESSAGE_TYPE } from "../../shared/message-client/modules/client-message-type";
+import { Has_t } from "../../shared/types/has-_t.type";
+import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 
-export function HandleClientMessage<M extends ClientMessage>(MessageCtor: ClassType<M>): MethodDecorator {
+const _log = new ClassLogger(HandleClientMessage);
+
+export function HandleClientMessage<T extends A_CLIENT_MESSAGE_TYPE>(
+  ClientMessageCtor: Extract<ClientMessageCtor, Has_t<T>>
+): MethodDecorator {
+  /**
+   * @decorator
+   *
+   * @param target          prototype for instance member, constructor for static member
+   * @param propertyKey     name of the member
+   * @param descriptor      property descriptor for the member
+   */
   const doHandleClientMessage = function doHandleClientMessage(
-    this: any,
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) {
-    // TODO: cleanup
-    const subscription = Container
-      .get(ServerEventStream)
-      .of(ServerEventSocketClientMessageParsed)
-      .pipe(filter(ofClientMessage(MessageCtor)))
-      .subscribe((evt) => descriptor.value.apply(this, evt));
+    _log.info(`Registering metadata for ${target.constructor.name}.${propertyKey.toString()}`);
+    Reflect.defineMetadata(
+      SERVER_METADATA_KEY.CLIENT_MESSAGE_HANDLER,
+      new ClientMessageHandlerMetadata(
+        ClientMessageCtor,
+        propertyKey,
+        descriptor
+      ),
+      target,
+      propertyKey,
+    );
+
+    // // TODO: cleanup
+    // const subscription = Container
+    //   .get(ServerEventStream)
+    //   .of(ServerEventSocketClientMessageParsed)
+    //   .pipe(filter(ofClientMessage(MessageCtor)))
+    //   .subscribe((evt) => descriptor.value.apply(this, evt));
   }
 
   return doHandleClientMessage;
