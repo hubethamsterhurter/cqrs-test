@@ -36,6 +36,30 @@ export abstract class BaseRepository<M extends Model> {
   private readonly _tableFile: string;
 
   /**
+   * @description
+   * Hook into model creation
+   * 
+   * @param createdModel 
+   */
+  protected onCreateHook(createdModel: Readonly<M>) {}
+
+  /**
+   * @description
+   * Hook into model update
+   * 
+   * @param createdModel 
+   */
+  protected onUpdateHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
+
+  /**
+   * @description
+   * Hook into model delete
+   * 
+   * @param createdModel 
+   */
+  protected onDeleteHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
+
+  /**
    * @constructor
    *
    * @param _idFactory
@@ -56,6 +80,7 @@ export abstract class BaseRepository<M extends Model> {
       // TODO: validate result shape (should be entries)
       this._log.info(`loaded table ${this._ModelCTor.name.toLowerCase()} from fs`, result)
       this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
+      for (const [,model] of this._table) { this.onCreateHook(model); }
     } catch (err) {
       // TODO: check if file is readable & lock instead of try catch
       this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`);
@@ -107,6 +132,7 @@ export abstract class BaseRepository<M extends Model> {
     const clonedModel = plainToClass(this._ModelCTor, preparedModel);
     this._log.info(`Creating`, id, this._ModelCTor.name);
     this._table.set(clonedModel.id, clonedModel);
+    this.onCreateHook(clonedModel);
     this._eb.fire(new ServerEventModelCreated({
       _p: {
         CTor: this._ModelCTor,
@@ -131,9 +157,18 @@ export abstract class BaseRepository<M extends Model> {
     trace: Trace,
   ): Promise<M> {
     const cloned = cloneFromClass(this._ModelCTor, model);
-    this._log.info(`Upserting ${this._ModelCTor.name} - ${model.id}`);
     cloned.updated_at = new Date();
+    const match = this._table.get(model.id);
     this._table.set(cloned.id, cloned);
+
+    if (match) {
+      this._log.info(`Upserting ${this._ModelCTor.name} - ${model.id}`);
+      this.onUpdateHook({ old: match, new: cloned })
+    } else {
+      this._log.info(`Creating ${this._ModelCTor.name} - ${model.id}`);
+      this.onCreateHook(cloned)
+    }
+
     this._eb.fire(new ServerEventModelUpdated({
       _p: {
         CTor: this._ModelCTor,
@@ -205,18 +240,19 @@ export abstract class BaseRepository<M extends Model> {
     trace: Trace,
   ): Promise<M | null> {
     this._log.info('Deleting', inputModel.id, this._ModelCTor.name);
-    let model = this._table.get(inputModel.id);
+    let match = this._table.get(inputModel.id);
 
     //not found
-    if (!model) { return null; }
+    if (!match) { return null; }
 
-    const clone = cloneFromClass(this._ModelCTor, model);
+    const clone = cloneFromClass(this._ModelCTor, match);
 
     // already deleted
     if (clone.deleted_at) { return clone; }
 
     clone.deleted_at = new Date();
     this._table.set(clone.id, clone);
+    this.onDeleteHook({ old: match, new: clone  });
     this._save$.next();
 
     this

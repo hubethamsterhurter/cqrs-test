@@ -4,10 +4,15 @@ import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { BaseRepository } from "../base-repository";
+import { addToIndex } from "../modules/add-to-index.helper";
+import { updateIndex } from "../modules/update-index.helper";
 
 let __created__ = false;
 @Service({ global: true })
 export class UserRepository extends BaseRepository<UserModel> {
+  private _index_user_name: Map<UserModel['user_name'], UserModel[]> = new Map();
+  private _index_colour: Map<UserModel['colour'], UserModel[]> = new Map();
+
   /**
    * @constructor
    *
@@ -35,5 +40,32 @@ export class UserRepository extends BaseRepository<UserModel> {
     const users = await this.findAll();
     const targetUser = users.find(user => user.user_name === user_name);
     return targetUser ?? null;
+  }
+
+  // async findByUserColour(colour: A_USER_COLOUR): Promise<UserModel[]> {
+  //   return this._index_colour.get(colour) ?? [];
+  // }
+
+  // async findByUserName(user_name: string): Promise<UserModel[]> {
+  //   return this._index_user_name.get(user_name) ?? [];
+  // }
+
+
+  /** * @inheritdoc */
+  protected onCreateHook(created: Readonly<UserModel>) {
+    addToIndex(this._index_user_name, created, 'user_name');
+    addToIndex(this._index_colour, created, 'colour');
+  }
+
+  /** * @inheritdoc */
+  protected onUpdateHook(models: { old: Readonly<UserModel>, new: Readonly<UserModel> }) {
+    updateIndex(this._index_user_name, models, 'user_name');
+    updateIndex(this._index_colour, models, 'colour');
+  }
+
+  /** * @inheritdoc */
+  protected onDeleteHook(models: { old: Readonly<UserModel>, new: Readonly<UserModel> }) {
+    updateIndex(this._index_user_name, models, 'user_name');
+    updateIndex(this._index_colour, models, 'colour');
   }
 }

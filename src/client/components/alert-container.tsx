@@ -122,7 +122,7 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
           console.warn('received invalid server message', evt);
           const msg = (
             <div>
-              <h3 className='alert-header'>{rws(`Invalid server message`)}</h3>
+              <h3 className='alert-header'>{rws(`Invalid Server Message`)}</h3>
               <div><strong>{`Details:`}</strong></div>
               <div><strong>{`- trace:`}</strong></div>
               <div>{`${rws('-   ')}trace_id: ${evt._o?.id}`}</div>
