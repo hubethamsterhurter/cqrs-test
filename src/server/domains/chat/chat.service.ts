@@ -1,7 +1,6 @@
 import * as op from "rxjs/operators";
 import { Service, Inject } from "typedi";
 import { ServerEventStream } from "../../global/event-stream/server-event-stream";
-import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { ChatRepository } from './chat.repository';
 import { ServerEventSocketClientMessageParsed } from "../../events/models/server-event.socket-client.message-parsed";
 import { ClientMessageCreateChat } from "../../../shared/message-client/models/client-message.create-chat";

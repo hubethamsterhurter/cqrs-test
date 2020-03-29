@@ -15,7 +15,6 @@ import { randomElement } from '../../../shared/helpers/random-element';
 import { ClientMessageCreateUser } from '../../../shared/message-client/models/client-message.create-user';
 import { ClientMessageUpdateUser } from '../../../shared/message-client/models/client-message.update-user';
 import { UserService } from '../user/user.service';
-import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
 
 
@@ -51,7 +50,6 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @autobind
   @HandleClientMessage(ClientMessageSignUp)
   async handleClientSignUp(evt: ServerEventSocketClientMessageParsed<ClientMessageSignUp>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
@@ -72,7 +70,6 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @autobind
   @HandleClientMessage(ClientMessageCreateUser)
   async handleClientCreateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageCreateUser>) {
     await this._userService.create(
@@ -92,7 +89,6 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @autobind
   @HandleClientMessage(ClientMessageUpdateUser)
   async handleClientUpdateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageUpdateUser>) {
     const user = await this._userRepo.findOne(evt._p.message.id);
@@ -122,7 +118,6 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @autobind
   @HandleClientMessage(ClientMessageLogIn)
   async handleClientMessageLogIn(evt: ServerEventSocketClientMessageParsed<ClientMessageLogIn>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
@@ -167,7 +162,6 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @autobind
   @HandleClientMessage(ClientMessageLogOut)
   async handleClientMessageLogOut(evt: ServerEventSocketClientMessageParsed<ClientMessageLogOut>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);

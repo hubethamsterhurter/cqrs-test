@@ -65,7 +65,6 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @autobind
   @HandleServerEvent(ServerEventModelCreated)
   private async _handleModelCreated(evt: ServerEventModelCreated) {
     this._log.info('Broadcasting ServerEventModelCreated...', evt._p.CTor.name);
@@ -100,7 +99,6 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @autobind
   @HandleServerEvent(ServerEventModelUpdated)
   private async _handleModelUpdated(evt: ServerEventModelUpdated) {
     this._log.info('Broadcasting ServerEventModelUpdated...', evt._p.CTor.name);
@@ -128,7 +126,6 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @autobind
   @HandleServerEvent(ServerEventModelDeleted)
   private async _handleModelDeleted(evt: ServerEventModelDeleted) {
     this._log.info('Broadcasting ServerEventModelDeleted...', evt._p.CTor.name);
@@ -150,7 +147,6 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @autobind
   @HandleServerEvent(ServerEventUserLoggedIn)
   private async _handleClientMessageSignUp(evt: ServerEventUserLoggedIn) {
     this
@@ -169,7 +165,6 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @autobind
   @HandleServerEvent(ServerEventSocketClientMessageInvalid)
   private async _handleClientMessageInvalid(evt: ServerEventSocketClientMessageInvalid) {
     evt
@@ -189,7 +184,6 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @autobind
   @HandleServerEvent(ServerEventSocketClientMessageMalformed)
   private async _handleClientMessageMalformed(evt: ServerEventSocketClientMessageMalformed) {
     evt
@@ -208,7 +202,6 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @autobind
   @HandleServerModelCreatedEvent(SessionModel)
   private async _handleClientCreated(evt: ServerEventModelCreated<SessionModel>) {
     this._log.info('initialising client');
