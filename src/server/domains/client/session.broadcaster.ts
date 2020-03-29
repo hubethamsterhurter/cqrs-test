@@ -14,10 +14,10 @@ import { ServerMessageChatCreated } from "../../../shared/message-server/models/
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { ServerMessageUserUpdated } from "../../../shared/message-server/models/server-message.user.updated";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { ServerMessageClientCreated } from "../../../shared/message-server/models/server-message.client.created";
-import { ServerMessageClientUpdated } from "../../../shared/message-server/models/server-message.client.updated";
+import { ServerMessageSessionCreated } from "../../../shared/message-server/models/server-message.session.created";
+import { ServerMessageSessionUpdated } from "../../../shared/message-server/models/server-message.session.updated";
 import { ServerEventModelDeleted } from "../../events/models/server-event.model-deleted";
-import { ServerMessageClientDeleted } from "../../../shared/message-server/models/server-message.client.deleted";
+import { ServerMessageSessionDeleted } from "../../../shared/message-server/models/server-message.session.deleted";
 import { ServerMessageAuthenticated } from "../../../shared/message-server/models/server-message.authenticated";
 import { ServerEventUserLoggedIn } from "../../events/models/server-event.user.logged-in";
 import { HandleServerModelCreatedEvent } from "../../decorators/handle-server-model-created-event.decorator";
@@ -29,6 +29,8 @@ import { ServerMessageClientMessageInvalid } from "../../../shared/message-serve
 import { ServerEventSocketClientMessageMalformed } from "../../events/models/server-event.socket-client.message-errored";
 import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { ServerEventAppHeartbeat } from "../../events/models/server-event.app-heartbeat";
+import { ServerMessageServerHeartbeat } from "../../../shared/message-server/models/server-message.server-heartbeat";
 
 
 
@@ -58,6 +60,36 @@ export class SessionBroadcaster {
   }
 
 
+
+  /**
+   * @description
+   * Fired on app heartbeat
+   * 
+   * @param evt 
+   */
+  @HandleServerEvent(ServerEventAppHeartbeat)
+  private async _testInvalidMessageHandleAppHeartbeat(evt: ServerEventAppHeartbeat) {
+    this._socketWarehouse.broadcastAll(new ServerMessageServerHeartbeat({
+      _o: evt._o.clone(),
+      // TESTING ERROR
+      at: 'hi :)' as any,
+    }));
+  }
+
+
+
+  /**
+   * @description
+   * Fired on app heartbeat
+   * 
+   * @param evt 
+   */
+  @HandleServerEvent(ServerEventAppHeartbeat)
+  private async _testMalformedMessageHandleAppHeartbeat(evt: ServerEventAppHeartbeat) {
+    this._socketWarehouse.broadcastAll({ hello: 'world' } as any);
+  }
+
+
   /**
    * @description
    * Fired when a model is created
@@ -83,7 +115,7 @@ export class SessionBroadcaster {
     }
 
     else if (serverModelCreatedEventOf(SessionModel)(evt)) {
-      this._socketWarehouse.broadcastAll(new ServerMessageClientCreated({
+      this._socketWarehouse.broadcastAll(new ServerMessageSessionCreated({
         model: evt._p.model,
         _o: evt._o.clone(),
       }));
@@ -110,7 +142,7 @@ export class SessionBroadcaster {
     }
 
     else if (serverModelUpdatedEventOf(SessionModel)(evt)) {
-      this._socketWarehouse.broadcastAll(new ServerMessageClientUpdated({
+      this._socketWarehouse.broadcastAll(new ServerMessageSessionUpdated({
         model: evt._p.model,
         _o: evt._o.clone(),
       }));
@@ -130,7 +162,7 @@ export class SessionBroadcaster {
     this._log.info('Broadcasting ServerEventModelDeleted...', evt._p.CTor.name);
 
     if (serverModelDeletedEventOf(SessionModel)(evt)) {
-      this._socketWarehouse.broadcastAll(new ServerMessageClientDeleted({
+      this._socketWarehouse.broadcastAll(new ServerMessageSessionDeleted({
         model: evt._p.model,
         _o: evt._o.clone(),
       }));
@@ -215,7 +247,7 @@ export class SessionBroadcaster {
     ]);
     const socket = this._socketWarehouse.findOneOrFail(evt._p.model.socket_id);
     const initMessage = new ServerMessageInit({
-      clients: clients.filter(model => model.deleted_at === null),
+      sessions: clients.filter(model => model.deleted_at === null),
       chats: chats.filter(model => model.deleted_at === null),
       users: users.filter(model => model.deleted_at === null),
       _o: evt._o.clone(),

@@ -5,6 +5,7 @@ import React, { useContext } from 'react';
 import { AppStateDataContext } from './app-state-data-provider';
 import { UserModel } from '../../shared/domains/user/user.model';
 import { USER_COLOUR } from '../../shared/constants/user-colour';
+import { HMS } from './hms';
 
 export const ChatHistory: React.FC = function ChatHistory(props) {
   const dataCtx = useContext(AppStateDataContext);
@@ -18,11 +19,7 @@ export const ChatHistory: React.FC = function ChatHistory(props) {
         const colour = author?.colour ?? USER_COLOUR.BLACK;
         return (
           <div key={chat.id}>
-            <span className="sent-at">{[
-              chat.sent_at.getHours().toString().padStart(2, '0'),
-              chat.sent_at.getMinutes().toString().padStart(2, '0'),
-              chat.sent_at.getSeconds().toString().padStart(2, '0'),
-            ].join(':')}</span>
+            <HMS className="sent-at" date={chat.sent_at} />
             <span className={classnames("user-name", `${colour}`)}>{authorName}</span>
             <span className="content">{chat.content}</span>
           </div>

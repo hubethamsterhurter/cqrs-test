@@ -49,6 +49,6 @@ export class ServerWatcher {
     this
       ._es
       .of(ServerEventSocketClientMessageInvalid)
-      .subscribe((evt) => { this._log.warn(`MALFORMED CLIENT MESSAGE EVENT ] "${ServerEventSocketClientMessageInvalid.name}"`, evt._p.errs); });
+      .subscribe((evt) => { this._log.warn(`INVALID CLIENT MESSAGE EVENT ] "${ServerEventSocketClientMessageInvalid.name}"`, evt._p.errs); });
   }
 }

@@ -1,16 +1,13 @@
 import './signup-page.css';
 import * as op from 'rxjs/operators';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
+import { race } from 'rxjs';
 import { Formik } from 'formik';
 import { WsContext } from './ws-provider';
 import { ClientMessageSignUp } from '../../shared/message-client/models/client-message.sign-up';
 import { Trace } from '../../shared/helpers/Tracking.helper';
-import { of, timer } from 'rxjs';
+import { of } from 'rxjs';
 import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
-import { ServerMessageClientMessageInvalid } from '../../shared/message-server/models/server-message.client-message-invalid';
-import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
-import { ServerMessageClientMessageMalformed } from '../../shared/message-server/models/server-message.client-message-malformed';
-import { ServerMessageError } from '../../shared/message-server/models/server-message.error';
 
 
 interface NewUser {
@@ -19,7 +16,6 @@ interface NewUser {
 }
 
 export const SignupPage: React.FC = function SignupPage(props) {
-  const [newUser, setNewUser] = useState<NewUser>({ user_name: '', password: ''});
   const wsCtx = useContext(WsContext);
 
   return (
@@ -32,34 +28,20 @@ export const SignupPage: React.FC = function SignupPage(props) {
         onSubmit={(values, opts) => {
           const trace = new Trace();
 
+          const UNRESPONSIVE_WAIT = 5000;
+
+          race<undefined | ServerMessage>(
+            wsCtx.message$.pipe(op.filter(evt => evt._o.origin_id === trace.id)),
+            of(undefined).pipe(op.delay(UNRESPONSIVE_WAIT)),
+          )
+            .pipe(op.take(1))
+            .subscribe((evt) => { opts.setSubmitting(false); });
+
           wsCtx.send(new ClientMessageSignUp({
             user_name: values.user_name,
             password: values.password,
             _o: trace,
           }));
-
-          of(undefined)
-            .pipe(
-              op.race<undefined | ServerMessage>(
-                of(undefined).pipe(op.delay(5000)),
-                wsCtx.message$.pipe(op.filter(evt => evt._o.id === trace.id)),
-              ),
-              op.take(1),
-            )
-            .subscribe((evt) => {
-              if (!evt) {
-                console.log('No response from server...');
-              } else if (evt._t === ServerMessageClientMessageInvalid._t) {
-                console.log('Message Invalid', evt);
-              } else if (evt._t === ServerMessageClientMessageMalformed._t) {
-                console.log('Message Malformed', evt);
-              } else if (evt._t === ServerMessageError._t) {
-                console.log('Message Error', evt);
-              } else {
-                console.log('Unhandled evt', evt);
-              }
-              opts.setSubmitting(false);
-            });
         }}
       >
         {({

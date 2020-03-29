@@ -11,11 +11,6 @@
   overflow-y: scroll;
 }
 
-.chat-history .sent-at::before { content: '[' }
-.chat-history .sent-at::after { content: ']' }
 .chat-history .user-name::after { content: ':' }
-
-.chat-history span { margin: 0 0.15em 0 0.15em; }
-
-.chat-history .sent-at { color: rgba(255, 255, 255, 0.25); }
+.chat-history span { margin: 0 var(--universal-margin) 0 var(--universal-margin); }
 .user-name.user-colour-black { color: rgba(150, 150, 150, 0.75); }

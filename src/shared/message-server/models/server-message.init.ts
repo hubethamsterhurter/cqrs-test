@@ -30,7 +30,7 @@ export class ServerMessageInit implements ServerMessageType<SERVER_MESSAGE_TYPE[
   @IsArray()
   @ValidateNested()
   @Type(() => SessionModel)
-  readonly clients!: SessionModel[];
+  readonly sessions!: SessionModel[];
 
 
   /**
@@ -40,14 +40,14 @@ export class ServerMessageInit implements ServerMessageType<SERVER_MESSAGE_TYPE[
    */
   constructor(props: {
     _o: Trace,
-    clients: SessionModel[],
+    sessions: SessionModel[],
     users: UserModel[],
     chats: ChatModel[],
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
       this._o = props._o;
-      this.clients = props.clients;
+      this.sessions = props.sessions;
       this.users = props.users;
       this.chats = props.chats;
     }

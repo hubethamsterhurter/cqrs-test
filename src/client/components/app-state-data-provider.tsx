@@ -11,9 +11,9 @@ import { ServerMessageChatCreated } from '../../shared/message-server/models/ser
 import { ServerMessageInit } from '../../shared/message-server/models/server-message.init';
 import { ClassLogger } from '../../shared/helpers/class-logger.helper';
 import { SessionModel } from '../../shared/domains/session/session.model';
-import { ServerMessageClientUpdated } from '../../shared/message-server/models/server-message.client.updated';
-import { ServerMessageClientDeleted } from '../../shared/message-server/models/server-message.client.deleted';
-import { ServerMessageClientCreated } from '../../shared/message-server/models/server-message.client.created';
+import { ServerMessageSessionUpdated } from '../../shared/message-server/models/server-message.session.updated';
+import { ServerMessageSessionDeleted } from '../../shared/message-server/models/server-message.session.deleted';
+import { ServerMessageSessionCreated } from '../../shared/message-server/models/server-message.session.created';
 
 
 interface AppStateDataContextValue {
@@ -25,7 +25,7 @@ interface AppStateDataContextValue {
     byId: Record<string, UserModel>;
     ids: string[],
   };
-  clients: {
+  sessions: {
     byId: Record<string, SessionModel>;
     ids: string[],
   };
@@ -40,7 +40,7 @@ const initialAppStateDataContext: AppStateDataContextValue = {
     byId: {},
     ids: [],
   },
-  clients: {
+  sessions: {
     byId: {},
     ids: [],
   },
@@ -72,9 +72,9 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
           byId: Object.fromEntries(message.users.map(user => [user.id, user] as const)),
           ids: message.users.map(chat => chat.id),
         },
-        clients: {
-          byId: Object.fromEntries(message.clients.map(client => [client.id, client] as const)),
-          ids: message.clients.map(chat => chat.id),
+        sessions: {
+          byId: Object.fromEntries(message.sessions.map(session => [session.id, session] as const)),
+          ids: message.sessions.map(chat => chat.id),
         },
       }))
     ));
@@ -87,7 +87,7 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
         const next = ({ ...prev, users: {
           ...prev.users,
           byId: { ...prev.users.byId, [message.model.id]: message.model, },
-          ids: message.model.id in prev.users.ids ? prev.users.ids : prev.users.ids.concat(message.model.id),
+          ids: message.model.id in prev.users.byId ? prev.users.ids : prev.users.ids.concat(message.model.id),
         }});
         _log.info(`Updating from ${ServerMessageUserCreated.name}`, { prev, next });
         return next;
@@ -100,7 +100,7 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
         const next = ({ ...prev, users: {
           ...prev.users,
           byId: { ...prev.users.byId, [message.model.id]: message.model, },
-          ids: message.model.id in prev.users.ids ? prev.users.ids : prev.users.ids.concat(message.model.id),
+          ids: message.model.id in prev.users.byId ? prev.users.ids : prev.users.ids.concat(message.model.id),
         }});
         _log.info(`Updating from ${ServerMessageUserUpdated.name}`, { prev, next });
         return next;
@@ -113,47 +113,47 @@ export const AppStateDataProvider: React.FC = function AppStateDataProvider(prop
         const next = ({ ...prev, chats: {
           ...prev.chats,
           byId: { ...prev.chats.byId, [message.model.id]: message.model, },
-          ids: message.model.id in prev.chats.ids ? prev.chats.ids : prev.chats.ids.concat(message.model.id),
+          ids: message.model.id in prev.chats.byId ? prev.chats.ids : prev.chats.ids.concat(message.model.id),
         }})
         _log.info(`Updating from ${ServerMessageChatCreated.name}`, { prev, next });
         return next;
       }
     )));
 
-    // client created
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientCreated)))
+    // sessions created
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageSessionCreated)))
       .subscribe(message => setAppStateData(prev => {
-        const next = ({ ...prev, clients: {
-          ...prev.clients,
-          byId: { ...prev.clients.byId, [message.model.id]: message.model, },
-          ids: message.model.id in prev.clients.ids ? prev.clients.ids : prev.clients.ids.concat(message.model.id),
+        const next: AppStateDataContextValue = ({ ...prev, sessions: {
+          ...prev.sessions,
+          byId: { ...prev.sessions.byId, [message.model.id]: message.model, },
+          ids: message.model.id in prev.sessions.byId ? prev.sessions.ids : prev.sessions.ids.concat(message.model.id),
         }});
-        _log.info(`Updating from ${ServerMessageUserCreated.name}`, { prev, next });
+        _log.info(`Updating from ${ServerMessageSessionCreated.name}`, { prev, next });
         return next;
       }
     )));
 
-    // client updated
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientUpdated)))
+    // sessions updated
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageSessionUpdated)))
       .subscribe(message => setAppStateData(prev => {
-        const next = ({ ...prev, clients: {
-          ...prev.clients,
-          byId: { ...prev.clients.byId, [message.model.id]: message.model, },
-          ids: message.model.id in prev.clients.ids ? prev.clients.ids : prev.clients.ids.concat(message.model.id),
+        const next: AppStateDataContextValue = ({ ...prev, sessions: {
+          ...prev.sessions,
+          byId: { ...prev.sessions.byId, [message.model.id]: message.model, },
+          ids: message.model.id in prev.sessions.byId ? prev.sessions.ids : prev.sessions.ids.concat(message.model.id),
         }});
         _log.info(`Updating from ${ServerMessageUserUpdated.name}`, { prev, next });
         return next;
       }
     )));
 
-    // client deleted
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageClientDeleted)))
+    // sessions deleted
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageSessionDeleted)))
       .subscribe(message => setAppStateData(prev => {
-        const { [message.model.id]: deletedModel, ...remainingModels } = prev.clients.byId;
-        const next = ({ ...prev, clients: {
-          ...prev.clients,
+        const { [message.model.id]: deletedModel, ...remainingModels } = prev.sessions.byId;
+        const next: AppStateDataContextValue = ({ ...prev, sessions: {
+          ...prev.sessions,
           byId: remainingModels,
-          ids: prev.clients.ids.filter(id => id !== message.model.id),
+          ids: prev.sessions.ids.filter(id => id !== message.model.id),
         }});
         _log.info(`Updating from ${ServerMessageUserUpdated.name}`, { prev, next });
         return next;

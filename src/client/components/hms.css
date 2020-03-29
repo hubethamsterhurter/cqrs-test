@@ -1,0 +1,6 @@
+.hms::before { content: '[' }
+.hms::after { content: ']' }
+.hms {
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0 var(--universal-margin) 0 var(--universal-margin);
+}

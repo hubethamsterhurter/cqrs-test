@@ -4,11 +4,11 @@ import { ValidateNested, IsObject, Equals, } from "class-validator";
 import { SessionModel } from '../../domains/session/session.model';
 import { Trace } from '../../helpers/Tracking.helper';
 
-const _t = SERVER_MESSAGE_TYPE.CLIENT_CREATED
+const _t = SERVER_MESSAGE_TYPE.SESSION_DELETED
 
-export class ServerMessageClientCreated implements ServerMessageType<SERVER_MESSAGE_TYPE['CLIENT_CREATED']> {
+export class ServerMessageSessionDeleted implements ServerMessageType<SERVER_MESSAGE_TYPE['SESSION_DELETED']> {
   static get _t() { return _t; }
-  @Equals( _t) readonly _t = ServerMessageClientCreated._t;
+  @Equals( _t) readonly _t = ServerMessageSessionDeleted._t;
 
   @IsObject()
   @ValidateNested()

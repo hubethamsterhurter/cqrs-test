@@ -12,9 +12,9 @@ export class ServerEventStream {
   /**
    * @constructor
    * 
-   * @param _eventBus
+   * @param _eb
    */
-  constructor(@Inject(() => ServerEventBus) private _eventBus: ServerEventBus) {
+  constructor(@Inject(() => ServerEventBus) private _eb: ServerEventBus) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }
@@ -29,10 +29,10 @@ export class ServerEventStream {
   of<T extends ServerEvent>(
     EvtCtor: ClassType<T>
   ): Observable<T> {
-    const evtBus = this._eventBus;
+    const _eb = this._eb;
     const event$ = new Observable(function subscribe(subscriber: Subscriber<T>) {
       // somehow map ctor to something I can get off a hashmap
-      const evtSubscription = evtBus.subscribe(EvtCtor, (evt) => subscriber.next(evt));
+      const evtSubscription = _eb.subscribe(EvtCtor, (evt) => subscriber.next(evt));
       // teardown logic
       subscriber.add(evtSubscription);
     });

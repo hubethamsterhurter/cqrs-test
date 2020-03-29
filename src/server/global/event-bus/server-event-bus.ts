@@ -23,14 +23,14 @@ export class ServerEventBus {
   constructor() {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
+
+    setTimeout(
+      () => this.fire(new ServerEventAppHeartbeat({ _p: { at: new Date(), }, _o: new Trace(), })),
+      5000,
+    );
     this._heartbeatInterval = setInterval(
-      () => this.fire(new ServerEventAppHeartbeat({
-        _p: {
-          at: new Date(),
-        },
-        _o: new Trace(),
-      })),
-      10000
+      () => this.fire(new ServerEventAppHeartbeat({ _p: { at: new Date(), }, _o: new Trace(), })),
+      20000,
     );
   }
 

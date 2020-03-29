@@ -106,13 +106,7 @@ export class SessionService {
    */
   @HandleServerEvent(ServerEventUserSignedUp)
   private async _handleClientMessageSignUp(evt: ServerEventUserSignedUp) {
-    this._eb.fire(new ServerEventUserLoggedIn({
-      _p: {
-        user: evt._p.user,
-        session: evt._p.session,
-      },
-      _o: evt._o.clone(),
-    }));
+    await this.authenticate(evt._p.session, evt._p.user, evt._o);
   }
 
 

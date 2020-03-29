@@ -1,18 +1,20 @@
+import './session-list.css';
 import classnames from 'classnames';
 import React, { useContext } from 'react';
 import { AppStateDataContext } from './app-state-data-provider';
+import { HMS } from './hms';
 
-export const ClientList: React.FC = function ClientList() {
+export const SessionList: React.FC = function SessionList() {
   const dataCtx = useContext(AppStateDataContext);
 
   return (
-    <div className="client-list">
-      {dataCtx.clients.ids.map(id => {
-        const client = dataCtx.clients.byId[id];
-        const user = client.user_id ? dataCtx.users.byId[client.user_id] : null;
+    <div className="session-list">
+      {dataCtx.sessions.ids.map(id => {
+        const session = dataCtx.sessions.byId[id];
+        const user = session.user_id ? dataCtx.users.byId[session.user_id] : null;
         return (
-          <div key={id} className="client">
-            <span>{client.connected_at.toISOString()}</span>
+          <div key={id} className="session">
+            <HMS date={session.connected_at} />
             <span className={classnames('user-name', user?.colour ?? 'black')}>
               {user?.user_name || 'Anonymous'}
             </span>

@@ -96,7 +96,7 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
       const recoveredTrace = plainToClass(Trace, _o);
       const traceValidationErrors = validateSync(recoveredTrace);
 
-      this._log.warn('Unable to recover trace from message', traceValidationErrors);
+      if (traceValidationErrors.length) this._log.warn('Unable to recover trace from message', traceValidationErrors);
       // try to parse the Trace independently
 
       const payload: ParseInvalidPayload<C> = {

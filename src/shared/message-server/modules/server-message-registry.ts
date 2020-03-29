@@ -6,9 +6,9 @@ import { ServerMessageInit } from '../models/server-message.init';
 import { ServerMessageServerHeartbeat } from "../models/server-message.server-heartbeat";
 import { ServerMessageAuthenticated } from "../models/server-message.authenticated";
 import { ServerMessageLoggedOut } from "../models/server-message.logged-out";
-import { ServerMessageClientCreated } from "../models/server-message.client.created";
-import { ServerMessageClientUpdated } from "../models/server-message.client.updated";
-import { ServerMessageClientDeleted } from "../models/server-message.client.deleted";
+import { ServerMessageSessionCreated } from "../models/server-message.session.created";
+import { ServerMessageSessionUpdated } from "../models/server-message.session.updated";
+import { ServerMessageSessionDeleted } from "../models/server-message.session.deleted";
 import { ServerMessageError } from "../models/server-message.error";
 import { Service } from "typedi";
 import { Registry } from "../../helpers/registry.helper";
@@ -26,9 +26,9 @@ export type ServerMessageCtor =
   | typeof ServerMessageServerHeartbeat
   | typeof ServerMessageAuthenticated
   | typeof ServerMessageLoggedOut
-  | typeof ServerMessageClientCreated
-  | typeof ServerMessageClientUpdated
-  | typeof ServerMessageClientDeleted
+  | typeof ServerMessageSessionCreated
+  | typeof ServerMessageSessionUpdated
+  | typeof ServerMessageSessionDeleted
   | typeof ServerMessageClientMessageInvalid
   | typeof ServerMessageClientMessageMalformed
   | typeof ServerMessageError;
@@ -44,9 +44,9 @@ const SERVER_MESSAGE_CTOR_MAP: UToKV<ServerMessageCtor, '_t'> = {
   [ServerMessageServerHeartbeat._t]: ServerMessageServerHeartbeat,
   [ServerMessageAuthenticated._t]: ServerMessageAuthenticated,
   [ServerMessageLoggedOut._t]: ServerMessageLoggedOut,
-  [ServerMessageClientCreated._t]: ServerMessageClientCreated,
-  [ServerMessageClientUpdated._t]: ServerMessageClientUpdated,
-  [ServerMessageClientDeleted._t]: ServerMessageClientDeleted,
+  [ServerMessageSessionCreated._t]: ServerMessageSessionCreated,
+  [ServerMessageSessionUpdated._t]: ServerMessageSessionUpdated,
+  [ServerMessageSessionDeleted._t]: ServerMessageSessionDeleted,
   [ServerMessageClientMessageInvalid._t]: ServerMessageClientMessageInvalid,
   [ServerMessageClientMessageMalformed._t]: ServerMessageClientMessageMalformed,
   [ServerMessageError._t]: ServerMessageError,
