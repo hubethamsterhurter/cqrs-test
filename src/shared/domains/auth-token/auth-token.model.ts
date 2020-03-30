@@ -12,7 +12,10 @@ export class AuthTokenModel implements ModelType {
   @IsString()
   body!: string;
 
-  @IsOptional() @IsDate() @Type(() => Date) expires_at!: Date | null;
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  expires_at!: Date | null;
 
   @IsDate() @Type(() => Date) updated_at!: Date;
   @IsDate() @Type(() => Date) created_at!: Date;

@@ -2,23 +2,18 @@ import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { UserModel } from "../../../shared/domains/user/user.model";
-import { randomElement } from "../../../shared/helpers/random-element";
-import { USER_COLOURS } from "../../../shared/constants/user-colour";
-import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
-import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
 import { UserRepository } from "../user/user.repository";
 import { AuthTokenRepository } from "./auth-token.repository";
+import { CreateAuthTokenDto } from "../../../shared/domains/auth-token/dto/create-auth-token.dto";
+import { AuthTokenModel } from "../../../shared/domains/auth-token/auth-token.model";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-export class UserService {
+export class AuthTokenService {
   private readonly _log = new ClassLogger(this);
 
   /**
@@ -43,15 +38,20 @@ export class UserService {
    * Create a model
    * 
    * @param dto 
+   * @param opts
    * @param trace
    */
-  async create(dto: CreateUserDto, trace: Trace): Promise<UserModel> {
-    const unsaved: UnsavedModel<UserModel> = {
-      user_name: dto.user_name,
-      password: dto.password,
-      colour: dto.colour ?? randomElement(USER_COLOURS),
+  async create(
+    dto: CreateAuthTokenDto,
+    opts: { expires_at: Date | null, user_id: string },
+    trace: Trace,
+  ): Promise<AuthTokenModel> {
+    const unsaved: UnsavedModel<AuthTokenModel> = {
+      body: dto.body,
+      user_id: opts.user_id,
+      expires_at: opts.expires_at,
     };
-    const user = await this._userRepo.create(unsaved, undefined, trace,);
+    const user = await this._authTokenRepo.create(unsaved, undefined, trace,);
     return user;
   }
 
@@ -61,14 +61,16 @@ export class UserService {
    * Update a model
    *
    * @param model
-   * @param dto
+   * @param opts
    * @param trace
    */
-  async update(model: UserModel, dto: UpdateUserDto, trace: Trace): Promise<UserModel> {
-    if (dto.user_name) model.user_name = dto.user_name;
-    if (dto.password) model.password = dto.password;
-    if (dto.colour) model.colour = dto.colour;
-    const updated = await this._userRepo.upsert(model, trace);
+  async update(
+    model: AuthTokenModel,
+    opts: { expires_at: Date | null, },
+    trace: Trace,
+  ): Promise<AuthTokenModel> {
+    model.expires_at = opts.expires_at;
+    const updated = await this._authTokenRepo.upsert(model, trace);
     return updated;
   }
 
@@ -80,8 +82,8 @@ export class UserService {
    * @param model 
    * @param tracking
    */
-  async delete(model: UserModel, tracking: Trace): Promise<UserModel> {
-    const deleted = await this._userRepo.delete(model, tracking);
+  async delete(model: AuthTokenModel, tracking: Trace): Promise<AuthTokenModel> {
+    const deleted = await this._authTokenRepo.delete(model, tracking);
     if (!deleted) throw new Error(`Unable to delete ${model.id}`);
     return deleted;
   }
