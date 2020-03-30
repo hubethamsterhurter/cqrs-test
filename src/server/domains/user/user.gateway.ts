@@ -1,7 +1,7 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { HandleCm } from '../../decorators/handle-client-message.decorator';
-import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
+import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { UserRepository } from '../user/user.repository';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
 import { USER_COLOURS } from '../../../shared/constants/user-colour';
@@ -53,12 +53,12 @@ export class UserGateway {
    * @param evt 
    */
   @HandleCm(CreateUserCmo)
-  async handleClientCreateUser(evt: SocketClientMessageParsedSeo<CreateUserCmo>) {
+  async create(evt: SCMessageSeo<CreateUserCmo>) {
     const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name)
 
     if (user) {
       evt._p.socket.send(new ServerMessageError({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         code: 422,
         message: `User ${evt._p.message.cdto.user_name} already exists`,
       }));
@@ -83,12 +83,12 @@ export class UserGateway {
    * @param evt 
    */
   @HandleCm(UpdateUserCmo)
-  async handleClientUpdateUser(evt: SocketClientMessageParsedSeo<UpdateUserCmo>) {
+  async update(evt: SCMessageSeo<UpdateUserCmo>) {
     const user = await this._userRepo.findByUserName(evt._p.message.cdto.id);
 
     if (!user) {
       evt._p.socket.send(new ServerMessageError({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         code: 404,
         message: `User ${evt._p.message.cdto.id} not found`,
       }));

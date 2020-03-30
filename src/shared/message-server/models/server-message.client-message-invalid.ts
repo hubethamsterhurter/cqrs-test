@@ -29,13 +29,13 @@ export class ServerMessageClientMessageInvalid implements ServerMessageType<SERV
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     errors: ValidationError[],
     messageType: A_CLIENT_MESSAGE_TYPE,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.errors = props.errors;
       this.messageType = props.messageType;
     }

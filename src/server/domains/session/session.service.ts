@@ -4,8 +4,8 @@ import { UserModel } from "../../../shared/domains/user/user.model";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SessionRepository } from "./session.repository";
-import { SocketServerConnectionSeo } from "../../events/models/socket-server.connection.seo";
-import { SocketClientCloseSeo } from "../../events/models/socket-client.close.seo";
+import { SSConnectionSeo } from "../../events/models/ss.connection.seo";
+import { SCCloseSeo } from "../../events/models/sc.close.seo";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { SocketClientFactory } from "../../global/socket-client/socket-client.factory";
@@ -56,8 +56,8 @@ export class SessionService {
    *
    * @param evt
    */
-  @HandleServerEvent(SocketServerConnectionSeo)
-  private async _handleSocketClientConnection(evt: SocketServerConnectionSeo) {
+  @HandleServerEvent(SSConnectionSeo)
+  private async _handleSocketClientConnection(evt: SSConnectionSeo) {
     // create a "client" for the socket
     this._log.info('socket connected', this);
     const clientId = this._idFactory.create();
@@ -88,8 +88,8 @@ export class SessionService {
    * 
    * @param evt 
    */
-  @HandleServerEvent(SocketClientCloseSeo)
-  private async _handleSocketClientClose(evt: SocketClientCloseSeo) {
+  @HandleServerEvent(SCCloseSeo)
+  private async _handleSocketClientClose(evt: SCCloseSeo) {
     this._log.info(`Removing closed socket ${evt._p.socket.id} (code: "${evt._p.code}", reason: "${evt._p.reason}")`);
     const client = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
     await this._sessionRepo.delete(client, evt.trace);
@@ -132,7 +132,7 @@ export class SessionService {
         session,
         user,
       },
-      _o: trace.clone(),
+      trace: trace.clone(),
     }));
   }
 
@@ -158,7 +158,7 @@ export class SessionService {
         session,
         user,
       },
-      _o: trace.clone(),
+      trace: trace.clone(),
     }));
   }
 }

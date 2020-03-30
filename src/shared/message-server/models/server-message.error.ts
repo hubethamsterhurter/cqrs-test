@@ -26,13 +26,13 @@ export class ServerMessageError implements ServerMessageType<SERVER_MESSAGE_TYPE
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     message: string,
     code: number,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.message = props.message;
       this.code = props.code;
     }

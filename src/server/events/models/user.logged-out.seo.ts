@@ -25,10 +25,10 @@ export class UserLoggedOutSeo implements EventType<SERVER_EVENT_TYPE['USER_LOGGE
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

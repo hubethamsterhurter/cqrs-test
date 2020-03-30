@@ -1,4 +1,3 @@
-
 import { EventType } from "../../../shared/types/event.type";
 import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
@@ -8,15 +7,14 @@ import { Type } from "class-transformer";
 
 interface Payload {
   readonly socket: SocketClient,
-  readonly code: number,
-  readonly reason: string,
+  readonly err: Error,
 };
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_CLOSE;
 
-// socket client event
-export class SocketClientCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_CLOSE'], Payload> {
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_ERROR
+
+export class SCErrorSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_ERROR'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketClientCloseSeo._t;
+  @Equals(_t) readonly _t = SCErrorSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -27,10 +25,10 @@ export class SocketClientCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

@@ -52,7 +52,7 @@ export class UserService {
         session,
         user,
       },
-      _o: tracking.clone(),
+      trace: tracking.clone(),
     }));
   }
 

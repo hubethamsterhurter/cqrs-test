@@ -3,11 +3,11 @@ import { Service } from "typedi";
 import { ServerEventBus } from '../event-bus/server-event-bus';
 import { WSS_EVENT } from '../../constants/wss.event';
 import { ServerEventStream } from '../event-stream/server-event-stream';
-import { SocketServerCloseSeo } from '../../events/models/socket-server.close.seo';
-import { SocketServerConnectionSeo } from '../../events/models/socket-server.connection.seo';
-import { SocketServerErrorSeo } from '../../events/models/socket-server.error.seo';
-import { SocketServerListeningSeo } from '../../events/models/socket-server.listening.seo';
-import { SocketServerHeadersSeo } from '../../events/models/socket-server.headers.seo';
+import { SSCloseSeo } from '../../events/models/ss.close.seo';
+import { SSConnectionSeo } from '../../events/models/ss.connection.seo';
+import { SSErrorSeo } from '../../events/models/ss.error.seo';
+import { SSListeningSeo } from '../../events/models/ss.listening.seo';
+import { SSHeadersSeo } from '../../events/models/ss.headers.seo';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
 
@@ -33,49 +33,49 @@ export class SocketServer {
 
     // close
     this._wss.on(WSS_EVENT.CLOSE, () => {
-      this._eb.fire(new SocketServerCloseSeo({
+      this._eb.fire(new SSCloseSeo({
         _p: undefined,
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // connection
     this._wss.on(WSS_EVENT.CONNECTION, (socket, req) => {
-      this._eb.fire(new SocketServerConnectionSeo({
+      this._eb.fire(new SSConnectionSeo({
         _p: {
           req,
           rawWebSocket: socket,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // error
     this._wss.on(WSS_EVENT.ERROR, (err) => {
-      this._eb.fire(new SocketServerErrorSeo({
+      this._eb.fire(new SSErrorSeo({
         _p: {
           err,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // headers
     this._wss.on(WSS_EVENT.HEADERS, (headers, req) => {
-      this._eb.fire(new SocketServerHeadersSeo({
+      this._eb.fire(new SSHeadersSeo({
         _p: {
           headers,
           req,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // listening
     this._wss.on(WSS_EVENT.LISTENING, () => {
-      this._eb.fire(new SocketServerListeningSeo({
+      this._eb.fire(new SSListeningSeo({
         _p: undefined,
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
   }

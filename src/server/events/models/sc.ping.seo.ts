@@ -1,4 +1,3 @@
-
 import { EventType } from "../../../shared/types/event.type";
 import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
@@ -9,11 +8,11 @@ import { Type } from "class-transformer";
 interface Payload {
   readonly socket: SocketClient,
 };
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_UGPRADE;
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_PING;
 
-export class SocketClientUpgradeSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_UGPRADE'], Payload> {
+export class SCPingSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_PING'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketClientUpgradeSeo._t;
+  @Equals(_t) readonly _t = SCPingSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -24,10 +23,10 @@ export class SocketClientUpgradeSeo implements EventType<SERVER_EVENT_TYPE['SOCK
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

@@ -24,9 +24,9 @@ import { HandleServerModelCreatedEvent } from "../../decorators/handle-server-mo
 import { HandleServerEvent } from "../../decorators/handle-server-event.decorator";
 import { SessionService } from "./session.service";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
-import { SocketClientMessageInvalidSeo } from "../../events/models/socket-client.message-invalid.seo";
+import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
 import { ServerMessageClientMessageInvalid } from "../../../shared/message-server/models/server-message.client-message-invalid";
-import { SocketClientMessageMalformedSeo } from "../../events/models/socket-client.message-errored.seo";
+import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
 import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
@@ -72,7 +72,7 @@ export class SessionBroadcaster {
   @HandleServerEvent(AppHeartbeatSeo)
   private async _testInvalidMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
     this._socketWarehouse.broadcastAll(new ServerMessageServerHeartbeat({
-      _o: evt.trace.clone(),
+      trace: evt.trace.clone(),
       // TESTING ERROR
       at: 'hi :)' as any,
     }));
@@ -107,21 +107,21 @@ export class SessionBroadcaster {
     if (serverModelCreatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserCreated({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
 
     else if (serverModelCreatedEventOf(ChatModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageChatCreated({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
 
     else if (serverModelCreatedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionCreated({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
   }
@@ -141,14 +141,14 @@ export class SessionBroadcaster {
     if (serverModelUpdatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserUpdated({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
 
     else if (serverModelUpdatedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionUpdated({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
   }
@@ -168,7 +168,7 @@ export class SessionBroadcaster {
     if (serverModelDeletedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionDeleted({
         model: evt._p.model,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
     }
   }
@@ -189,7 +189,7 @@ export class SessionBroadcaster {
       .findOneOrFail(evt._p.session.socket_id)
       .send(new ServerMessageAuthenticated({
         you: evt._p.user,
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
       }));
   }
 
@@ -200,13 +200,13 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(SocketClientMessageInvalidSeo)
-  private async _handleClientMessageInvalid(evt: SocketClientMessageInvalidSeo) {
+  @HandleServerEvent(SCMessageInvalidSeo)
+  private async _handleClientMessageInvalid(evt: SCMessageInvalidSeo) {
     evt
       ._p
       .socket
       .send(new ServerMessageClientMessageInvalid({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         errors: evt._p.errs,
         messageType: evt._p.Ctor._t,
       }));
@@ -219,13 +219,13 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(SocketClientMessageMalformedSeo)
-  private async _handleClientMessageMalformed(evt: SocketClientMessageMalformedSeo) {
+  @HandleServerEvent(SCMessageMalformedSeo)
+  private async _handleClientMessageMalformed(evt: SCMessageMalformedSeo) {
     evt
       ._p
       .socket
       .send(new ServerMessageClientMessageMalformed({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         error: evt._p.err,
       }));
   }
@@ -254,7 +254,7 @@ export class SessionBroadcaster {
       sessions: clients.filter(model => model.deleted_at === null),
       chats: chats.filter(model => model.deleted_at === null),
       users: users.filter(model => model.deleted_at === null),
-      _o: evt.trace.clone(),
+      trace: evt.trace.clone(),
     });
     socket.send(initMessage);
   }

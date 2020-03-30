@@ -1,30 +1,28 @@
 import { EventType } from "../../../shared/types/event.type";
 import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
-import { Model } from "../../../shared/domains/model";
-import { ClassType } from "class-transformer/ClassTransformer";
+import { SocketClient } from "../../global/socket-client/socket-client";
 import { Equals, IsObject, ValidateNested } from "class-validator";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { Type } from "class-transformer";
 
-interface Payload<M> {
-  readonly model: M,
-  readonly CTor: ClassType<M>
-}
-const _t = SERVER_EVENT_TYPE.MODEL_UPDATED;
+interface Payload {
+  readonly socket: SocketClient,
+};
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_UNEXPECTED_RESPONSE;
 
-export class ModelUpdatedSeo<M extends Model = Model> implements EventType<SERVER_EVENT_TYPE['MODEL_UPDATED'], Payload<M>> {
+export class SCUnexpectedResponseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_UNEXPECTED_RESPONSE'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = ModelUpdatedSeo._t;
+  @Equals(_t) readonly _t = SCUnexpectedResponseSeo._t;
 
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
   readonly trace!: Trace;
 
-  readonly _p!: Payload<M>;
+  readonly _p!: Payload;
 
   constructor(props: {
-    _p: Payload<M>,
+    _p: Payload,
     trace: Trace,
   }) {
     if (props) {

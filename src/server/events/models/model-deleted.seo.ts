@@ -25,10 +25,10 @@ export class ModelDeletedSeo<M extends Model = Model> implements EventType<SERVE
 
   constructor(props: {
     _p: Payload<M>,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

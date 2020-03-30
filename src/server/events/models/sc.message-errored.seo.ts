@@ -7,12 +7,13 @@ import { Type } from "class-transformer";
 
 interface Payload {
   readonly socket: SocketClient,
+  readonly err: Error,
 };
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_UNEXPECTED_RESPONSE;
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_MALFORMED;
 
-export class SocketClientUnexpectedResponseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_UNEXPECTED_RESPONSE'], Payload> {
+export class SCMessageMalformedSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_MALFORMED'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketClientUnexpectedResponseSeo._t;
+  @Equals(_t) readonly _t = SCMessageMalformedSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -23,10 +24,10 @@ export class SocketClientUnexpectedResponseSeo implements EventType<SERVER_EVENT
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

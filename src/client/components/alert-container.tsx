@@ -1,7 +1,6 @@
 import './alert-container.css';
-import classnames from 'classnames';
 import { toast } from 'react-toastify';
-import React, { useState, useReducer, Reducer, useContext, useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { WsContext } from './ws-provider';
 import { Subscription } from 'rxjs';
 import { ValidationError } from 'class-validator';
@@ -16,8 +15,10 @@ import { ServerMessageClientMessageMalformed } from '../../shared/message-server
 function rws(str: string) { return str.replace(/ /g, '\u00A0'); }
 
 function flattenValidationErrors(error: ValidationError, currentIndentation: string, tab: string, depth: number): [string, string][] {
-  const constraints = Object.entries(error.constraints);
-  const ownLines: [string, string][] = constraints.map(([name, message]) => [`${depth}${error.property}${name}`, `${rws(currentIndentation)} ${message}`]);
+  const ownLines: [string, string][] = error.constraints
+    ? Object.entries(error.constraints).map(([name, message]) => [`${depth}${error.property}${name}`, `${rws(currentIndentation)} ${message}`])
+    : [];
+
   const childLines = error.children.flatMap((error) => flattenValidationErrors(error, `${currentIndentation}${tab}`, tab, depth + 1));
   const result: [string, string][] = [
     ...ownLines,
@@ -125,9 +126,9 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
               <h3 className='alert-header'>{rws(`Invalid Server Message`)}</h3>
               <div><strong>{`Details:`}</strong></div>
               <div><strong>{`- trace:`}</strong></div>
-              <div>{`${rws('-   ')}trace_id: ${evt._o?.id}`}</div>
-              <div>{`${rws('-   ')}prev_trace_id: ${evt._o?.prev_id}`}</div>
-              <div>{`${rws('-   ')}origin_trace_id: ${evt._o?.origin_id}`}</div>
+              <div>{`${rws('-   ')}trace_id: ${evt.trace?.id}`}</div>
+              <div>{`${rws('-   ')}prev_trace_id: ${evt.trace?.prev_id}`}</div>
+              <div>{`${rws('-   ')}origin_trace_id: ${evt.trace?.origin_id}`}</div>
               <div><strong>{`${rws('- ')}constructor:`}</strong></div>
               <div>{`${rws('-   ')}name: ${evt.Ctor.name}`}</div>
               <div><strong>{`${rws('- ')}errors:`}</strong></div>

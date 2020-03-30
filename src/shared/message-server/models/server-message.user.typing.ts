@@ -30,14 +30,14 @@ export class ServerMessageUserTyping implements ServerMessageType<SERVER_MESSAGE
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     user_name: string,
     typing: boolean,
     timestamp: Date,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.user_name = props.user_name;
       this.typing = props.typing;
       this.timestamp = props.timestamp;

@@ -39,14 +39,14 @@ export class ServerMessageInit implements ServerMessageType<SERVER_MESSAGE_TYPE[
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     sessions: SessionModel[],
     users: UserModel[],
     chats: ChatModel[],
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.sessions = props.sessions;
       this.users = props.users;
       this.chats = props.chats;

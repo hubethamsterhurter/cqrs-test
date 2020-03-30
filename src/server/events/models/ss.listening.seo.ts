@@ -7,9 +7,9 @@ import { Trace } from "../../../shared/helpers/Tracking.helper";
 type Payload = undefined
 const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_LISTENING;
 
-export class SocketServerListeningSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_LISTENING'], Payload> {
+export class SSListeningSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_LISTENING'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketServerListeningSeo._t;
+  @Equals(_t) readonly _t = SSListeningSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -20,10 +20,10 @@ export class SocketServerListeningSeo implements EventType<SERVER_EVENT_TYPE['SO
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

@@ -13,9 +13,9 @@ interface Payload {
 };
 const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_INVALID;
 
-export class SocketClientMessageInvalidSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_INVALID'], Payload> {
+export class SCMessageInvalidSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_INVALID'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketClientMessageInvalidSeo._t;
+  @Equals(_t) readonly _t = SCMessageInvalidSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -26,10 +26,10 @@ export class SocketClientMessageInvalidSeo implements EventType<SERVER_EVENT_TYP
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

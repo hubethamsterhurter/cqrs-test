@@ -10,9 +10,9 @@ interface Payload {
 };
 const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_OPEN;
 
-export class SocketClientOpenSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_OPEN'], Payload> {
+export class SCOpenSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_OPEN'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketClientOpenSeo._t;
+  @Equals(_t) readonly _t = SCOpenSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -23,10 +23,10 @@ export class SocketClientOpenSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

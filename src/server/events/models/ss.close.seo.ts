@@ -7,9 +7,9 @@ import { Type } from "class-transformer";
 type Payload = undefined;
 const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_CLOSE;
 
-export class SocketServerCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_CLOSE'], Payload> {
+export class SSCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_CLOSE'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketServerCloseSeo._t;
+  @Equals(_t) readonly _t = SSCloseSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -20,10 +20,10 @@ export class SocketServerCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

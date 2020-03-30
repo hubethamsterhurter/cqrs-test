@@ -24,12 +24,12 @@ export class ServerMessageServerHeartbeat implements ServerMessageType<SERVER_ME
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     at: Date
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.at = props.at;
     }
   }

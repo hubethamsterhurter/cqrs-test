@@ -12,9 +12,9 @@ interface Payload {
 }
 const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_CONNECTION;
 
-export class SocketServerConnectionSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_CONNECTION'], Payload> {
+export class SSConnectionSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_CONNECTION'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketServerConnectionSeo._t;
+  @Equals(_t) readonly _t = SSConnectionSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -25,10 +25,10 @@ export class SocketServerConnectionSeo implements EventType<SERVER_EVENT_TYPE['S
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

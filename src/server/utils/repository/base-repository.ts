@@ -143,7 +143,7 @@ export abstract class BaseRepository<M extends Model> {
         CTor: this._ModelCTor,
         model: cloneFromClass(this._ModelCTor, clonedModel)
       },
-      _o: trace.clone(),
+      trace: trace.clone(),
     }));
     this._save$.next();
     return cloneFromClass(this._ModelCTor, clonedModel);
@@ -179,7 +179,7 @@ export abstract class BaseRepository<M extends Model> {
         CTor: this._ModelCTor,
         model: cloneFromClass(this._ModelCTor, cloned)
       },
-      _o: trace.clone(),
+      trace: trace.clone(),
     }));
     this._save$.next();
     return cloneFromClass(this._ModelCTor, cloned);
@@ -267,7 +267,7 @@ export abstract class BaseRepository<M extends Model> {
           CTor: this._ModelCTor,
           model: cloneFromClass(this._ModelCTor, clone),
         },
-        _o: trace.clone()
+        trace: trace.clone()
       }));
 
     return cloneFromClass(this._ModelCTor, clone);

@@ -1,7 +1,7 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { HandleCm } from '../../decorators/handle-client-message.decorator';
-import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
+import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 import { CreateChatCmo } from "../../../shared/message-client/models/create-chat.cmo";
@@ -43,7 +43,7 @@ export class ChatGateway {
    * @param evt 
    */
   @HandleCm(CreateChatCmo)
-  async handleClientCreateChat(evt: SocketClientMessageParsedSeo<CreateChatCmo>) {
+  async create(evt: SCMessageSeo<CreateChatCmo>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
     await this._chatService.create(
       evt._p.message.cdto,

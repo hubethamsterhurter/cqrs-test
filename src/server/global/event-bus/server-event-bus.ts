@@ -25,11 +25,11 @@ export class ServerEventBus {
     __created__ = true;
 
     setTimeout(
-      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, _o: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, trace: new Trace(), })),
       5000,
     );
     this._heartbeatInterval = setInterval(
-      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, _o: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, trace: new Trace(), })),
       20000,
     );
   }

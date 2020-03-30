@@ -26,12 +26,12 @@ export class ServerMessageAuthenticated implements ServerMessageType<SERVER_MESS
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     you: UserModel
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.you = props.you;
     }
   }

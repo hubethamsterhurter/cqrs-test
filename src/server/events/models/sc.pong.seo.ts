@@ -1,17 +1,18 @@
 import { EventType } from "../../../shared/types/event.type";
 import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
+import { SocketClient } from "../../global/socket-client/socket-client";
 import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { Type } from "class-transformer";
+import { Trace } from "../../../shared/helpers/Tracking.helper";
 
 interface Payload {
-  readonly err: Error
+  readonly socket: SocketClient,
 };
-const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_ERROR
+const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_PONG;
 
-export class SocketServerErrorSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_ERROR'], Payload> {
+export class SCPongSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_PONG'], Payload> {
   static get _t() { return _t; }
-  @Equals(_t) readonly _t = SocketServerErrorSeo._t;
+  @Equals(_t) readonly _t = SCPongSeo._t;
 
   @IsObject()
   @ValidateNested()
@@ -22,10 +23,10 @@ export class SocketServerErrorSeo implements EventType<SERVER_EVENT_TYPE['SOCKET
 
   constructor(props: {
     _p: Payload,
-    _o: Trace,
+    trace: Trace,
   }) {
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this._p = props._p;
     }
   }

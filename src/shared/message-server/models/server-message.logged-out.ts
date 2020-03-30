@@ -20,11 +20,11 @@ export class ServerMessageLoggedOut implements ServerMessageType<SERVER_MESSAGE_
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
     }
   }
 }

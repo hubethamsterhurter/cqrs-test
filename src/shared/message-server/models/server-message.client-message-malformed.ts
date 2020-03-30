@@ -25,12 +25,12 @@ export class ServerMessageClientMessageMalformed implements ServerMessageType<SE
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     error: Error,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.error = props.error;
     }
   }

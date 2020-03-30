@@ -5,10 +5,10 @@ import { ServerEventStream } from './global/event-stream/server-event-stream';
 import { SocketServerFactory } from './global/socket-server/socket-server.factory';
 import * as op from 'rxjs/operators';
 import { AppHeartbeatSeo } from './events/models/app-heartbeat.seo';
-import { SocketServerListeningSeo } from './events/models/socket-server.listening.seo';
-import { SocketClientMessageParsedSeo } from './events/models/socket-client.message-parsed.seo';
-import { SocketClientMessageInvalidSeo } from './events/models/socket-client.message-invalid.seo';
-import { SocketClientMessageMalformedSeo } from './events/models/socket-client.message-errored.seo';
+import { SSListeningSeo } from './events/models/ss.listening.seo';
+import { SCMessageSeo } from './events/models/sc.message-parsed.seo';
+import { SCMessageInvalidSeo } from './events/models/sc.message-invalid.seo';
+import { SCMessageMalformedSeo } from './events/models/sc.message-errored.seo';
 import { SocketServer } from './global/socket-server/socket-server';
 import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { ClassLogger } from '../shared/helpers/class-logger.helper';
@@ -58,22 +58,22 @@ async function bootstrap() {
     .subscribe((evt) => _log.info(' 2 ] hearbeat', evt._p.at))
 
   es
-    .of(SocketServerListeningSeo)
+    .of(SSListeningSeo)
     .subscribe((evt) => _log.info('socket server listening'));
 
   // successful message
   es
-    .of(SocketClientMessageParsedSeo)
+    .of(SCMessageSeo)
     .subscribe((evt) => _log.info(`Message parsed: ${evt._p.Ctor.name}`));
 
   // invalid message
   es
-    .of(SocketClientMessageInvalidSeo)
+    .of(SCMessageInvalidSeo)
     .subscribe((evt) => _log.info('Message invalid:', evt._p.errs));
 
   // errored message
   es
-    .of(SocketClientMessageMalformedSeo)
+    .of(SCMessageMalformedSeo)
     .subscribe((evt) => _log.info('Message invalid:', evt._p.err));
 }
 

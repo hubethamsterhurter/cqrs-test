@@ -3,7 +3,7 @@ import { $FIX_ME } from "../../shared/types/fix-me.type";
 import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
 import { ServerEventStream } from "../global/event-stream/server-event-stream";
-import { SocketClientMessageParsedSeo } from "../events/models/socket-client.message-parsed.seo";
+import { SCMessageSeo } from "../events/models/sc.message-parsed.seo";
 import { filter } from "rxjs/operators";
 import { ofClientMessage } from "../helpers/server-client-message-event-filter.helper";
 import { ServerModelCreatedEventHandlerMetadata } from "./meatadata/server-model-created-event-handler.metadata";
@@ -38,7 +38,7 @@ function bindMetadata(opts: {
     _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ClientMessage ${metadata.ClientMessageCtor.name}`);
     Container
       .get(ServerEventStream)
-      .of(SocketClientMessageParsedSeo)
+      .of(SCMessageSeo)
       .pipe(filter(ofClientMessage(metadata.ClientMessageCtor)))
       .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
   }

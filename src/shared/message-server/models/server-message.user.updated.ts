@@ -26,12 +26,12 @@ export class ServerMessageUserUpdated implements ServerMessageType<SERVER_MESSAG
    * @param props
    */
   constructor(props: {
-    _o: Trace,
+    trace: Trace,
     model: UserModel,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.trace = props._o;
+      this.trace = props.trace;
       this.model = props.model;
     }
   }

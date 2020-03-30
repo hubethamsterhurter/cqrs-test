@@ -2,16 +2,16 @@ import ws from 'ws';
 import { ServerEventBus } from '../event-bus/server-event-bus';
 import { ServerEventStream } from '../event-stream/server-event-stream';
 import { WS_EVENT } from '../../constants/ws.event';
-import { SocketClientCloseSeo } from '../../events/models/socket-client.close.seo';
-import { SocketClientErrorSeo } from '../../events/models/socket-client.error.seo';
-import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
-import { SocketClientMessageInvalidSeo } from '../../events/models/socket-client.message-invalid.seo';
-import { SocketClientMessageMalformedSeo } from '../../events/models/socket-client.message-errored.seo';
-import { SocketClientOpenSeo } from '../../events/models/socket-client.open.seo';
-import { SocketClientUnexpectedResponseSeo } from '../../events/models/socket-client.unexpected-response.seo';
-import { SocketClientUpgradeSeo } from '../../events/models/socket-client.upgrade.seo';
-import { SocketClientPongSeo } from '../../events/models/socket-client.pong.seo';
-import { SocketClientPingSeo } from '../../events/models/socket-client.ping.seo';
+import { SCCloseSeo } from '../../events/models/sc.close.seo';
+import { SCErrorSeo } from '../../events/models/sc.error.seo';
+import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
+import { SCMessageInvalidSeo } from '../../events/models/sc.message-invalid.seo';
+import { SCMessageMalformedSeo } from '../../events/models/sc.message-errored.seo';
+import { SCOpenSeo } from '../../events/models/sc.open.seo';
+import { SCUnexpectedResponseSeo } from '../../events/models/sc.unexpected-response.seo';
+import { SCUpgradeSeo } from '../../events/models/sc.upgrade.seo';
+import { SCPongSeo } from '../../events/models/sc.pong.seo';
+import { SCPingSeo } from '../../events/models/sc.ping.seo';
 import { ServerMessage } from '../../../shared/message-server/modules/server-message-registry';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
@@ -48,24 +48,24 @@ export class SocketClient {
 
     // close
     this._ws.on(WS_EVENT.CLOSE, async (code, reason) => {
-      this._eb.fire(new SocketClientCloseSeo({
+      this._eb.fire(new SCCloseSeo({
         _p: {
           socket: this,
           code,
           reason,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // error
     this._ws.on(WS_EVENT.ERROR, async (err) => {
-      this._eb.fire(new SocketClientErrorSeo({
+      this._eb.fire(new SCErrorSeo({
         _p: {
           socket: this,
           err,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
@@ -76,89 +76,89 @@ export class SocketClient {
       if (result.malformed()) {
         // message -> malformed
 
-        this._eb.fire(new SocketClientMessageMalformedSeo({
+        this._eb.fire(new SCMessageMalformedSeo({
           _p: {
             socket: this,
             err: result._u.err,
           },
-          _o: new Trace(),
+          trace: new Trace(),
         }));
       }
 
       else if (result.invalid()) {
         // message -> invalid
 
-        this._eb.fire(new SocketClientMessageInvalidSeo({
+        this._eb.fire(new SCMessageInvalidSeo({
           _p: {
             socket: this,
             errs: result._u.errs,
             Ctor: result._u.Ctor,
           },
-          _o: result._u._o?.clone() ?? new Trace(),
+          trace: result._u.trace?.clone() ?? new Trace(),
         }));
       }
 
       else if (result.success()) {
         // message -> success
 
-        this._eb.fire(new SocketClientMessageParsedSeo({
+        this._eb.fire(new SCMessageSeo({
           _p: {
             socket: this,
             message: result._u.instance,
             Ctor: result._u.Ctor,
           },
-          _o: result._u.instance.trace.clone(),
+          trace: result._u.instance.trace.clone(),
         }));
       }
     });
 
     // open
     this._ws.on(WS_EVENT.OPEN, async () => {
-      this._eb.fire(new SocketClientOpenSeo({
+      this._eb.fire(new SCOpenSeo({
         _p: {
           socket: this,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // ping
     this._ws.on(WS_EVENT.PING, async () => {
-      this._eb.fire(new SocketClientPingSeo({
+      this._eb.fire(new SCPingSeo({
         _p: {
           socket: this,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // pong
     this._ws.on(WS_EVENT.PONG, async () => {
-      this._eb.fire(new SocketClientPongSeo({
+      this._eb.fire(new SCPongSeo({
         _p: {
           socket: this
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // upgrade
     this._ws.on(WS_EVENT.UGPRADE, async () => {
-      this._eb.fire(new SocketClientUpgradeSeo({
+      this._eb.fire(new SCUpgradeSeo({
         _p: {
           socket: this,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 
     // unexpected response
     this._ws.on(WS_EVENT.UNEXPECTED_RESPONSE, async () => {
-      this._eb.fire(new SocketClientUnexpectedResponseSeo({
+      this._eb.fire(new SCUnexpectedResponseSeo({
         _p: {
           socket: this,
         },
-        _o: new Trace(),
+        trace: new Trace(),
       }));
     });
 

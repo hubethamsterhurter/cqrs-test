@@ -1,10 +1,10 @@
 import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../event-bus/server-event-bus";
 import { ServerEventStream } from "../event-stream/server-event-stream";
-import { SocketClientErrorSeo } from "../../events/models/socket-client.error.seo";
-import { SocketServerErrorSeo } from "../../events/models/socket-server.error.seo";
-import { SocketClientMessageMalformedSeo } from "../../events/models/socket-client.message-errored.seo";
-import { SocketClientMessageInvalidSeo } from "../../events/models/socket-client.message-invalid.seo";
+import { SCErrorSeo } from "../../events/models/sc.error.seo";
+import { SSErrorSeo } from "../../events/models/ss.error.seo";
+import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
+import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 
@@ -30,25 +30,25 @@ export class ServerWatcher {
     // socket client error
     this
       ._es
-      .of(SocketClientErrorSeo)
-      .subscribe((evt) => { this._log.warn(`ERR EVENT ] "${SocketClientErrorSeo.name}"`, evt._p.err); });
+      .of(SCErrorSeo)
+      .subscribe((evt) => { this._log.warn(`ERR EVENT ] "${SCErrorSeo.name}"`, evt._p.err); });
 
     // socket server error
     this
       ._es
-      .of(SocketServerErrorSeo)
-      .subscribe((evt) => { this._log.warn(`ERR EVENT ] "${SocketServerErrorSeo.name}"`, evt._p.err); });
+      .of(SSErrorSeo)
+      .subscribe((evt) => { this._log.warn(`ERR EVENT ] "${SSErrorSeo.name}"`, evt._p.err); });
 
     // malformed message event
     this
       ._es
-      .of(SocketClientMessageMalformedSeo)
-      .subscribe((evt) => { this._log.warn(`MALFORMED CLIENT MESSAGE EVENT ] "${SocketClientMessageMalformedSeo.name}"`, evt._p.err); });
+      .of(SCMessageMalformedSeo)
+      .subscribe((evt) => { this._log.warn(`MALFORMED CLIENT MESSAGE EVENT ] "${SCMessageMalformedSeo.name}"`, evt._p.err); });
 
     // invalid message event
     this
       ._es
-      .of(SocketClientMessageInvalidSeo)
-      .subscribe((evt) => { this._log.warn(`INVALID CLIENT MESSAGE EVENT ] "${SocketClientMessageInvalidSeo.name}"`, evt._p.errs); });
+      .of(SCMessageInvalidSeo)
+      .subscribe((evt) => { this._log.warn(`INVALID CLIENT MESSAGE EVENT ] "${SCMessageInvalidSeo.name}"`, evt._p.errs); });
   }
 }

@@ -8,7 +8,7 @@ import { SessionRepository } from "./session.repository";
 import { UserRepository } from "../user/user.repository";
 import { HandleCm } from "../../decorators/handle-client-message.decorator";
 import { SignUpCmo } from "../../../shared/message-client/models/sign-up.cmo";
-import { SocketClientMessageParsedSeo } from "../../events/models/socket-client.message-parsed.seo";
+import { SCMessageSeo } from "../../events/models/sc.message-parsed.seo";
 import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
 import { LogInCmo } from "../../../shared/message-client/models/log-in.cmo";
 import { LogOutCmo } from "../../../shared/message-client/models/log-out.cmo";
@@ -43,13 +43,13 @@ export class SessionGateway {
    * @param evt 
    */
   @HandleCm(SignUpCmo)
-  async signUp(evt: SocketClientMessageParsedSeo<SignUpCmo>) {
+  async signUp(evt: SCMessageSeo<SignUpCmo>) {
     const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name)
 
     if (user) {
       console.log('hi');
       evt._p.socket.send(new ServerMessageError({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         code: 422,
         message: `User ${evt._p.message.cdto.user_name} already exists`,
       }));
@@ -75,7 +75,7 @@ export class SessionGateway {
    * @param evt 
    */
   @HandleCm(LogInCmo)
-  async logIn(evt: SocketClientMessageParsedSeo<LogInCmo>) {
+  async logIn(evt: SCMessageSeo<LogInCmo>) {
     const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name);
 
     if (!user) {
@@ -83,7 +83,7 @@ export class SessionGateway {
       const msg = 'Cannot log in. User not found.';
       this._log.warn(msg);
       evt._p.socket.send(new ServerMessageError({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         code: 404,
         message: msg,
       }));
@@ -95,7 +95,7 @@ export class SessionGateway {
       const msg = 'Cannot log in. Password does not match.';
       this._log.warn(msg);
       evt._p.socket.send(new ServerMessageError({
-        _o: evt.trace.clone(),
+        trace: evt.trace.clone(),
         code: 422,
         message: msg,
       }));
@@ -119,7 +119,7 @@ export class SessionGateway {
    * @param evt 
    */
   @HandleCm(LogOutCmo)
-  async logOut(evt: SocketClientMessageParsedSeo<LogOutCmo>) {
+  async logOut(evt: SCMessageSeo<LogOutCmo>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
     if (session.user_id) {
       const user = await this._userRepo.findOneOrFail(session.user_id);

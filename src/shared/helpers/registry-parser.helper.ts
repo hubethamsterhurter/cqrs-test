@@ -92,8 +92,8 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
 
     if (validationErrors.length) {
       // recover the trace if possible
-      const _o = rawJson._o as $DANGER<InstanceType<C>>['trace'];
-      const recoveredTrace = plainToClass(Trace, _o);
+      const trace = rawJson.trace as $DANGER<InstanceType<C>>['trace'];
+      const recoveredTrace = plainToClass(Trace, trace);
       const traceValidationErrors = validateSync(recoveredTrace);
 
       if (traceValidationErrors.length) this._log.warn('Unable to recover trace from message', traceValidationErrors);
@@ -103,7 +103,7 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
         status: 'invalid',
         errs: validationErrors,
         Ctor: Ctor,
-        _o: traceValidationErrors.length === 0 ? recoveredTrace : null,
+        trace: traceValidationErrors.length === 0 ? recoveredTrace : null,
       }
 
       return new ParseResult(payload);

@@ -11,7 +11,7 @@ export interface ParseSuccessPayload<C extends ClassType<any>> {
 }
 export interface ParseInvalidPayload<C extends ClassType<any>> {
   readonly status: 'invalid',
-  readonly _o: null | Trace,
+  readonly trace: null | Trace,
   readonly errs: ValidationError[],
   readonly Ctor: C,
 };
