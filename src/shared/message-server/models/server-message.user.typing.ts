@@ -12,7 +12,7 @@ export class ServerMessageUserTyping implements ServerMessageType<SERVER_MESSAGE
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   @IsString()
   readonly user_name!: string;
@@ -37,7 +37,7 @@ export class ServerMessageUserTyping implements ServerMessageType<SERVER_MESSAGE
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.user_name = props.user_name;
       this.typing = props.typing;
       this.timestamp = props.timestamp;

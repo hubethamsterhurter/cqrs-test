@@ -1,34 +1,34 @@
-import { ClientMessageCreateUser } from "../models/client-message.create-user";
-import { ClientMessageUpdateUser } from "../models/client-message.update-user";
-import { ClientMessageUserTyping } from "../models/client-message.user-typing";
-import { ClientMessageCreateChat } from "../models/client-message.create-chat";
-import { ClientMessageSignUp } from "../models/client-message.sign-up";
-import { ClientMessageLogIn } from "../models/client-message.log-in";
-import { ClientMessageLogOut } from "../models/client-message.log-out";
+import { CreateUserCmo } from "../models/create-user.cmo";
+import { UpdateUserCmo } from "../models/update-user.cmo";
+import { UserTypingCmo } from "../models/user-typing.cmo";
+import { CreateChatCmo } from "../models/create-chat.cmo";
+import { SignUpCmo } from "../models/sign-up.cmo";
+import { LogInCmo } from "../models/log-in.cmo";
+import { LogOutCmo } from "../models/log-out.cmo";
 import { Service } from "typedi";
 import { LogConstruction } from "../../decorators/log-construction.decorator";
 import { Registry } from "../../helpers/registry.helper";
 import { UToKV } from "../../types/u-to-kv.type";
 
 export type ClientMessageCtor =
-  | typeof ClientMessageCreateUser
-  | typeof ClientMessageUpdateUser
-  | typeof ClientMessageUserTyping
-  | typeof ClientMessageCreateChat
-  | typeof ClientMessageSignUp
-  | typeof ClientMessageLogIn
-  | typeof ClientMessageLogOut;
+  | typeof CreateUserCmo
+  | typeof UpdateUserCmo
+  | typeof UserTypingCmo
+  | typeof CreateChatCmo
+  | typeof SignUpCmo
+  | typeof LogInCmo
+  | typeof LogOutCmo;
 
 export type ClientMessage = ClientMessageCtor['prototype'];
 
 const CLIENT_MESSAGE_CTOR_MAP: UToKV<ClientMessageCtor, '_t'> = {
-  [ClientMessageCreateUser._t]: ClientMessageCreateUser,
-  [ClientMessageUpdateUser._t]: ClientMessageUpdateUser,
-  [ClientMessageUserTyping._t]: ClientMessageUserTyping,
-  [ClientMessageCreateChat._t]: ClientMessageCreateChat,
-  [ClientMessageSignUp._t]: ClientMessageSignUp,
-  [ClientMessageLogIn._t]: ClientMessageLogIn,
-  [ClientMessageLogOut._t]: ClientMessageLogOut,
+  [CreateUserCmo._t]: CreateUserCmo,
+  [UpdateUserCmo._t]: UpdateUserCmo,
+  [UserTypingCmo._t]: UserTypingCmo,
+  [CreateChatCmo._t]: CreateChatCmo,
+  [SignUpCmo._t]: SignUpCmo,
+  [LogInCmo._t]: LogInCmo,
+  [LogOutCmo._t]: LogOutCmo,
 };
 
 const CLIENT_MESSAGE_CTORS: ClientMessageCtor[] = Object.values(CLIENT_MESSAGE_CTOR_MAP);

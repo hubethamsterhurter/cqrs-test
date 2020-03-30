@@ -12,7 +12,7 @@ export class ServerMessageClientMessageMalformed implements ServerMessageType<SE
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   // do not bother validate nested
   @IsObject()
@@ -30,7 +30,7 @@ export class ServerMessageClientMessageMalformed implements ServerMessageType<SE
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.error = props.error;
     }
   }

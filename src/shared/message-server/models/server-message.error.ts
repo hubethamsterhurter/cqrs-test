@@ -12,7 +12,7 @@ export class ServerMessageError implements ServerMessageType<SERVER_MESSAGE_TYPE
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   @IsNumber()
   readonly code!: number;
@@ -32,7 +32,7 @@ export class ServerMessageError implements ServerMessageType<SERVER_MESSAGE_TYPE
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.message = props.message;
       this.code = props.code;
     }

@@ -12,7 +12,7 @@ export class ServerMessageServerHeartbeat implements ServerMessageType<SERVER_ME
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   @IsDate()
   @Type(() => Date)
@@ -29,7 +29,7 @@ export class ServerMessageServerHeartbeat implements ServerMessageType<SERVER_ME
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.at = props.at;
     }
   }

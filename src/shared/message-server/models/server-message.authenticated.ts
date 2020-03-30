@@ -13,7 +13,7 @@ export class ServerMessageAuthenticated implements ServerMessageType<SERVER_MESS
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   @IsObject()
   @ValidateNested()
@@ -31,7 +31,7 @@ export class ServerMessageAuthenticated implements ServerMessageType<SERVER_MESS
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.you = props.you;
     }
   }

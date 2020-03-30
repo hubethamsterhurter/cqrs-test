@@ -1,14 +1,13 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleClientMessage } from '../../decorators/handle-client-message.decorator';
-import { ServerEventSocketClientMessageParsed } from '../../events/models/server-event.socket-client.message-parsed';
+import { HandleCm } from '../../decorators/handle-client-message.decorator';
+import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
-import { ClientMessageCreateChat } from "../../../shared/message-client/models/client-message.create-chat";
+import { CreateChatCmo } from "../../../shared/message-client/models/create-chat.cmo";
 import { ChatRepository } from "./chat.repository";
 import { ChatService } from "./chat.service";
 import { SessionRepository } from "../session/session.repository";
-import { CreateChatDto } from "../../../shared/domains/chat/dto/create-chat.dto";
 
 
 let __created__ = false;
@@ -43,16 +42,13 @@ export class ChatGateway {
    * 
    * @param evt 
    */
-  @HandleClientMessage(ClientMessageCreateChat)
-  async handleClientCreateChat(evt: ServerEventSocketClientMessageParsed<ClientMessageCreateChat>) {
+  @HandleCm(CreateChatCmo)
+  async handleClientCreateChat(evt: SocketClientMessageParsedSeo<CreateChatCmo>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
     await this._chatService.create(
-      new CreateChatDto({
-        content: evt._p.message.content,
-        sent_at: evt._p.message.sent_at,
-      }),
+      evt._p.message.cdto,
       session.user_id,
-      evt._o
+      evt.trace
     );
   }
 }

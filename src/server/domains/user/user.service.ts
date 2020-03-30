@@ -3,15 +3,15 @@ import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { UserRepository } from "./user.repository";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { ServerEventUserSignedUp } from "../../events/models/server-event.user.signed-up";
+import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { randomElement } from "../../../shared/helpers/random-element";
 import { USER_COLOURS } from "../../../shared/constants/user-colour";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
-import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
+import { CreateUserCdto } from "../../../shared/domains/user/cdto/create-user.cdto";
+import { UpdateUserCdto } from "../../../shared/domains/user/cdto/update-user.cdto";
 
 
 let __created__ = false;
@@ -45,9 +45,9 @@ export class UserService {
    * @param dto 
    * @param tracking
    */
-  async signUp(session: SessionModel, dto: CreateUserDto, tracking: Trace): Promise<void> {
+  async signUp(session: SessionModel, dto: CreateUserCdto, tracking: Trace): Promise<void> {
     const user = await this.create(dto, tracking);
-    this._eb.fire(new ServerEventUserSignedUp({
+    this._eb.fire(new UserSignedUpSeo({
       _p: {
         session,
         user,
@@ -78,7 +78,7 @@ export class UserService {
    * @param dto 
    * @param trace
    */
-  async create(dto: CreateUserDto, trace: Trace): Promise<UserModel> {
+  async create(dto: CreateUserCdto, trace: Trace): Promise<UserModel> {
     const unsaved: UnsavedModel<UserModel> = {
       user_name: dto.user_name,
       password: dto.password,
@@ -95,13 +95,13 @@ export class UserService {
    *
    * @param model
    * @param dto
-   * @param tracking
+   * @param trace
    */
-  async update(model: UserModel, dto: UpdateUserDto, tracking: Trace): Promise<UserModel> {
+  async update(model: UserModel, dto: UpdateUserCdto, trace: Trace): Promise<UserModel> {
     if (dto.user_name) model.user_name = dto.user_name;
     if (dto.password) model.password = dto.password;
     if (dto.colour) model.colour = dto.colour;
-    const updated = await this._userRepo.upsert(model, tracking);
+    const updated = await this._userRepo.upsert(model, trace);
     return updated;
   }
 

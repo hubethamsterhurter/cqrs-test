@@ -2,16 +2,16 @@ import ws from 'ws';
 import { ServerEventBus } from '../event-bus/server-event-bus';
 import { ServerEventStream } from '../event-stream/server-event-stream';
 import { WS_EVENT } from '../../constants/ws.event';
-import { ServerEventSocketClientClose } from '../../events/models/server-event.socket-client.close';
-import { ServerEventSocketClientError } from '../../events/models/server-event.socket-client.error';
-import { ServerEventSocketClientMessageParsed } from '../../events/models/server-event.socket-client.message-parsed';
-import { ServerEventSocketClientMessageInvalid } from '../../events/models/server-event.socket-client.message-invalid';
-import { ServerEventSocketClientMessageMalformed } from '../../events/models/server-event.socket-client.message-errored';
-import { ServerEventSocketClientOpen } from '../../events/models/server-event.socket-client.open';
-import { ServerEventSocketClientUnexpectedResponse } from '../../events/models/server-event.socket-client.unexpected-response';
-import { ServerEventSocketClientUpgrade } from '../../events/models/server-event.socket-client.upgrade';
-import { ServerEventSocketClientPong } from '../../events/models/server-event.socket-client.pong';
-import { ServerEventSocketClientPing } from '../../events/models/server-event.socket-client.ping';
+import { SocketClientCloseSeo } from '../../events/models/socket-client.close.seo';
+import { SocketClientErrorSeo } from '../../events/models/socket-client.error.seo';
+import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
+import { SocketClientMessageInvalidSeo } from '../../events/models/socket-client.message-invalid.seo';
+import { SocketClientMessageMalformedSeo } from '../../events/models/socket-client.message-errored.seo';
+import { SocketClientOpenSeo } from '../../events/models/socket-client.open.seo';
+import { SocketClientUnexpectedResponseSeo } from '../../events/models/socket-client.unexpected-response.seo';
+import { SocketClientUpgradeSeo } from '../../events/models/socket-client.upgrade.seo';
+import { SocketClientPongSeo } from '../../events/models/socket-client.pong.seo';
+import { SocketClientPingSeo } from '../../events/models/socket-client.ping.seo';
 import { ServerMessage } from '../../../shared/message-server/modules/server-message-registry';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
@@ -48,7 +48,7 @@ export class SocketClient {
 
     // close
     this._ws.on(WS_EVENT.CLOSE, async (code, reason) => {
-      this._eb.fire(new ServerEventSocketClientClose({
+      this._eb.fire(new SocketClientCloseSeo({
         _p: {
           socket: this,
           code,
@@ -60,7 +60,7 @@ export class SocketClient {
 
     // error
     this._ws.on(WS_EVENT.ERROR, async (err) => {
-      this._eb.fire(new ServerEventSocketClientError({
+      this._eb.fire(new SocketClientErrorSeo({
         _p: {
           socket: this,
           err,
@@ -76,7 +76,7 @@ export class SocketClient {
       if (result.malformed()) {
         // message -> malformed
 
-        this._eb.fire(new ServerEventSocketClientMessageMalformed({
+        this._eb.fire(new SocketClientMessageMalformedSeo({
           _p: {
             socket: this,
             err: result._u.err,
@@ -88,7 +88,7 @@ export class SocketClient {
       else if (result.invalid()) {
         // message -> invalid
 
-        this._eb.fire(new ServerEventSocketClientMessageInvalid({
+        this._eb.fire(new SocketClientMessageInvalidSeo({
           _p: {
             socket: this,
             errs: result._u.errs,
@@ -101,20 +101,20 @@ export class SocketClient {
       else if (result.success()) {
         // message -> success
 
-        this._eb.fire(new ServerEventSocketClientMessageParsed({
+        this._eb.fire(new SocketClientMessageParsedSeo({
           _p: {
             socket: this,
             message: result._u.instance,
             Ctor: result._u.Ctor,
           },
-          _o: result._u.instance._o.clone(),
+          _o: result._u.instance.trace.clone(),
         }));
       }
     });
 
     // open
     this._ws.on(WS_EVENT.OPEN, async () => {
-      this._eb.fire(new ServerEventSocketClientOpen({
+      this._eb.fire(new SocketClientOpenSeo({
         _p: {
           socket: this,
         },
@@ -124,7 +124,7 @@ export class SocketClient {
 
     // ping
     this._ws.on(WS_EVENT.PING, async () => {
-      this._eb.fire(new ServerEventSocketClientPing({
+      this._eb.fire(new SocketClientPingSeo({
         _p: {
           socket: this,
         },
@@ -134,7 +134,7 @@ export class SocketClient {
 
     // pong
     this._ws.on(WS_EVENT.PONG, async () => {
-      this._eb.fire(new ServerEventSocketClientPong({
+      this._eb.fire(new SocketClientPongSeo({
         _p: {
           socket: this
         },
@@ -144,7 +144,7 @@ export class SocketClient {
 
     // upgrade
     this._ws.on(WS_EVENT.UGPRADE, async () => {
-      this._eb.fire(new ServerEventSocketClientUpgrade({
+      this._eb.fire(new SocketClientUpgradeSeo({
         _p: {
           socket: this,
         },
@@ -154,7 +154,7 @@ export class SocketClient {
 
     // unexpected response
     this._ws.on(WS_EVENT.UNEXPECTED_RESPONSE, async () => {
-      this._eb.fire(new ServerEventSocketClientUnexpectedResponse({
+      this._eb.fire(new SocketClientUnexpectedResponseSeo({
         _p: {
           socket: this,
         },

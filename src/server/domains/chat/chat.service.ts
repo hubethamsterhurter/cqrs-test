@@ -4,11 +4,11 @@ import { ChatRepository } from './chat.repository';
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { SessionRepository } from "../session/session.repository";
-import { CreateChatDto } from "../../../shared/domains/chat/dto/create-chat.dto";
+import { CreateChatCdto } from "../../../shared/domains/chat/cdto/create-chat.cdto";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { UpdateChatDto } from "../../../shared/domains/chat/dto/update-chat.dto";
+import { UpdateChatCdto } from "../../../shared/domains/chat/cdto/update-chat.cdto";
 
 
 let __created__ = false;
@@ -44,7 +44,7 @@ export class ChatService {
    * @param auhtorId
    * @param trace
    */
-  async create(dto: CreateChatDto, authorId: string | null, trace: Trace): Promise<ChatModel> {
+  async create(dto: CreateChatCdto, authorId: string | null, trace: Trace): Promise<ChatModel> {
     const unsaved: UnsavedModel<ChatModel> = {
       author_id: authorId,
       content: dto.content,
@@ -61,11 +61,11 @@ export class ChatService {
    *
    * @param model
    * @param updates
-   * @param tracking
+   * @param trace
    */
-  async update(model: ChatModel, dto: UpdateChatDto, tracking: Trace): Promise<ChatModel> {
+  async update(model: ChatModel, dto: UpdateChatCdto, trace: Trace): Promise<ChatModel> {
     if (dto.content) model.content = dto.content;
-    const updated = await this._chatRepo.upsert(model, tracking);
+    const updated = await this._chatRepo.upsert(model, trace);
     return updated;
   }
 
@@ -75,10 +75,10 @@ export class ChatService {
    * Delete a model
    *
    * @param model 
-   * @param tracking
+   * @param trace
    */
-  async delete(model: ChatModel, tracking: Trace): Promise<ChatModel> {
-    const deleted = await this._chatRepo.delete(model, tracking);
+  async delete(model: ChatModel, trace: Trace): Promise<ChatModel> {
+    const deleted = await this._chatRepo.delete(model, trace);
     if (!deleted) throw new Error(`Unable to delete ${model.id}`);
     return deleted;
   }

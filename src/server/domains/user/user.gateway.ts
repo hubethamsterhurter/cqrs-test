@@ -1,21 +1,21 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleClientMessage } from '../../decorators/handle-client-message.decorator';
-import { ServerEventSocketClientMessageParsed } from '../../events/models/server-event.socket-client.message-parsed';
+import { HandleCm } from '../../decorators/handle-client-message.decorator';
+import { SocketClientMessageParsedSeo } from '../../events/models/socket-client.message-parsed.seo';
 import { UserRepository } from '../user/user.repository';
 import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
 import { USER_COLOURS } from '../../../shared/constants/user-colour';
 import { randomElement } from '../../../shared/helpers/random-element';
-import { ClientMessageCreateUser } from '../../../shared/message-client/models/client-message.create-user';
-import { ClientMessageUpdateUser } from '../../../shared/message-client/models/client-message.update-user';
+import { CreateUserCmo } from '../../../shared/message-client/models/create-user.cmo';
+import { UpdateUserCmo } from '../../../shared/message-client/models/update-user.cmo';
 import { UserService } from '../user/user.service';
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
 import { SessionService } from "../session/session.service";
-import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
-import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
+import { CreateUserCdto } from "../../../shared/domains/user/cdto/create-user.cdto";
+import { UpdateUserCdto } from "../../../shared/domains/user/cdto/update-user.cdto";
 
 
 let __created__ = false;
@@ -52,26 +52,26 @@ export class UserGateway {
    * 
    * @param evt 
    */
-  @HandleClientMessage(ClientMessageCreateUser)
-  async handleClientCreateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageCreateUser>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.user_name)
+  @HandleCm(CreateUserCmo)
+  async handleClientCreateUser(evt: SocketClientMessageParsedSeo<CreateUserCmo>) {
+    const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name)
 
     if (user) {
       evt._p.socket.send(new ServerMessageError({
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
         code: 422,
-        message: `User ${evt._p.message.user_name} already exists`,
+        message: `User ${evt._p.message.cdto.user_name} already exists`,
       }));
       return;
     }
 
     await this._userService.create(
-      new CreateUserDto({
-        user_name: evt._p.message.user_name,
-        password: evt._p.message.password,
+      new CreateUserCdto({
+        user_name: evt._p.message.cdto.user_name,
+        password: evt._p.message.cdto.password,
         colour: randomElement(USER_COLOURS),
       }),
-      evt._o,
+      evt.trace,
     );
   }
 
@@ -82,28 +82,28 @@ export class UserGateway {
    * 
    * @param evt 
    */
-  @HandleClientMessage(ClientMessageUpdateUser)
-  async handleClientUpdateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageUpdateUser>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.id);
+  @HandleCm(UpdateUserCmo)
+  async handleClientUpdateUser(evt: SocketClientMessageParsedSeo<UpdateUserCmo>) {
+    const user = await this._userRepo.findByUserName(evt._p.message.cdto.id);
 
     if (!user) {
       evt._p.socket.send(new ServerMessageError({
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
         code: 404,
-        message: `User ${evt._p.message.id} not found`,
+        message: `User ${evt._p.message.cdto.id} not found`,
       }));
       return;
     }
 
     await this._userService.update(
       user,
-      new UpdateUserDto({
+      new UpdateUserCdto({
         id: user.id,
-        user_name: evt._p.message.user_name,
-        password: evt._p.message.password,
-        colour: evt._p.message.colour,
+        user_name: evt._p.message.cdto.user_name,
+        password: evt._p.message.cdto.password,
+        colour: evt._p.message.cdto.colour,
       }),
-      evt._o,
+      evt.trace,
     );
   }
 }

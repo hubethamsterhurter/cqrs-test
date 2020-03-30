@@ -3,13 +3,13 @@ import { $FIX_ME } from "../../shared/types/fix-me.type";
 import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
 import { ServerEventStream } from "../global/event-stream/server-event-stream";
-import { ServerEventSocketClientMessageParsed } from "../events/models/server-event.socket-client.message-parsed";
+import { SocketClientMessageParsedSeo } from "../events/models/socket-client.message-parsed.seo";
 import { filter } from "rxjs/operators";
 import { ofClientMessage } from "../helpers/server-client-message-event-filter.helper";
 import { ServerModelCreatedEventHandlerMetadata } from "./meatadata/server-model-created-event-handler.metadata";
-import { ServerEventModelCreated } from "../events/models/server-event.model-created";
-import { ServerEventModelDeleted } from "../events/models/server-event.model-deleted";
-import { ServerEventModelUpdated } from "../events/models/server-event.model-updated";
+import { ModelCreatedSeo } from "../events/models/model-created.seo";
+import { ModelDeletedSeo } from "../events/models/model-deleted.seo";
+import { ModelUpdatedSeo } from "../events/models/model-updated.seo";
 import { ServerEventHandlerMetadata } from "./meatadata/server-event-handler.metadata";
 import { ServerModelDeletedEventHandlerMetadata } from "./meatadata/server-model-deleted-event-handler.metadata";
 import { serverModelDeletedEventOf, serverModelUpdatedEventOf, serverModelCreatedEventOf } from "../helpers/server-model-event-filter.helper";
@@ -38,34 +38,34 @@ function bindMetadata(opts: {
     _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ClientMessage ${metadata.ClientMessageCtor.name}`);
     Container
       .get(ServerEventStream)
-      .of(ServerEventSocketClientMessageParsed)
+      .of(SocketClientMessageParsedSeo)
       .pipe(filter(ofClientMessage(metadata.ClientMessageCtor)))
       .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
   }
 
   else if (metadata instanceof ServerModelCreatedEventHandlerMetadata) {
-    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ServerEventModelCreated.name} of type ${metadata.ModelCtor.name}`);
+    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ModelCreatedSeo.name} of type ${metadata.ModelCtor.name}`);
     Container
       .get(ServerEventStream)
-      .of(ServerEventModelCreated)
+      .of(ModelCreatedSeo)
       .pipe(filter(serverModelCreatedEventOf(metadata.ModelCtor)))
       .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
   }
 
   else if (metadata instanceof ServerModelUpdatedEventHandlerMetadata) {
-    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ServerEventModelUpdated.name} of type ${metadata.ModelCtor.name}`);
+    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ModelUpdatedSeo.name} of type ${metadata.ModelCtor.name}`);
     Container
       .get(ServerEventStream)
-      .of(ServerEventModelUpdated)
+      .of(ModelUpdatedSeo)
       .pipe(filter(serverModelUpdatedEventOf(metadata.ModelCtor)))
       .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
   }
 
   else if (metadata instanceof ServerModelDeletedEventHandlerMetadata) {
-    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ServerEventModelDeleted.name} of type ${metadata.ModelCtor.name}`);
+    _log.info(`${mdKey.toString()} ] Binding ${Ctor.name}.${metadata.propertyKey.toString()} to ${ModelDeletedSeo.name} of type ${metadata.ModelCtor.name}`);
     Container
       .get(ServerEventStream)
-      .of(ServerEventModelDeleted)
+      .of(ModelDeletedSeo)
       .pipe(filter(serverModelDeletedEventOf(metadata.ModelCtor)))
       .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
   }

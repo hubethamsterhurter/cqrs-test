@@ -5,9 +5,9 @@ import { A_CLIENT_MESSAGE_TYPE } from "../../shared/message-client/modules/clien
 import { Has_t } from "../../shared/types/has-_t.type";
 import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleClientMessage);
+const _log = new ClassLogger(HandleCm);
 
-export function HandleClientMessage<T extends A_CLIENT_MESSAGE_TYPE>(
+export function HandleCm<T extends A_CLIENT_MESSAGE_TYPE>(
   ClientMessageCtor: Extract<ClientMessageCtor, Has_t<T>>
 ): MethodDecorator {
   /**
@@ -17,7 +17,7 @@ export function HandleClientMessage<T extends A_CLIENT_MESSAGE_TYPE>(
    * @param propertyKey     name of the member
    * @param descriptor      property descriptor for the member
    */
-  const doHandleClientMessage = function doHandleClientMessage(
+  const doHandleCm = function doHandleCm(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
@@ -33,14 +33,7 @@ export function HandleClientMessage<T extends A_CLIENT_MESSAGE_TYPE>(
       target,
       propertyKey,
     );
-
-    // // TODO: cleanup
-    // const subscription = Container
-    //   .get(ServerEventStream)
-    //   .of(ServerEventSocketClientMessageParsed)
-    //   .pipe(filter(ofClientMessage(MessageCtor)))
-    //   .subscribe((evt) => descriptor.value.apply(this, evt));
   }
 
-  return doHandleClientMessage;
+  return doHandleCm;
 }

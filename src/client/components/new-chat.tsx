@@ -3,9 +3,11 @@ import * as op from 'rxjs/operators';
 import React, { useContext, useState, useEffect } from 'react';
 import { Subject, Subscription, timer, of } from 'rxjs';
 import { WsContext } from './ws-provider';
-import { ClientMessageCreateChat } from '../../shared/message-client/models/client-message.create-chat';
-import { ClientMessageUserTyping } from '../../shared/message-client/models/client-message.user-typing';
+import { CreateChatCmo } from '../../shared/message-client/models/create-chat.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
+import { CreateChatCdto } from '../../shared/domains/chat/cdto/create-chat.cdto';
+import { UserTypingCdto } from '../../shared/domains/user/cdto/user-typing.cdto';
+import { UserTypingCmo } from '../../shared/message-client/models/user-typing.cmo';
 
 const TYPING_DEBOUNCE = 2500;
 const SUBMIT_DEBOUNCE = 0.1;
@@ -27,10 +29,12 @@ export const NewChat: React.FC = function NewChat(props) {
     subs.push(enterKey$
       .pipe(op.throttle(() => timer(SUBMIT_DEBOUNCE), { leading: true, trailing: false }))
       .subscribe(enterEvt => {
-        wsCtx.send(new ClientMessageCreateChat({
-          content: enterEvt.currentTarget.value,
-          sent_at: new Date(),
-          _o: new Trace(),
+        wsCtx.send(new CreateChatCmo({
+          cdto: new CreateChatCdto({
+            content: enterEvt.currentTarget.value,
+            sent_at: new Date(),
+          }),
+          trace: new Trace(),
         }));
       })
     );
@@ -42,8 +46,9 @@ export const NewChat: React.FC = function NewChat(props) {
         op.switchMap((evt) => of(evt).pipe(op.takeUntil(enterKey$))),
       )
       .subscribe(nonEnterEvt => {
-        wsCtx.send(new ClientMessageUserTyping({
-          _o: new Trace()
+        wsCtx.send(new UserTypingCmo({
+          cdto: new UserTypingCdto(),
+          trace: new Trace(),
         }));
       })
     );

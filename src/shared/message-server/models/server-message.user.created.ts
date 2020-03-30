@@ -5,7 +5,7 @@ import { UserModel } from '../../domains/user/user.model';
 import { Trace } from '../../helpers/Tracking.helper';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { Has_t } from '../../types/has-_t.type';
-import { Has_o } from '../../types/has-_o.type';
+import { HasTrace } from '../../types/has-_o.type';
 
 const _t = SERVER_MESSAGE_TYPE.USER_CREATED
 
@@ -52,7 +52,7 @@ export class ServerMessageUserCreated implements ServerMessageType<SERVER_MESSAG
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   @IsObject()
   @ValidateNested()
@@ -70,7 +70,7 @@ export class ServerMessageUserCreated implements ServerMessageType<SERVER_MESSAG
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.model = props.model;
     }
   }

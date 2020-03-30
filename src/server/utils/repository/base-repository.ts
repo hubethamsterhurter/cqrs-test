@@ -10,10 +10,10 @@ import { ServerEventBus } from '../../global/event-bus/server-event-bus';
 import { $DANGER } from '../../../shared/types/danger.type';
 import { UnsavedModel } from '../../../shared/types/unsaved-model.type';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
-import { ServerEventModelCreated } from '../../events/models/server-event.model-created';
+import { ModelCreatedSeo } from '../../events/models/model-created.seo';
 import { $FIX_ME } from '../../../shared/types/fix-me.type';
-import { ServerEventModelUpdated } from '../../events/models/server-event.model-updated';
-import { ServerEventModelDeleted } from '../../events/models/server-event.model-deleted';
+import { ModelUpdatedSeo } from '../../events/models/model-updated.seo';
+import { ModelDeletedSeo } from '../../events/models/model-deleted.seo';
 
 function cloneFromClass<M>(Ctor: ClassType<M>, model: M): M {
   const cloned = plainToClass(Ctor, classToPlain(model));
@@ -138,7 +138,7 @@ export abstract class BaseRepository<M extends Model> {
     this._log.info(`Creating`, id, this._ModelCTor.name);
     this._table.set(clonedModel.id, clonedModel);
     this._onCreateHook(clonedModel);
-    this._eb.fire(new ServerEventModelCreated({
+    this._eb.fire(new ModelCreatedSeo({
       _p: {
         CTor: this._ModelCTor,
         model: cloneFromClass(this._ModelCTor, clonedModel)
@@ -174,7 +174,7 @@ export abstract class BaseRepository<M extends Model> {
       this._onCreateHook(cloned)
     }
 
-    this._eb.fire(new ServerEventModelUpdated({
+    this._eb.fire(new ModelUpdatedSeo({
       _p: {
         CTor: this._ModelCTor,
         model: cloneFromClass(this._ModelCTor, cloned)
@@ -262,7 +262,7 @@ export abstract class BaseRepository<M extends Model> {
 
     this
       ._eb
-      .fire(new ServerEventModelDeleted({
+      .fire(new ModelDeletedSeo({
         _p: {
           CTor: this._ModelCTor,
           model: cloneFromClass(this._ModelCTor, clone),

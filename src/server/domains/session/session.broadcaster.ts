@@ -6,8 +6,8 @@ import { SessionRepository } from "./session.repository";
 import { ChatRepository } from "../chat/chat.repository";
 import { UserRepository } from "../user/user.repository";
 import { ServerMessageInit } from "../../../shared/message-server/models/server-message.init";
-import { ServerEventModelCreated } from "../../events/models/server-event.model-created";
-import { ServerEventModelUpdated } from "../../events/models/server-event.model-updated";
+import { ModelCreatedSeo } from "../../events/models/model-created.seo";
+import { ModelUpdatedSeo } from "../../events/models/model-updated.seo";
 import { serverModelCreatedEventOf, serverModelUpdatedEventOf, serverModelDeletedEventOf } from "../../helpers/server-model-event-filter.helper";
 import { ServerMessageUserCreated } from "../../../shared/message-server/models/server-message.user.created";
 import { ServerMessageChatCreated } from "../../../shared/message-server/models/server-message.chat.created";
@@ -16,20 +16,20 @@ import { ServerMessageUserUpdated } from "../../../shared/message-server/models/
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { ServerMessageSessionCreated } from "../../../shared/message-server/models/server-message.session.created";
 import { ServerMessageSessionUpdated } from "../../../shared/message-server/models/server-message.session.updated";
-import { ServerEventModelDeleted } from "../../events/models/server-event.model-deleted";
+import { ModelDeletedSeo } from "../../events/models/model-deleted.seo";
 import { ServerMessageSessionDeleted } from "../../../shared/message-server/models/server-message.session.deleted";
 import { ServerMessageAuthenticated } from "../../../shared/message-server/models/server-message.authenticated";
-import { ServerEventUserLoggedIn } from "../../events/models/server-event.user.logged-in";
+import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
 import { HandleServerModelCreatedEvent } from "../../decorators/handle-server-model-created-event.decorator";
 import { HandleServerEvent } from "../../decorators/handle-server-event.decorator";
 import { SessionService } from "./session.service";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
-import { ServerEventSocketClientMessageInvalid } from "../../events/models/server-event.socket-client.message-invalid";
+import { SocketClientMessageInvalidSeo } from "../../events/models/socket-client.message-invalid.seo";
 import { ServerMessageClientMessageInvalid } from "../../../shared/message-server/models/server-message.client-message-invalid";
-import { ServerEventSocketClientMessageMalformed } from "../../events/models/server-event.socket-client.message-errored";
+import { SocketClientMessageMalformedSeo } from "../../events/models/socket-client.message-errored.seo";
 import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
-import { ServerEventAppHeartbeat } from "../../events/models/server-event.app-heartbeat";
+import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
 import { ServerMessageServerHeartbeat } from "../../../shared/message-server/models/server-message.server-heartbeat";
 
 
@@ -62,15 +62,17 @@ export class SessionBroadcaster {
 
 
   /**
+   * TODO: remove test
+   *
    * @description
    * Fired on app heartbeat
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventAppHeartbeat)
-  private async _testInvalidMessageHandleAppHeartbeat(evt: ServerEventAppHeartbeat) {
+  @HandleServerEvent(AppHeartbeatSeo)
+  private async _testInvalidMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
     this._socketWarehouse.broadcastAll(new ServerMessageServerHeartbeat({
-      _o: evt._o.clone(),
+      _o: evt.trace.clone(),
       // TESTING ERROR
       at: 'hi :)' as any,
     }));
@@ -79,13 +81,15 @@ export class SessionBroadcaster {
 
 
   /**
+   * TODO: remove test
+   *
    * @description
    * Fired on app heartbeat
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventAppHeartbeat)
-  private async _testMalformedMessageHandleAppHeartbeat(evt: ServerEventAppHeartbeat) {
+  @HandleServerEvent(AppHeartbeatSeo)
+  private async _testMalformedMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
     this._socketWarehouse.broadcastAll({ hello: 'world' } as any);
   }
 
@@ -96,28 +100,28 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ServerEventModelCreated)
-  private async _handleModelCreated(evt: ServerEventModelCreated) {
+  @HandleServerEvent(ModelCreatedSeo)
+  private async _handleModelCreated(evt: ModelCreatedSeo) {
     this._log.info('Broadcasting ServerEventModelCreated...', evt._p.CTor.name);
 
     if (serverModelCreatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserCreated({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
 
     else if (serverModelCreatedEventOf(ChatModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageChatCreated({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
 
     else if (serverModelCreatedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionCreated({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
   }
@@ -130,21 +134,21 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ServerEventModelUpdated)
-  private async _handleModelUpdated(evt: ServerEventModelUpdated) {
+  @HandleServerEvent(ModelUpdatedSeo)
+  private async _handleModelUpdated(evt: ModelUpdatedSeo) {
     this._log.info('Broadcasting ServerEventModelUpdated...', evt._p.CTor.name);
 
     if (serverModelUpdatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserUpdated({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
 
     else if (serverModelUpdatedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionUpdated({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
   }
@@ -157,14 +161,14 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ServerEventModelDeleted)
-  private async _handleModelDeleted(evt: ServerEventModelDeleted) {
+  @HandleServerEvent(ModelDeletedSeo)
+  private async _handleModelDeleted(evt: ModelDeletedSeo) {
     this._log.info('Broadcasting ServerEventModelDeleted...', evt._p.CTor.name);
 
     if (serverModelDeletedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionDeleted({
         model: evt._p.model,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
     }
   }
@@ -178,14 +182,14 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventUserLoggedIn)
-  private async _handleClientMessageSignUp(evt: ServerEventUserLoggedIn) {
+  @HandleServerEvent(UserLoggedInSeo)
+  private async _handleClientMessageSignUp(evt: UserLoggedInSeo) {
     this
       ._socketWarehouse
       .findOneOrFail(evt._p.session.socket_id)
       .send(new ServerMessageAuthenticated({
         you: evt._p.user,
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
       }));
   }
 
@@ -196,13 +200,13 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventSocketClientMessageInvalid)
-  private async _handleClientMessageInvalid(evt: ServerEventSocketClientMessageInvalid) {
+  @HandleServerEvent(SocketClientMessageInvalidSeo)
+  private async _handleClientMessageInvalid(evt: SocketClientMessageInvalidSeo) {
     evt
       ._p
       .socket
       .send(new ServerMessageClientMessageInvalid({
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
         errors: evt._p.errs,
         messageType: evt._p.Ctor._t,
       }));
@@ -215,13 +219,13 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ServerEventSocketClientMessageMalformed)
-  private async _handleClientMessageMalformed(evt: ServerEventSocketClientMessageMalformed) {
+  @HandleServerEvent(SocketClientMessageMalformedSeo)
+  private async _handleClientMessageMalformed(evt: SocketClientMessageMalformedSeo) {
     evt
       ._p
       .socket
       .send(new ServerMessageClientMessageMalformed({
-        _o: evt._o.clone(),
+        _o: evt.trace.clone(),
         error: evt._p.err,
       }));
   }
@@ -234,7 +238,7 @@ export class SessionBroadcaster {
    * @param evt
    */
   @HandleServerModelCreatedEvent(SessionModel)
-  private async _handleClientCreated(evt: ServerEventModelCreated<SessionModel>) {
+  private async _handleClientCreated(evt: ModelCreatedSeo<SessionModel>) {
     this._log.info('initialising client');
     const [
       chats,
@@ -250,7 +254,7 @@ export class SessionBroadcaster {
       sessions: clients.filter(model => model.deleted_at === null),
       chats: chats.filter(model => model.deleted_at === null),
       users: users.filter(model => model.deleted_at === null),
-      _o: evt._o.clone(),
+      _o: evt.trace.clone(),
     });
     socket.send(initMessage);
   }

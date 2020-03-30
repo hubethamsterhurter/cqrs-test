@@ -4,11 +4,11 @@ import { ServerEventBus } from './global/event-bus/server-event-bus';
 import { ServerEventStream } from './global/event-stream/server-event-stream';
 import { SocketServerFactory } from './global/socket-server/socket-server.factory';
 import * as op from 'rxjs/operators';
-import { ServerEventAppHeartbeat } from './events/models/server-event.app-heartbeat';
-import { ServerEventSocketServerListening } from './events/models/server-event.socket-server.listening';
-import { ServerEventSocketClientMessageParsed } from './events/models/server-event.socket-client.message-parsed';
-import { ServerEventSocketClientMessageInvalid } from './events/models/server-event.socket-client.message-invalid';
-import { ServerEventSocketClientMessageMalformed } from './events/models/server-event.socket-client.message-errored';
+import { AppHeartbeatSeo } from './events/models/app-heartbeat.seo';
+import { SocketServerListeningSeo } from './events/models/socket-server.listening.seo';
+import { SocketClientMessageParsedSeo } from './events/models/socket-client.message-parsed.seo';
+import { SocketClientMessageInvalidSeo } from './events/models/socket-client.message-invalid.seo';
+import { SocketClientMessageMalformedSeo } from './events/models/socket-client.message-errored.seo';
 import { SocketServer } from './global/socket-server/socket-server';
 import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { ClassLogger } from '../shared/helpers/class-logger.helper';
@@ -49,31 +49,31 @@ async function bootstrap() {
   Container.get(ChatGateway);
 
   es
-    .of(ServerEventAppHeartbeat)
+    .of(AppHeartbeatSeo)
     .subscribe((evt) => _log.info(' 1 ] hearbeat', evt._p.at))
 
   es
-    .of(ServerEventAppHeartbeat)
+    .of(AppHeartbeatSeo)
     .pipe(op.take(5))
     .subscribe((evt) => _log.info(' 2 ] hearbeat', evt._p.at))
 
   es
-    .of(ServerEventSocketServerListening)
+    .of(SocketServerListeningSeo)
     .subscribe((evt) => _log.info('socket server listening'));
 
   // successful message
   es
-    .of(ServerEventSocketClientMessageParsed)
+    .of(SocketClientMessageParsedSeo)
     .subscribe((evt) => _log.info(`Message parsed: ${evt._p.Ctor.name}`));
 
   // invalid message
   es
-    .of(ServerEventSocketClientMessageInvalid)
+    .of(SocketClientMessageInvalidSeo)
     .subscribe((evt) => _log.info('Message invalid:', evt._p.errs));
 
   // errored message
   es
-    .of(ServerEventSocketClientMessageMalformed)
+    .of(SocketClientMessageMalformedSeo)
     .subscribe((evt) => _log.info('Message invalid:', evt._p.err));
 }
 

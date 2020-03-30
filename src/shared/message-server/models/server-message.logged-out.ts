@@ -12,7 +12,7 @@ export class ServerMessageLoggedOut implements ServerMessageType<SERVER_MESSAGE_
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   /**
    * @constructor
@@ -24,7 +24,7 @@ export class ServerMessageLoggedOut implements ServerMessageType<SERVER_MESSAGE_
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
     }
   }
 }

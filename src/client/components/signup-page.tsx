@@ -4,10 +4,11 @@ import React, { useContext } from 'react';
 import { race } from 'rxjs';
 import { Formik } from 'formik';
 import { WsContext } from './ws-provider';
-import { ClientMessageSignUp } from '../../shared/message-client/models/client-message.sign-up';
+import { SignUpCmo } from '../../shared/message-client/models/sign-up.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { of } from 'rxjs';
 import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
+import { SignupCdto } from '../../shared/domains/session/cdto/signup.cdto';
 
 
 interface NewUser {
@@ -31,16 +32,18 @@ export const SignupPage: React.FC = function SignupPage(props) {
           const UNRESPONSIVE_WAIT = 5000;
 
           race<undefined | ServerMessage>(
-            wsCtx.message$.pipe(op.filter(evt => evt._o.origin_id === trace.id)),
+            wsCtx.message$.pipe(op.filter(evt => evt.trace.origin_id === trace.id)),
             of(undefined).pipe(op.delay(UNRESPONSIVE_WAIT)),
           )
             .pipe(op.take(1))
             .subscribe((evt) => { opts.setSubmitting(false); });
 
-          wsCtx.send(new ClientMessageSignUp({
-            user_name: values.user_name,
-            password: values.password,
-            _o: trace,
+          wsCtx.send(new SignUpCmo({
+            cdto: new SignupCdto({
+              user_name: values.user_name,
+              password: values.password,
+            }),
+            trace: trace,
           }));
         }}
       >

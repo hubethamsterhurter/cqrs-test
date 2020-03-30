@@ -4,16 +4,16 @@ import { UserModel } from "../../../shared/domains/user/user.model";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SessionRepository } from "./session.repository";
-import { ServerEventSocketServerConnection } from "../../events/models/server-event.socket-server.connection";
-import { ServerEventSocketClientClose } from "../../events/models/server-event.socket-client.close";
+import { SocketServerConnectionSeo } from "../../events/models/socket-server.connection.seo";
+import { SocketClientCloseSeo } from "../../events/models/socket-client.close.seo";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { ServerEventUserSignedUp } from "../../events/models/server-event.user.signed-up";
+import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { SocketClientFactory } from "../../global/socket-client/socket-client.factory";
 import { IdFactory } from "../../../shared/helpers/id.factory";
-import { ServerEventUserLoggedIn } from "../../events/models/server-event.user.logged-in";
+import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { HandleServerEvent } from "../../decorators/handle-server-event.decorator";
-import { ServerEventUserLoggedOut } from "../../events/models/server-event.user.logged-out";
+import { UserLoggedOutSeo } from "../../events/models/user.logged-out.seo";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
@@ -56,8 +56,8 @@ export class SessionService {
    *
    * @param evt
    */
-  @HandleServerEvent(ServerEventSocketServerConnection)
-  private async _handleSocketClientConnection(evt: ServerEventSocketServerConnection) {
+  @HandleServerEvent(SocketServerConnectionSeo)
+  private async _handleSocketClientConnection(evt: SocketServerConnectionSeo) {
     // create a "client" for the socket
     this._log.info('socket connected', this);
     const clientId = this._idFactory.create();
@@ -76,7 +76,7 @@ export class SessionService {
     await this._sessionRepo.create(
       rawClient,
       clientId,
-      evt._o
+      evt.trace
     );
   }
 
@@ -88,11 +88,11 @@ export class SessionService {
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventSocketClientClose)
-  private async _handleSocketClientClose(evt: ServerEventSocketClientClose) {
+  @HandleServerEvent(SocketClientCloseSeo)
+  private async _handleSocketClientClose(evt: SocketClientCloseSeo) {
     this._log.info(`Removing closed socket ${evt._p.socket.id} (code: "${evt._p.code}", reason: "${evt._p.reason}")`);
     const client = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
-    await this._sessionRepo.delete(client, evt._o);
+    await this._sessionRepo.delete(client, evt.trace);
     this._socketWarehouse.remove(evt._p.socket);
   }
 
@@ -104,9 +104,9 @@ export class SessionService {
    * 
    * @param evt 
    */
-  @HandleServerEvent(ServerEventUserSignedUp)
-  private async _handleClientMessageSignUp(evt: ServerEventUserSignedUp) {
-    await this.authenticate(evt._p.session, evt._p.user, evt._o);
+  @HandleServerEvent(UserSignedUpSeo)
+  private async _handleClientMessageSignUp(evt: UserSignedUpSeo) {
+    await this.authenticate(evt._p.session, evt._p.user, evt.trace);
   }
 
 
@@ -127,7 +127,7 @@ export class SessionService {
   ): Promise<void> {
     session.user_id = user.id;
     session = await this._sessionRepo.upsert(session, trace);
-    this._eb.fire(new ServerEventUserLoggedIn({
+    this._eb.fire(new UserLoggedInSeo({
       _p: {
         session,
         user,
@@ -153,7 +153,7 @@ export class SessionService {
   ): Promise<void> {
     session.user_id = null;
     session = await this._sessionRepo.upsert(session, trace);
-    this._eb.fire(new ServerEventUserLoggedOut({
+    this._eb.fire(new UserLoggedOutSeo({
       _p: {
         session,
         user,

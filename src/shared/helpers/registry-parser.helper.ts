@@ -7,13 +7,13 @@ import { Has_t } from "../types/has-_t.type";
 import { ParseResult, ParseInvalidPayload, ParseSuccessPayload } from "./parse-result.helper";
 import { LogConstruction } from "../decorators/log-construction.decorator";
 import { $FIX_ME } from "../types/fix-me.type";
-import { Has_o } from "../types/has-_o.type";
+import { HasTrace } from "../types/has-_o.type";
 import { Trace } from "./Tracking.helper";
 import { ClassLogger } from "./class-logger.helper";
 
 
 @LogConstruction()
-export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Has_o> & Has_t<PropertyKey>> {
+export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & HasTrace> & Has_t<PropertyKey>> {
   _log = new ClassLogger(this);
   #registry: Registry<C, '_t'>;
 
@@ -92,7 +92,7 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
 
     if (validationErrors.length) {
       // recover the trace if possible
-      const _o = rawJson._o as $DANGER<InstanceType<C>>['_o'];
+      const _o = rawJson._o as $DANGER<InstanceType<C>>['trace'];
       const recoveredTrace = plainToClass(Trace, _o);
       const traceValidationErrors = validateSync(recoveredTrace);
 

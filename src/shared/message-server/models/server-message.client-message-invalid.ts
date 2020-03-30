@@ -13,7 +13,7 @@ export class ServerMessageClientMessageInvalid implements ServerMessageType<SERV
   @IsObject()
   @ValidateNested()
   @Type(() => Trace)
-  readonly _o!: Trace;
+  readonly trace!: Trace;
 
   // do not bother validate nested
   @IsArray()
@@ -35,7 +35,7 @@ export class ServerMessageClientMessageInvalid implements ServerMessageType<SERV
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this._o = props._o;
+      this.trace = props._o;
       this.errors = props.errors;
       this.messageType = props.messageType;
     }

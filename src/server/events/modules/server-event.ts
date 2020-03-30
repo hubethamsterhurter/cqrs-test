@@ -1,50 +1,50 @@
-import { ServerEventAppHeartbeat } from '../models/server-event.app-heartbeat';
-import { ServerEventSocketServerClose } from '../models/server-event.socket-server.close';
-import { ServerEventSocketServerConnection } from '../models/server-event.socket-server.connection';
-import { ServerEventSocketServerError } from '../models/server-event.socket-server.error';
-import { ServerEventSocketServerHeaders } from '../models/server-event.socket-server.headers';
-import { ServerEventSocketServerListening } from '../models/server-event.socket-server.listening';
-import { ServerEventSocketClientClose } from '../models/server-event.socket-client.close';
-import { ServerEventSocketClientError } from '../models/server-event.socket-client.error';
-import { ServerEventSocketClientMessage } from '../models/server-event.socket-client.message';
-import { ServerEventSocketClientMessageParsed } from '../models/server-event.socket-client.message-parsed';
-import { ServerEventSocketClientMessageInvalid } from '../models/server-event.socket-client.message-invalid';
-import { ServerEventSocketClientMessageMalformed } from '../models/server-event.socket-client.message-errored';
-import { ServerEventSocketClientOpen } from '../models/server-event.socket-client.open';
-import { ServerEventSocketClientPing } from '../models/server-event.socket-client.ping';
-import { ServerEventSocketClientPong } from '../models/server-event.socket-client.pong';
-import { ServerEventSocketClientUpgrade } from '../models/server-event.socket-client.upgrade';
-import { ServerEventSocketClientUnexpectedResponse } from '../models/server-event.socket-client.unexpected-response';
-import { ServerEventModelUpdated } from '../models/server-event.model-updated';
-import { ServerEventModelDeleted } from '../models/server-event.model-deleted';
-import { ServerEventModelCreated } from '../models/server-event.model-created';
-import { ServerEventUserSignedUp } from '../models/server-event.user.signed-up';
-import { ServerEventUserLoggedIn } from '../models/server-event.user.logged-in';
-import { ServerEventUserLoggedOut } from '../models/server-event.user.logged-out';
+import { AppHeartbeatSeo } from '../models/app-heartbeat.seo';
+import { SocketServerCloseSeo } from '../models/socket-server.close.seo';
+import { SocketServerConnectionSeo } from '../models/socket-server.connection.seo';
+import { SocketServerErrorSeo } from '../models/socket-server.error.seo';
+import { SocketServerHeadersSeo } from '../models/socket-server.headers.seo';
+import { SocketServerListeningSeo } from '../models/socket-server.listening.seo';
+import { SocketClientCloseSeo } from '../models/socket-client.close.seo';
+import { SocketClientErrorSeo } from '../models/socket-client.error.seo';
+import { SocketClientMessageSeo } from '../models/socket-client.message.seo';
+import { SocketClientMessageParsedSeo } from '../models/socket-client.message-parsed.seo';
+import { SocketClientMessageInvalidSeo } from '../models/socket-client.message-invalid.seo';
+import { SocketClientMessageMalformedSeo } from '../models/socket-client.message-errored.seo';
+import { SocketClientOpenSeo } from '../models/socket-client.open.seo';
+import { SocketClientPingSeo } from '../models/socket-client.ping.seo';
+import { SocketClientPongSeo } from '../models/socket-client.pong.seo';
+import { SocketClientUpgradeSeo } from '../models/socket-client.upgrade.seo';
+import { SocketClientUnexpectedResponseSeo } from '../models/socket-client.unexpected-response.seo';
+import { ModelUpdatedSeo } from '../models/model-updated.seo';
+import { ModelDeletedSeo } from '../models/model-deleted.seo';
+import { ModelCreatedSeo } from '../models/model-created.seo';
+import { UserSignedUpSeo } from '../models/user.signed-up.seo';
+import { UserLoggedInSeo } from '../models/user.logged-in.seo';
+import { UserLoggedOutSeo } from '../models/user.logged-out.seo';
 
 export type ServerEventCtor =
-  | typeof ServerEventAppHeartbeat
-  | typeof ServerEventSocketServerClose
-  | typeof ServerEventSocketServerConnection
-  | typeof ServerEventSocketServerError
-  | typeof ServerEventSocketServerHeaders
-  | typeof ServerEventSocketServerListening
-  | typeof ServerEventSocketClientClose
-  | typeof ServerEventSocketClientError
-  | typeof ServerEventSocketClientMessage
-  | typeof ServerEventSocketClientMessageParsed
-  | typeof ServerEventSocketClientMessageInvalid
-  | typeof ServerEventSocketClientMessageMalformed
-  | typeof ServerEventSocketClientOpen
-  | typeof ServerEventSocketClientPing
-  | typeof ServerEventSocketClientPong
-  | typeof ServerEventSocketClientUpgrade
-  | typeof ServerEventSocketClientUnexpectedResponse
-  | typeof ServerEventModelCreated
-  | typeof ServerEventModelUpdated
-  | typeof ServerEventModelDeleted
-  | typeof ServerEventUserSignedUp
-  | typeof ServerEventUserLoggedIn
-  | typeof ServerEventUserLoggedOut;
+  | typeof AppHeartbeatSeo
+  | typeof SocketServerCloseSeo
+  | typeof SocketServerConnectionSeo
+  | typeof SocketServerErrorSeo
+  | typeof SocketServerHeadersSeo
+  | typeof SocketServerListeningSeo
+  | typeof SocketClientCloseSeo
+  | typeof SocketClientErrorSeo
+  | typeof SocketClientMessageSeo
+  | typeof SocketClientMessageParsedSeo
+  | typeof SocketClientMessageInvalidSeo
+  | typeof SocketClientMessageMalformedSeo
+  | typeof SocketClientOpenSeo
+  | typeof SocketClientPingSeo
+  | typeof SocketClientPongSeo
+  | typeof SocketClientUpgradeSeo
+  | typeof SocketClientUnexpectedResponseSeo
+  | typeof ModelCreatedSeo
+  | typeof ModelUpdatedSeo
+  | typeof ModelDeletedSeo
+  | typeof UserSignedUpSeo
+  | typeof UserLoggedInSeo
+  | typeof UserLoggedOutSeo;
 
 export type ServerEvent = ServerEventCtor['prototype'];

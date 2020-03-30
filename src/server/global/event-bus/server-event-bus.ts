@@ -3,7 +3,7 @@ import { Listener } from "../../../shared/types/listener.type";
 import { ServerEvent } from '../../events/modules/server-event'
 import { $FIX_ME } from "../../../shared/types/fix-me.type";
 import { ClassType } from "class-transformer/ClassTransformer";
-import { ServerEventAppHeartbeat } from "../../events/models/server-event.app-heartbeat";
+import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
 import { $DANGER } from "../../../shared/types/danger.type";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
@@ -25,11 +25,11 @@ export class ServerEventBus {
     __created__ = true;
 
     setTimeout(
-      () => this.fire(new ServerEventAppHeartbeat({ _p: { at: new Date(), }, _o: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, _o: new Trace(), })),
       5000,
     );
     this._heartbeatInterval = setInterval(
-      () => this.fire(new ServerEventAppHeartbeat({ _p: { at: new Date(), }, _o: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, _o: new Trace(), })),
       20000,
     );
   }
