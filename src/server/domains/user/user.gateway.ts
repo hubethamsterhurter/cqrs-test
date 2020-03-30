@@ -14,8 +14,8 @@ import { ServerMessageError } from "../../../shared/message-server/models/server
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
 import { SessionService } from "../session/session.service";
-import { CreateUserCdto } from "../../../shared/domains/user/cdto/create-user.cdto";
-import { UpdateUserCdto } from "../../../shared/domains/user/cdto/update-user.cdto";
+import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
+import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
 
 
 let __created__ = false;
@@ -54,21 +54,21 @@ export class UserGateway {
    */
   @HandleCm(CreateUserCmo)
   async create(evt: SCMessageSeo<CreateUserCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name)
+    const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name)
 
     if (user) {
       evt._p.socket.send(new ServerMessageError({
         trace: evt.trace.clone(),
         code: 422,
-        message: `User ${evt._p.message.cdto.user_name} already exists`,
+        message: `User ${evt._p.message.dto.user_name} already exists`,
       }));
       return;
     }
 
     await this._userService.create(
-      new CreateUserCdto({
-        user_name: evt._p.message.cdto.user_name,
-        password: evt._p.message.cdto.password,
+      new CreateUserDto({
+        user_name: evt._p.message.dto.user_name,
+        password: evt._p.message.dto.password,
         colour: randomElement(USER_COLOURS),
       }),
       evt.trace,
@@ -84,24 +84,24 @@ export class UserGateway {
    */
   @HandleCm(UpdateUserCmo)
   async update(evt: SCMessageSeo<UpdateUserCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.cdto.id);
+    const user = await this._userRepo.findByUserName(evt._p.message.dto.id);
 
     if (!user) {
       evt._p.socket.send(new ServerMessageError({
         trace: evt.trace.clone(),
         code: 404,
-        message: `User ${evt._p.message.cdto.id} not found`,
+        message: `User ${evt._p.message.dto.id} not found`,
       }));
       return;
     }
 
     await this._userService.update(
       user,
-      new UpdateUserCdto({
+      new UpdateUserDto({
         id: user.id,
-        user_name: evt._p.message.cdto.user_name,
-        password: evt._p.message.cdto.password,
-        colour: evt._p.message.cdto.colour,
+        user_name: evt._p.message.dto.user_name,
+        password: evt._p.message.dto.password,
+        colour: evt._p.message.dto.colour,
       }),
       evt.trace,
     );

@@ -1,6 +1,6 @@
 import { IsString } from "class-validator";
 
-export class DeleteUserCdto {
+export class DeleteChatDto {
   @IsString()
   readonly id!: string;
 

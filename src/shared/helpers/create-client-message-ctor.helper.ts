@@ -4,7 +4,7 @@ import { Equals, IsObject, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { Trace } from "./Tracking.helper";
 
-export function CreateCmoCtor<T extends A_CLIENT_MESSAGE_TYPE, D extends {}>(_t: T, CdtoCtor: ClassType<D>) {
+export function CreateCmoCtor<T extends A_CLIENT_MESSAGE_TYPE, D extends {}>(_t: T, DtoCtor: ClassType<D>) {
   class BaseClientMessage implements ClientMessageType<T> {
     static get _t() { return _t; }
     @Equals(_t) readonly _t = _t;
@@ -16,8 +16,8 @@ export function CreateCmoCtor<T extends A_CLIENT_MESSAGE_TYPE, D extends {}>(_t:
 
     @IsObject()
     @ValidateNested()
-    @Type(() => CdtoCtor)
-    readonly cdto!: D;
+    @Type(() => DtoCtor)
+    readonly dto!: D;
 
     /**
      * @constructor
@@ -26,12 +26,12 @@ export function CreateCmoCtor<T extends A_CLIENT_MESSAGE_TYPE, D extends {}>(_t:
      */
     constructor(props: {
       trace: Trace,
-      cdto: D,
+      dto: D,
     }) {
       // props will not be defined if we do not construct ourselves
       if (props) {
         this.trace = props.trace;
-        this.cdto = props.cdto;
+        this.dto = props.dto;
       }
     }
   }

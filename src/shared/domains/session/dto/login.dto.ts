@@ -1,7 +1,7 @@
 import { MinLength, MaxLength, IsString } from "class-validator";
 import { USER_DEFINITION } from "../../user/user.definition";
 
-export class LoginCdto {
+export class LoginDto {
   @MinLength(USER_DEFINITION.user_name.minLength)
   @MaxLength(USER_DEFINITION.user_name.maxLength)
   @IsString()

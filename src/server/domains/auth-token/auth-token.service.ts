@@ -1,6 +1,5 @@
 import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
-import { UserRepository } from "./user.repository";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
@@ -12,6 +11,8 @@ import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
 import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
+import { UserRepository } from "../user/user.repository";
+import { AuthTokenRepository } from "./auth-token.repository";
 
 
 let __created__ = false;
@@ -29,46 +30,12 @@ export class UserService {
    */
   constructor(
     @Inject(() => ServerEventBus) private readonly _eb: ServerEventBus,
+    @Inject(() => AuthTokenRepository) private readonly _authTokenRepo: AuthTokenRepository,
     @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }
-
-
-
-  /**
-   * @description
-   * Sign up
-   * 
-   * @param session
-   * @param dto 
-   * @param tracking
-   */
-  async signUp(session: SessionModel, dto: CreateUserDto, tracking: Trace): Promise<void> {
-    const user = await this.create(dto, tracking);
-    this._eb.fire(new UserSignedUpSeo({
-      _p: {
-        session,
-        user,
-      },
-      trace: tracking.clone(),
-    }));
-  }
-
-
-
-  /**
-   * @description
-   * Log in
-   * 
-   * @param data 
-   */
-  passwordMatch(user: UserModel, password: string): boolean {
-    if (user.password !== password) return false;
-    return true;
-  }
-
 
 
   /**

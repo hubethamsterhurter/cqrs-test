@@ -1,12 +1,9 @@
 import { UserModel } from "../user/user.model";
-import { IsString, IsOptional, IsDate, MinLength, MaxLength } from "class-validator";
+import { IsString, IsOptional, IsDate } from "class-validator";
 import { ModelType } from "../model.type";
 import { Type } from "class-transformer";
-import { ID_DEFINITION } from "../id.definition";
 
 export class SessionModel implements ModelType {
-  @MinLength(ID_DEFINITION.id.minLength)
-  @MaxLength(ID_DEFINITION.id.maxLength)
   @IsString()
   id!: string;
 

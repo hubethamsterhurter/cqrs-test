@@ -2,7 +2,7 @@ import { MinLength, IsString, MaxLength, IsOptional, IsIn } from "class-validato
 import { USER_DEFINITION } from "../../user/user.definition";
 import { USER_COLOURS, A_USER_COLOUR } from "../../../constants/user-colour";
 
-export class SignupCdto {
+export class SignupDto {
   @MinLength(USER_DEFINITION.user_name.minLength)
   @MaxLength(USER_DEFINITION.user_name.maxLength)
   @IsString()

@@ -8,7 +8,7 @@ import { SignUpCmo } from '../../shared/message-client/models/sign-up.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { of } from 'rxjs';
 import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
-import { SignupCdto } from '../../shared/domains/session/cdto/signup.cdto';
+import { SignupDto } from '../../shared/domains/session/dto/signup.dto';
 
 
 interface NewUser {
@@ -39,7 +39,7 @@ export const SignupPage: React.FC = function SignupPage(props) {
             .subscribe((evt) => { opts.setSubmitting(false); });
 
           wsCtx.send(new SignUpCmo({
-            cdto: new SignupCdto({
+            dto: new SignupDto({
               user_name: values.user_name,
               password: values.password,
             }),

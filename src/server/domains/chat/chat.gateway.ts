@@ -46,7 +46,7 @@ export class ChatGateway {
   async create(evt: SCMessageSeo<CreateChatCmo>) {
     const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
     await this._chatService.create(
-      evt._p.message.cdto,
+      evt._p.message.dto,
       session.user_id,
       evt.trace
     );

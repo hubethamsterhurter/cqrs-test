@@ -5,8 +5,6 @@ import { ID_DEFINITION } from '../id.definition';
 import { ModelType } from '../model.type';
 
 export class ChatModel implements ModelType {
-  @MinLength(ID_DEFINITION.id.minLength)
-  @MaxLength(ID_DEFINITION.id.maxLength)
   @IsString()
   id!: string;
 

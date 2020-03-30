@@ -4,11 +4,11 @@ import { ChatRepository } from './chat.repository';
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
 import { SessionRepository } from "../session/session.repository";
-import { CreateChatCdto } from "../../../shared/domains/chat/cdto/create-chat.cdto";
+import { CreateChatDto } from "../../../shared/domains/chat/dto/create-chat.dto";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { UpdateChatCdto } from "../../../shared/domains/chat/cdto/update-chat.cdto";
+import { UpdateChatDto } from "../../../shared/domains/chat/dto/update-chat.dto";
 
 
 let __created__ = false;
@@ -44,7 +44,7 @@ export class ChatService {
    * @param auhtorId
    * @param trace
    */
-  async create(dto: CreateChatCdto, authorId: string | null, trace: Trace): Promise<ChatModel> {
+  async create(dto: CreateChatDto, authorId: string | null, trace: Trace): Promise<ChatModel> {
     const unsaved: UnsavedModel<ChatModel> = {
       author_id: authorId,
       content: dto.content,
@@ -63,7 +63,7 @@ export class ChatService {
    * @param updates
    * @param trace
    */
-  async update(model: ChatModel, dto: UpdateChatCdto, trace: Trace): Promise<ChatModel> {
+  async update(model: ChatModel, dto: UpdateChatDto, trace: Trace): Promise<ChatModel> {
     if (dto.content) model.content = dto.content;
     const updated = await this._chatRepo.upsert(model, trace);
     return updated;

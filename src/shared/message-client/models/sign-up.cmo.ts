@@ -1,5 +1,5 @@
 import { CLIENT_MESSAGE_TYPE } from "../modules/client-message-type";
 import { CreateCmoCtor } from "../../helpers/create-client-message-ctor.helper";
-import { SignupCdto } from "../../domains/session/cdto/signup.cdto";
+import { SignupDto } from "../../domains/session/dto/signup.dto";
 
-export class SignUpCmo extends CreateCmoCtor(CLIENT_MESSAGE_TYPE.SIGN_UP, SignupCdto) {}
+export class SignUpCmo extends CreateCmoCtor(CLIENT_MESSAGE_TYPE.SIGN_UP, SignupDto) {}

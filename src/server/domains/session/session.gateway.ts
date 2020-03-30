@@ -44,14 +44,14 @@ export class SessionGateway {
    */
   @HandleCm(SignUpCmo)
   async signUp(evt: SCMessageSeo<SignUpCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name)
+    const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name)
 
     if (user) {
       console.log('hi');
       evt._p.socket.send(new ServerMessageError({
         trace: evt.trace.clone(),
         code: 422,
-        message: `User ${evt._p.message.cdto.user_name} already exists`,
+        message: `User ${evt._p.message.dto.user_name} already exists`,
       }));
       return;
     }
@@ -60,8 +60,8 @@ export class SessionGateway {
     await this._userService.signUp(
       session,
       {
-        user_name: evt._p.message.cdto.user_name,
-        password: evt._p.message.cdto.password,
+        user_name: evt._p.message.dto.user_name,
+        password: evt._p.message.dto.password,
       },
       evt.trace,
     );
@@ -76,7 +76,7 @@ export class SessionGateway {
    */
   @HandleCm(LogInCmo)
   async logIn(evt: SCMessageSeo<LogInCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.cdto.user_name);
+    const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name);
 
     if (!user) {
       // can't find user
@@ -90,7 +90,7 @@ export class SessionGateway {
       return;
     }
 
-    if (!this._userService.passwordMatch(user, evt._p.message.cdto.password)) {
+    if (!this._userService.passwordMatch(user, evt._p.message.dto.password)) {
       // failed to log in
       const msg = 'Cannot log in. Password does not match.';
       this._log.warn(msg);

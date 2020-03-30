@@ -5,8 +5,8 @@ import { Subject, Subscription, timer, of } from 'rxjs';
 import { WsContext } from './ws-provider';
 import { CreateChatCmo } from '../../shared/message-client/models/create-chat.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
-import { CreateChatCdto } from '../../shared/domains/chat/cdto/create-chat.cdto';
-import { UserTypingCdto } from '../../shared/domains/user/cdto/user-typing.cdto';
+import { CreateChatDto } from '../../shared/domains/chat/dto/create-chat.dto';
+import { UserTypingDto } from '../../shared/domains/user/dto/user-typing.dto';
 import { UserTypingCmo } from '../../shared/message-client/models/user-typing.cmo';
 
 const TYPING_DEBOUNCE = 2500;
@@ -30,7 +30,7 @@ export const NewChat: React.FC = function NewChat(props) {
       .pipe(op.throttle(() => timer(SUBMIT_DEBOUNCE), { leading: true, trailing: false }))
       .subscribe(enterEvt => {
         wsCtx.send(new CreateChatCmo({
-          cdto: new CreateChatCdto({
+          dto: new CreateChatDto({
             content: enterEvt.currentTarget.value,
             sent_at: new Date(),
           }),
@@ -47,7 +47,7 @@ export const NewChat: React.FC = function NewChat(props) {
       )
       .subscribe(nonEnterEvt => {
         wsCtx.send(new UserTypingCmo({
-          cdto: new UserTypingCdto(),
+          dto: new UserTypingDto(),
           trace: new Trace(),
         }));
       })
