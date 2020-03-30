@@ -4,9 +4,9 @@ import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerEventHandlerMetadata } from "./meatadata/server-event-handler.metadata";
 import { ClassLogger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleServerEvent);
+const _log = new ClassLogger(HandleSe);
 
-export function HandleServerEvent(ServerEventCtor: ServerEventCtor): MethodDecorator {
+export function HandleSe(ServerEventCtor: ServerEventCtor): MethodDecorator {
   /**
    * @decorator
    *

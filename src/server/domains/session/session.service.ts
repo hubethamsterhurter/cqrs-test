@@ -12,11 +12,12 @@ import { SocketClientFactory } from "../../global/socket-client/socket-client.fa
 import { IdFactory } from "../../../shared/helpers/id.factory";
 import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { HandleServerEvent } from "../../decorators/handle-server-event.decorator";
+import { HandleSe } from "../../decorators/handle-server-event.decorator";
 import { UserLoggedOutSeo } from "../../events/models/user.logged-out.seo";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { AuthTokenService } from "../auth-token/auth-token.service";
 
 
 // TODO: timeout clients regularly with heartbeat
@@ -41,6 +42,7 @@ export class SessionService {
     @Inject(() => ServerEventBus) private readonly _eb: ServerEventBus,
     @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
     @Inject(() => SocketClientFactory) private readonly _wscFactory: SocketClientFactory,
+    @Inject(() => AuthTokenService) private readonly _authTokenService: AuthTokenService,
     @Inject(() => IdFactory) private readonly _idFactory: IdFactory,
     @Inject(() => SocketWarehouse) private readonly _socketWarehouse: SocketWarehouse,
   ) {
@@ -56,7 +58,7 @@ export class SessionService {
    *
    * @param evt
    */
-  @HandleServerEvent(SSConnectionSeo)
+  @HandleSe(SSConnectionSeo)
   private async _handleSocketClientConnection(evt: SSConnectionSeo) {
     // create a "client" for the socket
     this._log.info('socket connected', this);
@@ -88,7 +90,7 @@ export class SessionService {
    * 
    * @param evt 
    */
-  @HandleServerEvent(SCCloseSeo)
+  @HandleSe(SCCloseSeo)
   private async _handleSocketClientClose(evt: SCCloseSeo) {
     this._log.info(`Removing closed socket ${evt._p.socket.id} (code: "${evt._p.code}", reason: "${evt._p.reason}")`);
     const client = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
@@ -104,7 +106,7 @@ export class SessionService {
    * 
    * @param evt 
    */
-  @HandleServerEvent(UserSignedUpSeo)
+  @HandleSe(UserSignedUpSeo)
   private async _handleClientMessageSignUp(evt: UserSignedUpSeo) {
     await this.authenticate(evt._p.session, evt._p.user, evt.trace);
   }
@@ -127,8 +129,14 @@ export class SessionService {
   ): Promise<void> {
     session.user_id = user.id;
     session = await this._sessionRepo.upsert(session, trace);
+    const authToken = await this._authTokenService.create({
+      user: user,
+      session: session,
+      expires_at: null,
+    }, trace);
     this._eb.fire(new UserLoggedInSeo({
       _p: {
+        authToken,
         session,
         user,
       },

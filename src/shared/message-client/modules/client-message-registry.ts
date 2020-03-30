@@ -9,6 +9,7 @@ import { Service } from "typedi";
 import { LogConstruction } from "../../decorators/log-construction.decorator";
 import { Registry } from "../../helpers/registry.helper";
 import { UToKV } from "../../types/u-to-kv.type";
+import { ReAuthenticateCmo } from "../models/re-authenticate.cmo";
 
 export type ClientMessageCtor =
   | typeof CreateUserCmo
@@ -17,7 +18,8 @@ export type ClientMessageCtor =
   | typeof CreateChatCmo
   | typeof SignUpCmo
   | typeof LogInCmo
-  | typeof LogOutCmo;
+  | typeof LogOutCmo
+  | typeof ReAuthenticateCmo;
 
 export type ClientMessage = ClientMessageCtor['prototype'];
 
@@ -29,6 +31,7 @@ const CLIENT_MESSAGE_CTOR_MAP: UToKV<ClientMessageCtor, '_t'> = {
   [SignUpCmo._t]: SignUpCmo,
   [LogInCmo._t]: LogInCmo,
   [LogOutCmo._t]: LogOutCmo,
+  [ReAuthenticateCmo._t]: ReAuthenticateCmo,
 };
 
 const CLIENT_MESSAGE_CTORS: ClientMessageCtor[] = Object.values(CLIENT_MESSAGE_CTOR_MAP);

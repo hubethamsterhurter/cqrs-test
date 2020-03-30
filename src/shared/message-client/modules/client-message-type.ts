@@ -8,6 +8,7 @@ export const CLIENT_MESSAGE_TYPE = {
   SIGN_UP: 'sign_up',
   LOG_IN: 'log_in',
   LOG_OUT: 'log_out',
+  RE_AUTHENTICATE: 're_authenticate',
 } as const;
 export type CLIENT_MESSAGE_TYPE = typeof CLIENT_MESSAGE_TYPE;
 export type A_CLIENT_MESSAGE_TYPE = CLIENT_MESSAGE_TYPE[keyof CLIENT_MESSAGE_TYPE];

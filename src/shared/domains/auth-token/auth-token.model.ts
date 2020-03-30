@@ -7,10 +7,10 @@ export class AuthTokenModel implements ModelType {
   id!: string;
 
   @IsString()
-  user_id!: string;
+  origin_session_id!: string;
 
   @IsString()
-  body!: string;
+  user_id!: string;
 
   @IsOptional()
   @IsDate()
@@ -24,7 +24,7 @@ export class AuthTokenModel implements ModelType {
   constructor(props: {
     id: string,
     user_id: string;
-    body: string;
+    origin_session_id: string;
     expires_at: Date | null;
     updated_at: Date;
     created_at: Date;
@@ -33,7 +33,7 @@ export class AuthTokenModel implements ModelType {
     if (props) {
       this.id = props.id;
       this.user_id = props.user_id;
-      this.body = props.body;
+      this.origin_session_id = props.origin_session_id;
       this.updated_at = props.updated_at;
       this.created_at = props.created_at;
       this.deleted_at = props.deleted_at;

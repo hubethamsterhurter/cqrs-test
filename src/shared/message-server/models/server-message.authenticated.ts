@@ -3,6 +3,7 @@ import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-messag
 import { ValidateNested, IsObject, Equals } from "class-validator";
 import { UserModel } from '../../domains/user/user.model';
 import { Trace } from '../../helpers/Tracking.helper';
+import { AuthTokenModel } from '../../domains/auth-token/auth-token.model';
 
 const _t = SERVER_MESSAGE_TYPE.AUTHENTICATED
 
@@ -20,6 +21,11 @@ export class ServerMessageAuthenticated implements ServerMessageType<SERVER_MESS
   @Type(() => UserModel)
   readonly you!: UserModel;
 
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AuthTokenModel)
+  readonly token!: AuthTokenModel;
+
   /**
    * @constructor
    *
@@ -28,11 +34,13 @@ export class ServerMessageAuthenticated implements ServerMessageType<SERVER_MESS
   constructor(props: {
     trace: Trace,
     you: UserModel
+    token: AuthTokenModel,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
       this.trace = props.trace;
       this.you = props.you;
+      this.token = props.token;
     }
   }
 }

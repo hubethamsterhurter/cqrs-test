@@ -1,9 +1,8 @@
 import { IsString } from "class-validator";
 
-export class CreateAuthTokenDto {
-  // TODO: strong validation
+export class ReAuthenticateDto {
   @IsString()
-  readonly body!: string;
+  readonly auth_token_id!: string;
 
   /**
    * @constructor
@@ -11,11 +10,11 @@ export class CreateAuthTokenDto {
    * @param props
    */
   constructor(props: {
-    body: string,
+    auth_token_id: string,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
-      this.body = props.body;
+      this.auth_token_id = props.auth_token_id;
     }
   }
 }

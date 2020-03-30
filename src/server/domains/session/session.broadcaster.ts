@@ -21,7 +21,7 @@ import { ServerMessageSessionDeleted } from "../../../shared/message-server/mode
 import { ServerMessageAuthenticated } from "../../../shared/message-server/models/server-message.authenticated";
 import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
 import { HandleServerModelCreatedEvent } from "../../decorators/handle-server-model-created-event.decorator";
-import { HandleServerEvent } from "../../decorators/handle-server-event.decorator";
+import { HandleSe } from "../../decorators/handle-server-event.decorator";
 import { SessionService } from "./session.service";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
@@ -69,7 +69,7 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(AppHeartbeatSeo)
+  @HandleSe(AppHeartbeatSeo)
   private async _testInvalidMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
     this._socketWarehouse.broadcastAll(new ServerMessageServerHeartbeat({
       trace: evt.trace.clone(),
@@ -88,7 +88,7 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(AppHeartbeatSeo)
+  @HandleSe(AppHeartbeatSeo)
   private async _testMalformedMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
     this._socketWarehouse.broadcastAll({ hello: 'world' } as any);
   }
@@ -100,7 +100,7 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ModelCreatedSeo)
+  @HandleSe(ModelCreatedSeo)
   private async _handleModelCreated(evt: ModelCreatedSeo) {
     this._log.info('Broadcasting ServerEventModelCreated...', evt._p.CTor.name);
 
@@ -134,7 +134,7 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ModelUpdatedSeo)
+  @HandleSe(ModelUpdatedSeo)
   private async _handleModelUpdated(evt: ModelUpdatedSeo) {
     this._log.info('Broadcasting ServerEventModelUpdated...', evt._p.CTor.name);
 
@@ -161,7 +161,7 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(ModelDeletedSeo)
+  @HandleSe(ModelDeletedSeo)
   private async _handleModelDeleted(evt: ModelDeletedSeo) {
     this._log.info('Broadcasting ServerEventModelDeleted...', evt._p.CTor.name);
 
@@ -182,16 +182,18 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(UserLoggedInSeo)
+  @HandleSe(UserLoggedInSeo)
   private async _handleClientMessageSignUp(evt: UserLoggedInSeo) {
     this
       ._socketWarehouse
       .findOneOrFail(evt._p.session.socket_id)
       .send(new ServerMessageAuthenticated({
         you: evt._p.user,
+        token: evt._p.authToken,
         trace: evt.trace.clone(),
       }));
   }
+
 
 
   /**
@@ -200,7 +202,7 @@ export class SessionBroadcaster {
    * 
    * @param evt 
    */
-  @HandleServerEvent(SCMessageInvalidSeo)
+  @HandleSe(SCMessageInvalidSeo)
   private async _handleClientMessageInvalid(evt: SCMessageInvalidSeo) {
     evt
       ._p
@@ -219,7 +221,7 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerEvent(SCMessageMalformedSeo)
+  @HandleSe(SCMessageMalformedSeo)
   private async _handleClientMessageMalformed(evt: SCMessageMalformedSeo) {
     evt
       ._p

@@ -24,6 +24,8 @@ import { SessionBroadcaster } from './domains/session/session.broadcaster';
 import { SessionGateway } from './domains/session/session.gateway';
 import { UserGateway } from './domains/user/user.gateway';
 import { ChatGateway } from './domains/chat/chat.gateway';
+import { AuthTokenBroadcaster } from './domains/auth-token/auth-token.broadcaster';
+import { AuthTokenService } from './domains/auth-token/auth-token.service';
 
 
 
@@ -47,6 +49,8 @@ async function bootstrap() {
   Container.get(SessionGateway);
   Container.get(UserGateway);
   Container.get(ChatGateway);
+  Container.get(AuthTokenBroadcaster);
+  Container.get(AuthTokenService);
 
   es
     .of(AppHeartbeatSeo)

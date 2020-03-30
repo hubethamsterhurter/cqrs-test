@@ -5,10 +5,12 @@ import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Equals, IsObject, ValidateNested } from "class-validator";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { Type } from "class-transformer";
+import { AuthTokenModel } from "../../../shared/domains/auth-token/auth-token.model";
 
 interface Payload {
   readonly session: SessionModel,
   readonly user: UserModel,
+  readonly authToken: AuthTokenModel,
 }
 const _t = SERVER_EVENT_TYPE.USER_LOGGED_IN;
 

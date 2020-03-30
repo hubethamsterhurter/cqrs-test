@@ -6,8 +6,9 @@ import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { UserRepository } from "../user/user.repository";
 import { AuthTokenRepository } from "./auth-token.repository";
-import { CreateAuthTokenDto } from "../../../shared/domains/auth-token/dto/create-auth-token.dto";
 import { AuthTokenModel } from "../../../shared/domains/auth-token/auth-token.model";
+import { UserModel } from "../../../shared/domains/user/user.model";
+import { SessionModel } from "../../../shared/domains/session/session.model";
 
 
 let __created__ = false;
@@ -37,22 +38,24 @@ export class AuthTokenService {
    * @description
    * Create a model
    * 
-   * @param dto 
    * @param opts
    * @param trace
    */
   async create(
-    dto: CreateAuthTokenDto,
-    opts: { expires_at: Date | null, user_id: string },
+    opts: {
+      expires_at: Date | null,
+      user: UserModel,
+      session: SessionModel,
+    },
     trace: Trace,
   ): Promise<AuthTokenModel> {
     const unsaved: UnsavedModel<AuthTokenModel> = {
-      body: dto.body,
-      user_id: opts.user_id,
+      user_id: opts.user.id,
+      origin_session_id: opts.session.id,
       expires_at: opts.expires_at,
     };
-    const user = await this._authTokenRepo.create(unsaved, undefined, trace,);
-    return user;
+    const authToken = await this._authTokenRepo.create(unsaved, undefined, trace,);
+    return authToken;
   }
 
 
