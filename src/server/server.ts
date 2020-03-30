@@ -14,14 +14,16 @@ import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { ClassLogger } from '../shared/helpers/class-logger.helper';
 import { UserService } from './domains/user/user.service';
 import { ChatService } from './domains/chat/chat.service';
-import { SessionService } from './domains/client/session.service';
+import { SessionService } from './domains/session/session.service';
 import { ServerMessageRegistry } from '../shared/message-server/modules/server-message-registry';
 import { ServerMessageParser } from '../shared/message-server/modules/server-message-parser';
 import { ClientMessageRegistry } from '../shared/message-client/modules/client-message-registry';
 import { ClientMessageParser } from '../shared/message-client/modules/client-message-parser';
 import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
-import { SessionBroadcaster } from './domains/client/session.broadcaster';
-import { SessionGateway } from './domains/client/session.gateway';
+import { SessionBroadcaster } from './domains/session/session.broadcaster';
+import { SessionGateway } from './domains/session/session.gateway';
+import { UserGateway } from './domains/user/user.gateway';
+import { ChatGateway } from './domains/chat/chat.gateway';
 
 
 
@@ -43,6 +45,8 @@ async function bootstrap() {
   Container.get(SocketWarehouse);
   Container.get(SessionBroadcaster);
   Container.get(SessionGateway);
+  Container.get(UserGateway);
+  Container.get(ChatGateway);
 
   es
     .of(ServerEventAppHeartbeat)

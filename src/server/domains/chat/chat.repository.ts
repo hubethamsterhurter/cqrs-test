@@ -2,7 +2,7 @@ import { Service, Inject } from "typedi";
 import { IdFactory } from "../../../shared/helpers/id.factory";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { ServerEventStream } from "../../global/event-stream/server-event-stream";
-import { BaseRepository } from "../base-repository";
+import { BaseRepository } from "../../utils/repository/base-repository";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 
 let __created__ = false;

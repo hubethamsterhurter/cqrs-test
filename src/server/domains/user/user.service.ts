@@ -7,10 +7,11 @@ import { ServerEventUserSignedUp } from "../../events/models/server-event.user.s
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { randomElement } from "../../../shared/helpers/random-element";
-import { USER_COLOURS, A_USER_COLOUR } from "../../../shared/constants/user-colour";
+import { USER_COLOURS } from "../../../shared/constants/user-colour";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
+import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
 
 
 let __created__ = false;
@@ -41,22 +42,11 @@ export class UserService {
    * Sign up
    * 
    * @param session
-   * @param raw 
+   * @param dto 
    * @param tracking
    */
-  async signUp(
-    session: SessionModel,
-    raw: {
-      user_name: string,
-      password: string,
-      colour?: A_USER_COLOUR,
-    },
-    tracking: Trace,
-  ): Promise<void> {
-    const user = await this.create(
-      raw,
-      tracking,
-    );
+  async signUp(session: SessionModel, dto: CreateUserDto, tracking: Trace): Promise<void> {
+    const user = await this.create(dto, tracking);
     this._eb.fire(new ServerEventUserSignedUp({
       _p: {
         session,
@@ -83,72 +73,49 @@ export class UserService {
 
   /**
    * @description
-   * Create a user
+   * Create a model
    * 
-   * @param raw 
+   * @param dto 
    * @param trace
    */
-  async create(
-    raw: {
-      user_name: string,
-      password: string,
-      colour?: A_USER_COLOUR
-    },
-    trace: Trace,
-  ): Promise<UserModel> {
-    const rawUser: UnsavedModel<UserModel> = {
-      user_name: raw.user_name,
-      password: raw.password,
-      colour: raw.colour ?? randomElement(USER_COLOURS),
+  async create(dto: CreateUserDto, trace: Trace): Promise<UserModel> {
+    const unsaved: UnsavedModel<UserModel> = {
+      user_name: dto.user_name,
+      password: dto.password,
+      colour: dto.colour ?? randomElement(USER_COLOURS),
     };
-    const user = await this._userRepo.create(
-      rawUser,
-      undefined,
-      trace,
-    );
+    const user = await this._userRepo.create(unsaved, undefined, trace,);
     return user;
   }
 
 
-
   /**
    * @description
-   * Update a user
+   * Update a model
    *
-   * @param user
-   * @param updates
+   * @param model
+   * @param dto
    * @param tracking
    */
-  async update(
-    user: UserModel,
-    updates: {
-      user_name?: string,
-      password?: string,
-      colour?: A_USER_COLOUR
-    },
-    tracking: Trace,
-  ): Promise<UserModel> {
-    if (updates.user_name) user.user_name = updates.user_name;
-    if (updates.password) user.password = updates.password;
-    if (updates.colour) user.colour = updates.colour;
-    const updated = await this._userRepo.upsert(user, tracking);
+  async update(model: UserModel, dto: UpdateUserDto, tracking: Trace): Promise<UserModel> {
+    if (dto.user_name) model.user_name = dto.user_name;
+    if (dto.password) model.password = dto.password;
+    if (dto.colour) model.colour = dto.colour;
+    const updated = await this._userRepo.upsert(model, tracking);
     return updated;
   }
 
 
   /**
    * @description
-   * Delete a user
+   * Delete a model
    *
-   * @param user 
+   * @param model 
    * @param tracking
    */
-  async delete(
-    user: UserModel,
-    tracking: Trace,
-  ): Promise<UserModel> {
-    const deleted = await this._userRepo.delete(user, tracking);
-    if (!deleted) throw new Error(`Unable to delete ${user.id}`);
+  async delete(model: UserModel, tracking: Trace): Promise<UserModel> {
+    const deleted = await this._userRepo.delete(model, tracking);
+    if (!deleted) throw new Error(`Unable to delete ${model.id}`);
     return deleted;
   }
 }

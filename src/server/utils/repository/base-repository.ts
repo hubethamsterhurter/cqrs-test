@@ -1,19 +1,19 @@
 import * as op from 'rxjs/operators';
 import fs from 'fs';
-import { IdFactory } from "../../shared/helpers/id.factory";
-import { ClassType } from "class-transformer/ClassTransformer";
-import { plainToClass, classToPlain } from "class-transformer";
-import { ServerEventBus } from "../global/event-bus/server-event-bus";
-import { Model } from "../../shared/domains/model";
-import { ServerEventModelCreated } from "../events/models/server-event.model-created";
-import { ServerEventModelUpdated } from "../events/models/server-event.model-updated";
-import { ServerEventModelDeleted } from "../events/models/server-event.model-deleted";
-import { ClassLogger } from '../../shared/helpers/class-logger.helper';
-import { UnsavedModel } from '../../shared/types/unsaved-model.type';
-import { $FIX_ME } from '../../shared/types/fix-me.type';
-import { Subject, timer } from "rxjs";
-import { $DANGER } from '../../shared/types/danger.type';
-import { Trace } from '../../shared/helpers/Tracking.helper';
+import { plainToClass, classToPlain } from 'class-transformer';
+import { ClassType } from 'class-transformer/ClassTransformer';
+import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
+import { Model } from '../../../shared/domains/model';
+import { Subject, timer } from 'rxjs';
+import { IdFactory } from '../../../shared/helpers/id.factory';
+import { ServerEventBus } from '../../global/event-bus/server-event-bus';
+import { $DANGER } from '../../../shared/types/danger.type';
+import { UnsavedModel } from '../../../shared/types/unsaved-model.type';
+import { Trace } from '../../../shared/helpers/Tracking.helper';
+import { ServerEventModelCreated } from '../../events/models/server-event.model-created';
+import { $FIX_ME } from '../../../shared/types/fix-me.type';
+import { ServerEventModelUpdated } from '../../events/models/server-event.model-updated';
+import { ServerEventModelDeleted } from '../../events/models/server-event.model-deleted';
 
 function cloneFromClass<M>(Ctor: ClassType<M>, model: M): M {
   const cloned = plainToClass(Ctor, classToPlain(model));
@@ -41,7 +41,7 @@ export abstract class BaseRepository<M extends Model> {
    * 
    * @param createdModel 
    */
-  protected onCreateHook(createdModel: Readonly<M>) {}
+  protected _onCreateHook(createdModel: Readonly<M>) {}
 
   /**
    * @description
@@ -49,7 +49,7 @@ export abstract class BaseRepository<M extends Model> {
    * 
    * @param createdModel 
    */
-  protected onUpdateHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
+  protected _onUpdateHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
 
   /**
    * @description
@@ -57,7 +57,7 @@ export abstract class BaseRepository<M extends Model> {
    * 
    * @param createdModel 
    */
-  protected onDeleteHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
+  protected _onDeleteHook(models: { readonly old: Readonly<M>, readonly new: Readonly<M> }) {}
 
   /**
    * @constructor
@@ -80,7 +80,7 @@ export abstract class BaseRepository<M extends Model> {
       // TODO: validate result shape (should be entries)
       this._log.info(`loaded table ${this._ModelCTor.name.toLowerCase()} from fs`, result)
       this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
-      for (const [,model] of this._table) { this.onCreateHook(model); }
+      for (const [,model] of this._table) { this._onCreateHook(model); }
     } catch (err) {
       // TODO: check if file is readable & lock instead of try catch
       this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`);
@@ -104,6 +104,11 @@ export abstract class BaseRepository<M extends Model> {
           (err) => { this._log.error(`Failed writing ${this._ModelCTor.name} to db`, err); },
         );
       });
+  }
+
+
+  protected _find(id: string) {
+    return this._table.get(id);
   }
 
 
@@ -132,7 +137,7 @@ export abstract class BaseRepository<M extends Model> {
     const clonedModel = plainToClass(this._ModelCTor, preparedModel);
     this._log.info(`Creating`, id, this._ModelCTor.name);
     this._table.set(clonedModel.id, clonedModel);
-    this.onCreateHook(clonedModel);
+    this._onCreateHook(clonedModel);
     this._eb.fire(new ServerEventModelCreated({
       _p: {
         CTor: this._ModelCTor,
@@ -163,10 +168,10 @@ export abstract class BaseRepository<M extends Model> {
 
     if (match) {
       this._log.info(`Upserting ${this._ModelCTor.name} - ${model.id}`);
-      this.onUpdateHook({ old: match, new: cloned })
+      this._onUpdateHook({ old: match, new: cloned })
     } else {
       this._log.info(`Creating ${this._ModelCTor.name} - ${model.id}`);
-      this.onCreateHook(cloned)
+      this._onCreateHook(cloned)
     }
 
     this._eb.fire(new ServerEventModelUpdated({
@@ -252,7 +257,7 @@ export abstract class BaseRepository<M extends Model> {
 
     clone.deleted_at = new Date();
     this._table.set(clone.id, clone);
-    this.onDeleteHook({ old: match, new: clone  });
+    this._onDeleteHook({ old: match, new: clone  });
     this._save$.next();
 
     this
