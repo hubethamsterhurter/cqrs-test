@@ -1,8 +1,9 @@
 import { ClientMessageType, CLIENT_MESSAGE_TYPE } from "../modules/client-message-type";
-import { IsString, MaxLength, MinLength, IsOptional, Equals, IsObject, ValidateNested } from "class-validator";
+import { IsString, MaxLength, MinLength, IsOptional, Equals, IsObject, ValidateNested, IsIn } from "class-validator";
 import { USER_DEFINITION } from "../../domains/user/user.definition";
 import { Trace } from "../../helpers/Tracking.helper";
 import { Type } from "class-transformer";
+import { USER_COLOURS, A_USER_COLOUR } from "../../constants/user-colour";
 
 const _t = CLIENT_MESSAGE_TYPE.USER_UPDATE;
 
@@ -30,6 +31,10 @@ export class ClientMessageUpdateUser implements ClientMessageType<CLIENT_MESSAGE
   @IsString()
   readonly password?: string;
 
+  @IsOptional()
+  @IsIn(USER_COLOURS)
+  readonly colour?: A_USER_COLOUR;
+
   /**
    * @constructor
    *
@@ -40,6 +45,7 @@ export class ClientMessageUpdateUser implements ClientMessageType<CLIENT_MESSAGE
     id: string,
     user_name?: string,
     password?: string
+    colour?: A_USER_COLOUR,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
@@ -47,6 +53,7 @@ export class ClientMessageUpdateUser implements ClientMessageType<CLIENT_MESSAGE
       this.id = props.id;
       this.user_name = props.user_name;
       this.password = props.password;
+      this.colour = props.colour;
     }
   }
 }

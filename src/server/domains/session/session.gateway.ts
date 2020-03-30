@@ -44,9 +44,10 @@ export class SessionGateway {
    */
   @HandleClientMessage(ClientMessageSignUp)
   async handleClientSignUp(evt: ServerEventSocketClientMessageParsed<ClientMessageSignUp>) {
-    const user = this._userRepo.findByUserName(evt._p.message.user_name)
+    const user = await this._userRepo.findByUserName(evt._p.message.user_name)
 
     if (user) {
+      console.log('hi');
       evt._p.socket.send(new ServerMessageError({
         _o: evt._o.clone(),
         code: 422,

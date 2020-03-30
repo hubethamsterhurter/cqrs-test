@@ -14,6 +14,8 @@ import { ServerMessageError } from "../../../shared/message-server/models/server
 import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
 import { SessionService } from "../session/session.service";
+import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
+import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
 
 
 let __created__ = false;
@@ -52,7 +54,7 @@ export class UserGateway {
    */
   @HandleClientMessage(ClientMessageCreateUser)
   async handleClientCreateUser(evt: ServerEventSocketClientMessageParsed<ClientMessageCreateUser>) {
-    const user = this._userRepo.findByUserName(evt._p.message.user_name)
+    const user = await this._userRepo.findByUserName(evt._p.message.user_name)
 
     if (user) {
       evt._p.socket.send(new ServerMessageError({
@@ -64,11 +66,11 @@ export class UserGateway {
     }
 
     await this._userService.create(
-      {
+      new CreateUserDto({
         user_name: evt._p.message.user_name,
         password: evt._p.message.password,
         colour: randomElement(USER_COLOURS),
-      },
+      }),
       evt._o,
     );
   }
@@ -95,14 +97,13 @@ export class UserGateway {
 
     await this._userService.update(
       user,
-      {
+      new UpdateUserDto({
+        id: user.id,
         user_name: evt._p.message.user_name,
         password: evt._p.message.password,
-        // colour: evt._p.message.colour
-      },
+        colour: evt._p.message.colour,
+      }),
       evt._o,
     );
   }
-
-
 }
