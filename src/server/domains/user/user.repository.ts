@@ -4,12 +4,12 @@ import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { BaseRepository } from "../../utils/repository/base-repository";
-import { addToManyIndex } from "../modules/add-to-many-index.helper";
-import { updateManyIndex } from "../modules/update-many-index.helper";
+import { addToManyIndex } from "../../utils/repository/modules/add-to-many-index.helper";
+import { updateManyIndex } from "../../utils/repository/modules/update-many-index.helper";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { addToUniqueIndex } from "../modules/add-to-unique-index.helper";
-import { updateUniqueIndex } from "../modules/update-unique-index.helper";
+import { addToUniqueIndex } from "../../utils/repository/modules/add-to-unique-index.helper";
+import { updateUniqueIndex } from "../../utils/repository/modules/update-unique-index.helper";
 
 let __created__ = false;
 @Service({ global: true })
