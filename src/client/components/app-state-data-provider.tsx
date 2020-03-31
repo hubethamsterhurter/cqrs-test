@@ -5,18 +5,18 @@ import { ChatModel } from '../../shared/domains/chat/chat.model';
 import { WsContext } from './ws-provider';
 import { Subscription } from 'rxjs';
 import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
-import { ServerMessageUserCreated } from '../../shared/message-server/models/server-message.user.created';
-import { ServerMessageUserUpdated } from '../../shared/message-server/models/server-message.user.updated';
-import { ServerMessageChatCreated } from '../../shared/message-server/models/server-message.chat.created';
-import { ServerMessageInit } from '../../shared/message-server/models/server-message.init';
+import { ServerMessageUserCreated } from '../../shared/smo/models/user.created.smo';
+import { ServerMessageUserUpdated } from '../../shared/smo/models/user.updated.smo';
+import { ServerMessageChatCreated } from '../../shared/smo/model.created.smo';
+import { InitSmo } from '../../shared/smo/init.smo';
 import { Logger } from '../../shared/helpers/class-logger.helper';
 import { SessionModel } from '../../shared/domains/session/session.model';
-import { ServerMessageSessionUpdated } from '../../shared/message-server/models/server-message.session.updated';
-import { ServerMessageSessionDeleted } from '../../shared/message-server/models/server-message.session.deleted';
-import { ServerMessageSessionCreated } from '../../shared/message-server/models/server-message.session.created';
+import { ServerMessageSessionUpdated } from '../../shared/smo/models/session.updated.smo';
+import { ServerMessageSessionDeleted } from '../../shared/smo/models/session.deleted.smo';
+import { ServerMessageSessionCreated } from '../../shared/smo/models/session.created.smo';
 import { $DANGER } from '../../shared/types/danger.type';
 import { Model, ModelCtor } from '../../shared/domains/model';
-import { A_SERVER_MESSAGE_TYPE, ServerModelChangedMessageType } from '../../shared/message-server/modules/server-message-type';
+import { A_SERVER_MESSAGE_TYPE, ServerModelChangedMessageType } from '../../shared/smo/modules/server-message-type';
 import { ClassType } from 'class-transformer/ClassTransformer';
 
 /**
@@ -197,7 +197,7 @@ export const DataCtxProvider: React.FC = function DataCtxProvider(props) {
 
     // init (reset)
     // TODO: clean this init
-    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(ServerMessageInit)))
+    subs.push(wsCtx.message$.pipe(op.filter(ofServerMessage(InitSmo)))
       .subscribe(message => {
         console.log('ABC', message);
         const newState = {

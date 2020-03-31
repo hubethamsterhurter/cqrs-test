@@ -16,9 +16,8 @@ import { serverModelDeletedEventOf, serverModelUpdatedEventOf, serverModelCreate
 import { ServerModelUpdatedEventHandlerMetadata } from "./meatadata/server-model-updated-event-handler.metadata";
 import { ServerMetadata } from "./meatadata/server-metadata.type";
 import { $DANGER } from "../../shared/types/danger.type";
-import { ServerMessageError } from "../../shared/message-server/models/server-message.error";
+import { ErrorSmo } from "../../shared/smo/error.smo";
 import { HTTP_CODE } from "../../shared/constants/http-code.constant";
-import { ServerEvent } from "../events/modules/server-event";
 
 const _log = new Logger('ServerEventConsumerDecorator');
 
@@ -35,7 +34,8 @@ function fireCmHandler(instance: any, propKey: string | symbol) {
       await instance[propKey as $DANGER<keyof any>](evt)
     } catch (err) {
       if (err instanceof Error) {
-        evt._p.socket.send(new ServerMessageError({
+        evt._p.socket.send(new ErrorSmo({
+          dto: new ErrorSmoDe
           code: HTTP_CODE._500,
           message: `${err.name}: ${err.message}`,
           trace: evt.trace.clone(),

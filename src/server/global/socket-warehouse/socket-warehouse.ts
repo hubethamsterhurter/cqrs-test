@@ -2,7 +2,7 @@ import { Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { SocketClient } from "../socket-client/socket-client";
-import { ServerMessage } from "../../../shared/message-server/modules/server-message-registry";
+import { ServerMessage } from "../../../shared/smo/modules/server-message-registry";
 import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { HandleSe } from "../../decorators/handle-ce.decorator";
 import { SCCloseSeo } from "../../events/models/sc.close.seo";

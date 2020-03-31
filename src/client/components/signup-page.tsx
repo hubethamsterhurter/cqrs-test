@@ -7,8 +7,8 @@ import { WsContext } from './ws-provider';
 import { SignUpCmo } from '../../shared/message-client/models/sign-up.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { of } from 'rxjs';
-import { ServerMessage } from '../../shared/message-server/modules/server-message-registry';
-import { SignupDto } from '../../shared/domains/session/dto/signup.dto';
+import { ServerMessage } from '../../shared/smo/modules/server-message-registry';
+import { SignupCmDto } from '../../shared/domains/session/cmo/signup.cmo';
 
 
 interface NewUser {
@@ -39,7 +39,7 @@ export const SignupPage: React.FC = function SignupPage(props) {
             .subscribe((evt) => { opts.setSubmitting(false); });
 
           wsCtx.send(new SignUpCmo({
-            dto: new SignupDto({
+            dto: new SignupCmDto({
               user_name: values.user_name,
               password: values.password,
             }),

@@ -1,21 +1,21 @@
 import { Service } from "typedi";
 import { Listener } from "../../../shared/types/listener.type";
-import { ServerEvent } from '../../events/modules/server-event'
 import { $FIX_ME } from "../../../shared/types/fix-me.type";
 import { ClassType } from "class-transformer/ClassTransformer";
-import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
+import { AppHeartbeatSeo, AppHeartbeatSeDto } from "../../events/models/app-heartbeat.seo";
 import { $DANGER } from "../../../shared/types/danger.type";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IEvent } from "../../../shared/interfaces/interface.event";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class ServerEventBus {
   private _log = new Logger(this);
-  private _listeners: Map<ClassType<ServerEvent>, Listener<ServerEvent>[]> = new Map();
-  private _globalListeners: Listener<ServerEvent>[] = [];
+  private _listeners: Map<ClassType<IEvent>, Listener<IEvent>[]> = new Map();
+  private _globalListeners: Listener<IEvent>[] = [];
   private _heartbeatInterval: NodeJS.Timeout;
 
   /**
@@ -27,14 +27,14 @@ export class ServerEventBus {
 
     setTimeout(
       () => this.fire(new AppHeartbeatSeo({
-        _p: { at: new Date(), },
+        dto: new AppHeartbeatSeDto({ at: new Date(), }),
         trace: new Trace(),
       })),
       5000,
     );
     this._heartbeatInterval = setInterval(
       () => this.fire(new AppHeartbeatSeo({
-        _p: { at: new Date(), },
+        dto: new AppHeartbeatSeDto({ at: new Date(), }),
         trace: new Trace(),
       })),
       20000,
@@ -48,11 +48,11 @@ export class ServerEventBus {
    * 
    * @param evt 
    */
-  async fire(evt: ServerEvent) {
-    const Ctor = evt.constructor as ClassType<ServerEvent>;
+  async fire(evt: IEvent) {
+    const Ctor = evt.constructor as ClassType<IEvent>;
 
     if ((Ctor as $FIX_ME<any>) === Object) {
-      throw new TypeError(`Attempted to fire unserialized event "${evt._t}"`);
+      throw new TypeError(`Attempted to fire unserialized event "${evt._n}"`);
     }
 
     setImmediate(async () => {
@@ -71,7 +71,7 @@ export class ServerEventBus {
    * @param newGlobalListener 
    */
   subscribeAll(
-    newGlobalListener: Listener<ServerEvent>,
+    newGlobalListener: Listener<IEvent>,
   ): { unsubscribe: () => void } {
     this
       ._globalListeners
@@ -94,7 +94,7 @@ export class ServerEventBus {
    * @param evtType 
    * @param listener 
    */
-  subscribe<T extends ServerEvent>(
+  subscribe<T extends IEvent>(
     EvtCtor: ClassType<T>,
     listener: Listener<T>,
   ): { unsubscribe: () => void } {
@@ -102,7 +102,7 @@ export class ServerEventBus {
       ._listeners
       .set(
         EvtCtor,
-        (this._listeners.get(EvtCtor) || []).concat(listener as unknown as $DANGER<Listener<ServerEvent>>)
+        (this._listeners.get(EvtCtor) || []).concat(listener as unknown as $DANGER<Listener<IEvent>>)
       );
 
     return {

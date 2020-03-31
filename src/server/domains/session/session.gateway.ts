@@ -9,14 +9,14 @@ import { UserRepository } from "../user/user.repository";
 import { HandleCm } from "../../decorators/handle-cm.decorator";
 import { SignUpCmo } from "../../../shared/message-client/models/sign-up.cmo";
 import { SCMessageSeo } from "../../events/models/sc.message-parsed.seo";
-import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
+import { ErrorSmo } from "../../../shared/smo/error.smo";
 import { LogInCmo } from "../../../shared/message-client/models/log-in.cmo";
 import { LogOutCmo } from "../../../shared/message-client/models/log-out.cmo";
 import { ReAuthenticateCmo } from "../../../shared/message-client/models/re-authenticate.cmo";
 import { ReauthSessionTokenRepository } from "../auth-token/reauth-session-token.repository";
-import { ReauthSessionTokenModel } from "../../../shared/domains/auth-token/reauth-session-token.model";
+import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { ServerMessageInvalidReauthToken } from "../../../shared/message-server/models/server-message.session-expired";
+import { InvalidReauthTokenSmo } from "../../../shared/domains/session/smo/invalid-reauth-token.smo";
 
 
 let __created__ = false;
@@ -59,7 +59,7 @@ export class SessionGateway {
     ]);
 
     if (!token) {
-      evt._p.socket.send(new ServerMessageInvalidReauthToken({
+      evt._p.socket.send(new InvalidReauthTokenSmo({
         trace: evt.trace.clone(),
         message: `Failed to login. Auth token not found.`,
         invalidTokenId: evt._p.message.dto.auth_token_id,
@@ -70,7 +70,7 @@ export class SessionGateway {
     const now = Date.now();
 
     if (token.deleted_at !== null || (token.expires_at && (token.expires_at.valueOf() >= now ))) {
-      evt._p.socket.send(new ServerMessageInvalidReauthToken({
+      evt._p.socket.send(new InvalidReauthTokenSmo({
         trace: evt.trace.clone(),
         message: `Failed to log in. Your session has expired.`,
         invalidTokenId: evt._p.message.dto.auth_token_id,
@@ -81,7 +81,7 @@ export class SessionGateway {
     const user = await this._userRepo.findOne(token.user_id);
 
     if (!user) {
-      evt._p.socket.send(new ServerMessageInvalidReauthToken({
+      evt._p.socket.send(new InvalidReauthTokenSmo({
         trace: evt.trace.clone(),
         message: `Failed to log in. User has been deleted.`,
         invalidTokenId: evt._p.message.dto.auth_token_id,
@@ -108,7 +108,7 @@ export class SessionGateway {
     const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name)
 
     if (user) {
-      evt._p.socket.send(new ServerMessageError({
+      evt._p.socket.send(new ErrorSmo({
         trace: evt.trace.clone(),
         code: 422,
         message: `User ${evt._p.message.dto.user_name} already exists`,
@@ -142,7 +142,7 @@ export class SessionGateway {
       // can't find user
       const msg = 'Cannot log in. User not found.';
       this._log.warn(msg);
-      evt._p.socket.send(new ServerMessageError({
+      evt._p.socket.send(new ErrorSmo({
         trace: evt.trace.clone(),
         code: 404,
         message: msg,
@@ -154,7 +154,7 @@ export class SessionGateway {
       // failed to log in
       const msg = 'Cannot log in. Password does not match.';
       this._log.warn(msg);
-      evt._p.socket.send(new ServerMessageError({
+      evt._p.socket.send(new ErrorSmo({
         trace: evt.trace.clone(),
         code: 422,
         message: msg,

@@ -5,34 +5,34 @@ import { LogConstruction } from "../../../shared/decorators/log-construction.dec
 import { SessionRepository } from "./session.repository";
 import { ChatRepository } from "../chat/chat.repository";
 import { UserRepository } from "../user/user.repository";
-import { ServerMessageInit } from "../../../shared/message-server/models/server-message.init";
+import { InitSmo } from "../../../shared/smo/init.smo";
 import { ModelCreatedSeo } from "../../events/models/model-created.seo";
 import { ModelUpdatedSeo } from "../../events/models/model-updated.seo";
 import { serverModelCreatedEventOf, serverModelUpdatedEventOf, serverModelDeletedEventOf } from "../../helpers/server-model-event-filter.helper";
-import { ServerMessageUserCreated } from "../../../shared/message-server/models/server-message.user.created";
-import { ServerMessageChatCreated } from "../../../shared/message-server/models/server-message.chat.created";
+import { ServerMessageUserCreated } from "../../../shared/smo/models/user.created.smo";
+import { ServerMessageChatCreated } from "../../../shared/smo/model.created.smo";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
-import { ServerMessageUserUpdated } from "../../../shared/message-server/models/server-message.user.updated";
+import { ServerMessageUserUpdated } from "../../../shared/smo/models/user.updated.smo";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { ServerMessageSessionCreated } from "../../../shared/message-server/models/server-message.session.created";
-import { ServerMessageSessionUpdated } from "../../../shared/message-server/models/server-message.session.updated";
+import { ServerMessageSessionCreated } from "../../../shared/smo/models/session.created.smo";
+import { ServerMessageSessionUpdated } from "../../../shared/smo/models/session.updated.smo";
 import { ModelDeletedSeo } from "../../events/models/model-deleted.seo";
-import { ServerMessageSessionDeleted } from "../../../shared/message-server/models/server-message.session.deleted";
-import { ServerMessageAuthenticated } from "../../../shared/message-server/models/server-message.authenticated";
+import { ServerMessageSessionDeleted } from "../../../shared/smo/models/session.deleted.smo";
+import { ServerMessageAuthenticated } from "../../../shared/domains/session/smo/authenticated.smo";
 import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
 import { HandleSeModelCreated } from "../../decorators/handle-se-model-created.decorator";
 import { HandleSe } from "../../decorators/handle-ce.decorator";
 import { SessionService } from "./session.service";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
-import { ServerMessageClientMessageInvalid } from "../../../shared/message-server/models/server-message.client-message-invalid";
+import { CmInvalidSmo } from "../../../shared/smo/cm.invalid.smo";
 import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
-import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
+import { CMMalformedSmo } from "../../../shared/smo/cm.malformed.smo";
 import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
-import { ServerMessageServerHeartbeat } from "../../../shared/message-server/models/server-message.server-heartbeat";
+import { ServerHeartbeatSmo } from "../../../shared/smo/server-heartbeat.smo";
 import { UserLoggedOutSeo } from "../../events/models/user.logged-out.seo";
-import { ServerMessageLoggedOut } from "../../../shared/message-server/models/server-message.logged-out";
+import { LoggedOutSmo } from "../../../shared/domains/session/smo/logged-out.smo";
 
 
 
@@ -73,7 +73,7 @@ export class SessionBroadcaster {
    */
   @HandleSe(AppHeartbeatSeo)
   private async _testInvalidMessageHandleAppHeartbeat(evt: AppHeartbeatSeo) {
-    this._socketWarehouse.broadcastAll(new ServerMessageServerHeartbeat({
+    this._socketWarehouse.broadcastAll(new ServerHeartbeatSmo({
       trace: evt.trace.clone(),
       // TESTING ERROR
       at: 'hi :)' as any,
@@ -203,7 +203,7 @@ export class SessionBroadcaster {
     evt
       ._p
       .socket
-      .send(new ServerMessageClientMessageInvalid({
+      .send(new CmInvalidSmo({
         trace: evt.trace.clone(),
         errors: evt._p.errs,
         messageType: evt._p.Ctor._t,
@@ -222,7 +222,7 @@ export class SessionBroadcaster {
     evt
       ._p
       .socket
-      .send(new ServerMessageClientMessageMalformed({
+      .send(new CMMalformedSmo({
         trace: evt.trace.clone(),
         error: evt._p.err,
       }));
@@ -248,7 +248,7 @@ export class SessionBroadcaster {
       this._sessionRepo.findAll(),
     ]);
     const socket = this._socketWarehouse.findOneOrFail(evt._p.model.socket_id);
-    const initMessage = new ServerMessageInit({
+    const initMessage = new InitSmo({
       sessions: clients.filter(model => model.deleted_at === null),
       chats: chats.filter(model => model.deleted_at === null),
       users: users.filter(model => model.deleted_at === null),
@@ -268,7 +268,7 @@ export class SessionBroadcaster {
   private async _handleUserLoggedOut(evt: UserLoggedOutSeo) {
     const socket = this._socketWarehouse.findOne(evt._p.session.socket_id);
     if (socket) {
-      socket.send(new ServerMessageLoggedOut({
+      socket.send(new LoggedOutSmo({
         deletedReauthTokenId: evt._p.token.id,
         trace: evt.trace.clone(),
       }));

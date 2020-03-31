@@ -10,8 +10,12 @@ import { randomElement } from "../../../shared/helpers/random-element";
 import { USER_COLOURS } from "../../../shared/constants/user-colour";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
-import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
+import { CreateUserCmDto } from "../../../shared/domains/user/cmo/create-user.cmo";
+import { UpdateUserCmDto } from "../../../shared/domains/user/cmo/update-user.cmo";
+import { USER_FILLABLE_FIELDS } from "../../../shared/domains/user/user.definition";
+import { IModel } from "../../../shared/interfaces/interface.model";
+import { BaseModel } from "../../../shared/base/base.model";
+import { fill } from "../../../shared/helpers/fill-fillable.helper";
 
 
 let __created__ = false;
@@ -45,7 +49,7 @@ export class UserService {
    * @param dto 
    * @param tracking
    */
-  async signUp(session: SessionModel, dto: CreateUserDto, tracking: Trace): Promise<void> {
+  async signUp(session: SessionModel, dto: CreateUserCmDto, tracking: Trace): Promise<void> {
     const user = await this.create(dto, tracking);
     this._eb.fire(new UserSignedUpSeo({
       _p: {
@@ -78,12 +82,13 @@ export class UserService {
    * @param dto 
    * @param trace
    */
-  async create(dto: CreateUserDto, trace: Trace): Promise<UserModel> {
+  async create(dto: CreateUserCmDto, trace: Trace): Promise<UserModel> {
     const unsaved: UnsavedModel<UserModel> = {
       user_name: dto.user_name,
       password: dto.password,
       colour: dto.colour ?? randomElement(USER_COLOURS),
     };
+
     const user = await this._userRepo.create(unsaved, undefined, trace,);
     return user;
   }
@@ -97,10 +102,8 @@ export class UserService {
    * @param dto
    * @param trace
    */
-  async update(model: UserModel, dto: UpdateUserDto, trace: Trace): Promise<UserModel> {
-    if (dto.user_name) model.user_name = dto.user_name;
-    if (dto.password) model.password = dto.password;
-    if (dto.colour) model.colour = dto.colour;
+  async update(model: UserModel, dto: UpdateUserCmDto, trace: Trace): Promise<UserModel> {
+    fill(model, USER_FILLABLE_FIELDS, dto);
     const updated = await this._userRepo.upsert(model, trace);
     return updated;
   }

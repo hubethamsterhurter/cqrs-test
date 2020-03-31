@@ -1,14 +1,13 @@
-import { ClientMessageCtor } from "../../shared/message-client/modules/client-message-registry";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
-import { A_CLIENT_MESSAGE_TYPE } from "../../shared/message-client/modules/client-message-type";
-import { Has_t } from "../../shared/types/has-_t.type";
 import { Logger } from "../../shared/helpers/class-logger.helper";
+import { IMessage } from "../../shared/interfaces/interface.message";
+import { ClassType } from "class-transformer/ClassTransformer";
 
 const _log = new Logger(HandleCm);
 
-export function HandleCm<T extends A_CLIENT_MESSAGE_TYPE>(
-  ClientMessageCtor: Extract<ClientMessageCtor, Has_t<T>>
+export function HandleCm<T extends IMessage>(
+  ClientMessageCtor: ClassType<T>
 ): MethodDecorator {
   /**
    * @decorator
@@ -27,8 +26,8 @@ export function HandleCm<T extends A_CLIENT_MESSAGE_TYPE>(
       SERVER_METADATA_KEY.CLIENT_MESSAGE_HANDLER,
       new ClientMessageHandlerMetadata(
         ClientMessageCtor,
-        propertyKey,
-        descriptor
+        // propertyKey,
+        // descriptor
       ),
       target,
       propertyKey,

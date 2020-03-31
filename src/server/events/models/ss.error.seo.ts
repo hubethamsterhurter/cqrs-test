@@ -1,32 +1,26 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly err: Error
-};
-const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_ERROR
-
-export class SSErrorSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_ERROR'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SSErrorSeo._t;
-
+export class SSErrorSeDto extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => Error)
+  readonly err!: Error;
 
-  readonly _p!: Payload;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    err: Error,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.err = props.err;
     }
   }
 }
+
+export class SSErrorSeo extends CreateSe(SSErrorSeDto) {}

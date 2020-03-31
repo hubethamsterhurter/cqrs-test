@@ -1,37 +1,38 @@
-
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject, IsNumber, IsString } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly socket: SocketClient,
-  readonly code: number,
-  readonly reason: string,
-};
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_CLOSE;
-
-// socket client event
-export class SCCloseSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_CLOSE'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SCCloseSeo._t;
-
+export class SCCloseSeDto extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => SocketClient)
+  readonly socket!: SocketClient;
 
-  readonly _p!: Payload;
+  @IsNumber()
+  readonly code!: number;
 
+  @IsString()
+  readonly reason!: string;
+
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly socket: SocketClient,
+    readonly code: number,
+    readonly reason: string,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.socket = props.socket;
+      this.code = props.code;
+      this.reason = props.reason;
     }
   }
 }
+
+// socket client event
+export class SCCloseSeo extends CreateSe(SCCloseSeDto) {}

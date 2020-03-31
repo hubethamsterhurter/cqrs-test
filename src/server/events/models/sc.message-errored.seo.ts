@@ -1,34 +1,34 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly socket: SocketClient,
-  readonly err: Error,
-};
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_MALFORMED;
-
-export class SCMessageMalformedSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_MALFORMED'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SCMessageMalformedSeo._t;
-
+export class SCMessageMalformedSeDto extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => SocketClient)
+  readonly socket!: SocketClient;
 
-  readonly _p!: Payload;
+  
+  @IsObject()
+  @Type(() => Error)
+  readonly err!: Error;
 
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly socket: SocketClient,
+    readonly err: Error,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.socket = props.socket;
+      this.err = props.err;
     }
   }
 }
+
+export class SCMessageMalformedSeo extends CreateSe(SCMessageMalformedSeDto) {}

@@ -1,0 +1,1 @@
+export type K2K<T> = {[K in keyof T]: K}

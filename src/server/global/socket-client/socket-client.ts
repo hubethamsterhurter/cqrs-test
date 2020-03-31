@@ -12,7 +12,7 @@ import { SCUnexpectedResponseSeo } from '../../events/models/sc.unexpected-respo
 import { SCUpgradeSeo } from '../../events/models/sc.upgrade.seo';
 import { SCPongSeo } from '../../events/models/sc.pong.seo';
 import { SCPingSeo } from '../../events/models/sc.ping.seo';
-import { ServerMessage } from '../../../shared/message-server/modules/server-message-registry';
+import { ServerMessage } from '../../../shared/smo/modules/server-message-registry';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';

@@ -5,7 +5,7 @@ import { ServerEventStream } from "../../global/event-stream/server-event-stream
 import { BaseRepository } from "../../utils/repository/base-repository";
 import { addToManyIndex } from "../../utils/repository/modules/add-to-many-index.helper";
 import { updateManyIndex } from "../../utils/repository/modules/update-many-index.helper";
-import { ReauthSessionTokenModel } from "../../../shared/domains/auth-token/reauth-session-token.model";
+import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
 import { addToUniqueIndex } from "../../utils/repository/modules/add-to-unique-index.helper";
 import { updateUniqueIndex } from "../../utils/repository/modules/update-unique-index.helper";
 

@@ -1,12 +1,9 @@
 import { UserModel } from "../user/user.model";
 import { IsString, IsOptional, IsDate } from "class-validator";
-import { ModelType } from "../model.type";
 import { Type } from "class-transformer";
+import { BaseModel } from "../../base/base.model";
 
-export class SessionModel implements ModelType {
-  @IsString()
-  id!: string;
-
+export class SessionModel extends BaseModel {
   @IsString()
   socket_id!: string;
 
@@ -24,24 +21,22 @@ export class SessionModel implements ModelType {
   @Type(() => Date)
   disconnected_at!: Date | null;
 
-  @IsDate() @Type(() => Date) updated_at!: Date;
-  @IsDate() @Type(() => Date) created_at!: Date;
-  @IsOptional() @IsDate() @Type(() => Date) deleted_at!: Date | null;
-
   /**
    * @constructor
    *
    * @param props
    */
-  constructor(props: {
-    id: string,
-    socket_uuid: string,
-    user_id: UserModel['id'] | null,
-    connected_at: Date,
-    disconnected_at: Date | null,
-  }) {
+  constructor(
+    base: BaseModel,
+    props: {
+      socket_uuid: string,
+      user_id: UserModel['id'] | null,
+      connected_at: Date,
+      disconnected_at: Date | null,
+    }
+  ) {
+    super(base);
     if (props) {
-      this.id = props.id;
       this.socket_id = props.socket_uuid;
       this.user_id = props.user_id;
       this.connected_at = props.connected_at;

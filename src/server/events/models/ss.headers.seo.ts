@@ -1,34 +1,33 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { IncomingMessage } from "http";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject, IsArray, IsString } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly req: IncomingMessage,
-  readonly headers: string[],
-}
-const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_HEADERS;
-
-export class SSHeadersSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_HEADERS'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SSHeadersSeo._t;
-
+export class SSHeadersSeDto extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => IncomingMessage)
+  readonly req!: IncomingMessage;
 
-  readonly _p!: Payload;
+  @IsArray()
+  @IsString()
+  readonly headers!: string[];
 
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly req: IncomingMessage,
+    readonly headers: string[],
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.req = props.req;
+      this.headers = props.headers;
     }
   }
 }
+
+export class SSHeadersSeo extends CreateSe(SSHeadersSeDto) {}

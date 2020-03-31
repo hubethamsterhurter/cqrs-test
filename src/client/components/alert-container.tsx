@@ -5,10 +5,10 @@ import { WsContext } from './ws-provider';
 import { Subscription } from 'rxjs';
 import { ValidationError } from 'class-validator';
 import { filter } from 'rxjs/operators';
-import { ServerMessageError } from '../../shared/message-server/models/server-message.error';
+import { ErrorSmo } from '../../shared/smo/error.smo';
 import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
-import { ServerMessageClientMessageInvalid } from '../../shared/message-server/models/server-message.client-message-invalid';
-import { ServerMessageClientMessageMalformed } from '../../shared/message-server/models/server-message.client-message-malformed';
+import { CmInvalidSmo } from '../../shared/smo/cm.invalid.smo';
+import { CMMalformedSmo } from '../../shared/smo/cm.malformed.smo';
 
 // https://stackoverflow.com/questions/37909134/nbsp-jsx-not-working
 // function rws(str: string) { return str.replace(/ /g, '&nbsp;'); }
@@ -49,7 +49,7 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     subs.push(
       wsCtx
         .message$
-        .pipe(filter(ofServerMessage(ServerMessageError)))
+        .pipe(filter(ofServerMessage(ErrorSmo)))
         .subscribe(evt => {
           console.warn('Received error from server', evt);
           const msg = (
@@ -67,7 +67,7 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     subs.push(
       wsCtx
         .message$
-        .pipe(filter(ofServerMessage(ServerMessageClientMessageInvalid)))
+        .pipe(filter(ofServerMessage(CmInvalidSmo)))
         .subscribe(evt => {
           console.warn('Message invalidated by server', evt);
           const msg = (
@@ -84,7 +84,7 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     subs.push(
       wsCtx
         .message$
-        .pipe(filter(ofServerMessage(ServerMessageClientMessageMalformed)))
+        .pipe(filter(ofServerMessage(CMMalformedSmo)))
         .subscribe(evt => {
           console.warn('Message invalidated by server', evt);
           const msg = (

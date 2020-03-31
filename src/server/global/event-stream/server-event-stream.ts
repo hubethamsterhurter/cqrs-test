@@ -1,9 +1,9 @@
 import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../event-bus/server-event-bus";
-import { ServerEvent } from "../../events/modules/server-event";
 import { Observable, Subscriber } from "rxjs";
 import { ClassType } from "class-transformer/ClassTransformer";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
+import { IEvent } from "../../../shared/interfaces/interface.event";
 
 let __created__ = false;
 @Service({ global: true })
@@ -23,9 +23,9 @@ export class ServerEventStream {
    * @description
    * Retrieve an observable listening to all events
    */
-  all(): Observable<ServerEvent> {
+  all(): Observable<IEvent> {
     const _eb = this._eb;
-    const event$ = new Observable(function subscribe(subscriber: Subscriber<ServerEvent>) {
+    const event$ = new Observable(function subscribe(subscriber: Subscriber<IEvent>) {
       // somehow map ctor to something I can get off a hashmap
       const evtSubscription = _eb.subscribeAll((evt) => subscriber.next(evt));
       // teardown logic
@@ -40,7 +40,7 @@ export class ServerEventStream {
    * 
    * @param evtType 
    */
-  of<T extends ServerEvent>(
+  of<T extends IEvent>(
     EvtCtor: ClassType<T>
   ): Observable<T> {
     const _eb = this._eb;

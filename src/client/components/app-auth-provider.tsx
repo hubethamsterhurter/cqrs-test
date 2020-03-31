@@ -4,13 +4,13 @@ import { WsContext } from './ws-provider';
 import { Subscription } from 'rxjs';
 import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
 import { Logger } from '../../shared/helpers/class-logger.helper';
-import { ServerMessageAuthenticated } from '../../shared/message-server/models/server-message.authenticated';
-import { ServerMessageLoggedOut } from '../../shared/message-server/models/server-message.logged-out';
+import { ServerMessageAuthenticated } from '../../shared/domains/session/smo/authenticated.smo';
+import { LoggedOutSmo } from '../../shared/domains/session/smo/logged-out.smo';
 import { LOCAL_STORAGE_AUTH_KEY } from '../constants/ls-auth-key.constant';
-import { ReAuthenticateDto } from '../../shared/domains/session/dto/re-authenticate.dto';
+import { ReAuthenticateCmDto } from '../../shared/domains/session/cmo/re-authenticate.cmo';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { ReAuthenticateCmo } from '../../shared/message-client/models/re-authenticate.cmo';
-import { ServerMessageInvalidReauthToken } from '../../shared/message-server/models/server-message.session-expired';
+import { InvalidReauthTokenSmo } from '../../shared/domains/session/smo/invalid-reauth-token.smo';
 import { UserModel } from '../../shared/domains/user/user.model';
 
 
@@ -44,7 +44,7 @@ export const AppAuthProvider: React.FC<{ children: ReactNode }> = function AppAu
     if (authToken) {
       setAppAuth({ state: 'authenticating', user: null });
       wsCtx.send(new ReAuthenticateCmo({
-        dto: new ReAuthenticateDto({ auth_token_id: authToken, }),
+        dto: new ReAuthenticateCmDto({ auth_token_id: authToken, }),
         trace: new Trace(),
       }));
     }
@@ -57,7 +57,7 @@ export const AppAuthProvider: React.FC<{ children: ReactNode }> = function AppAu
     // on auth token invalid
     subs.push(wsCtx
       .message$
-      .pipe(op.filter(ofServerMessage(ServerMessageInvalidReauthToken)))
+      .pipe(op.filter(ofServerMessage(InvalidReauthTokenSmo)))
       .subscribe(message => {
         const currentToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
         const invalidToken = message.invalidTokenId;
@@ -87,7 +87,7 @@ export const AppAuthProvider: React.FC<{ children: ReactNode }> = function AppAu
     // on log-out
     subs.push(wsCtx
       .message$
-      .pipe(op.filter(ofServerMessage(ServerMessageLoggedOut)))
+      .pipe(op.filter(ofServerMessage(LoggedOutSmo)))
       .subscribe(message => {
         localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
         setAppAuth({

@@ -6,7 +6,7 @@ import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { UserRepository } from "../user/user.repository";
 import { ReauthSessionTokenRepository } from "./reauth-session-token.repository";
-import { ReauthSessionTokenModel } from "../../../shared/domains/auth-token/reauth-session-token.model";
+import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
 
@@ -38,19 +38,27 @@ export class ReauthSessionTokenService {
    * @description
    * Create a model
    * 
-   * @param opts
-   * @param trace
+   * @param arg
    */
-  async create(
-    opts: { expires_at: Date | null, user: UserModel, session: SessionModel, },
+  async create(arg: {
+    unsaved: {
+      expires_at: Date | null,
+      user: UserModel,
+      session: SessionModel,
+    },
     trace: Trace,
-  ): Promise<ReauthSessionTokenModel> {
+  }): Promise<ReauthSessionTokenModel> {
     const unsaved: UnsavedModel<ReauthSessionTokenModel> = {
-      user_id: opts.user.id,
-      session_id: opts.session.id,
-      expires_at: opts.expires_at,
+      user_id: arg.unsaved.user.id,
+      session_id: arg.unsaved.session.id,
+      expires_at: arg.unsaved.expires_at,
     };
-    const authToken = await this._reauthTokenRepo.create(unsaved, undefined, trace,);
+    const authToken = await this._reauthTokenRepo.create({
+      inModel: unsaved,
+      forceId: undefined,
+      requester: arg.unsaved.user,
+      trace: arg.trace,
+    });
     return authToken;
   }
 
@@ -59,17 +67,20 @@ export class ReauthSessionTokenService {
    * @description
    * Update a model
    *
-   * @param model
-   * @param opts
-   * @param trace
+   * @param arg
    */
-  async update(
+  async update(arg: {
     model: ReauthSessionTokenModel,
-    opts: { expires_at: Date | null, },
+    requester: UserModel,
+    changes: { expires_at: Date | null, },
     trace: Trace,
-  ): Promise<ReauthSessionTokenModel> {
-    model.expires_at = opts.expires_at;
-    const updated = await this._reauthTokenRepo.upsert(model, trace);
+  }): Promise<ReauthSessionTokenModel> {
+    arg.model.expires_at = arg.changes.expires_at;
+    const updated = await this._reauthTokenRepo.upsert({
+      inModel: arg.model,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
     return updated;
   }
 
@@ -79,10 +90,19 @@ export class ReauthSessionTokenService {
    * Delete a model
    *
    * @param model 
+   * @param requester
    * @param tracking
    */
-  async delete(model: ReauthSessionTokenModel, tracking: Trace): Promise<ReauthSessionTokenModel> {
-    const deleted = await this._reauthTokenRepo.delete(model, tracking);
+  async delete(arg: {
+    model: ReauthSessionTokenModel,
+    requester: UserModel,
+    trace: Trace,
+  }): Promise<ReauthSessionTokenModel> {
+    const deleted = await this._reauthTokenRepo.delete({
+      inModel: arg.model,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
     if (!deleted) throw new Error(`Unable to delete ${model.id}`);
     return deleted;
   }

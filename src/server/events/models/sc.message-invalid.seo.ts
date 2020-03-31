@@ -1,36 +1,40 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
-import { ValidationError, Equals, ValidateNested, IsObject } from "class-validator";
-import { ClientMessageCtor } from "../../../shared/message-client/modules/client-message-registry";
+import { ValidationError, IsObject, IsArray } from "class-validator";
 import { Type } from "class-transformer";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { ClassType } from "class-transformer/ClassTransformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
+import { IMessage } from "../../../shared/interfaces/interface.message";
 
-interface Payload {
-  readonly socket: SocketClient,
-  readonly errs: ValidationError[],
-  readonly Ctor: ClientMessageCtor
-};
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE_INVALID;
+export class SCMessageInvalidSeDto<M extends IMessage = IMessage> extends BaseDto {
+  @IsObject()
+  @Type(() => SocketClient)
+  readonly socket!: SocketClient;
 
-export class SCMessageInvalidSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE_INVALID'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SCMessageInvalidSeo._t;
+  @IsArray()
+  @Type(() => ValidationError)
+  readonly errs!: ValidationError[];
 
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  readonly MessageCtor!: ClassType<ClassType<M>>
 
-  readonly _p!: Payload;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly socket: SocketClient;
+    readonly errs: ValidationError[];
+    readonly MessageCtor: ClassType<ClassType<M>>;
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.socket = props.socket;
+      this.errs = props.errs;
+      this.MessageCtor = props.MessageCtor;
     }
   }
 }
+
+export class SCMessageInvalidSeo<M extends IMessage = IMessage> extends CreateSe(SCMessageInvalidSeDto)<SCMessageInvalidSeDto<M>> {}

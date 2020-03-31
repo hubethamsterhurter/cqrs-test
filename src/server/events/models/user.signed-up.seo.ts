@@ -1,35 +1,36 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly session: SessionModel,
-  readonly user: UserModel
-}
-const _t = SERVER_EVENT_TYPE.USER_SIGNED_UP;
-
-export class UserSignedUpSeo implements EventType<SERVER_EVENT_TYPE['USER_SIGNED_UP'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = UserSignedUpSeo._t;
+export class UserSignedUpSeDto extends BaseDto {
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SessionModel)
+  readonly session!: SessionModel;
 
   @IsObject()
   @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => UserModel)
+  readonly user!: UserModel;
 
-  readonly _p!: Payload;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly session: SessionModel,
+    readonly user: UserModel
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.session = props.session;
+      this.user = props.user;
     }
   }
 }
+
+export class UserSignedUpSeo extends CreateSe(UserSignedUpSeDto) {}

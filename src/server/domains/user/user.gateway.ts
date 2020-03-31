@@ -10,12 +10,12 @@ import { CreateUserCmo } from '../../../shared/message-client/models/create-user
 import { UpdateUserCmo } from '../../../shared/message-client/models/update-user.cmo';
 import { UserService } from '../user/user.service';
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
-import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
+import { ErrorSmo } from "../../../shared/smo/error.smo";
 import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
 import { SessionService } from "../session/session.service";
-import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
-import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto";
+import { CreateUserCmDto } from "../../../shared/domains/user/cmo/create-user.cmo";
+import { UpdateUserCmDto } from "../../../shared/domains/user/cmo/update-user.cmo";
 
 
 let __created__ = false;
@@ -57,7 +57,7 @@ export class UserGateway {
     const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name)
 
     if (user) {
-      evt._p.socket.send(new ServerMessageError({
+      evt._p.socket.send(new ErrorSmo({
         trace: evt.trace.clone(),
         code: 422,
         message: `User ${evt._p.message.dto.user_name} already exists`,
@@ -66,7 +66,7 @@ export class UserGateway {
     }
 
     await this._userService.create(
-      new CreateUserDto({
+      new CreateUserCmDto({
         user_name: evt._p.message.dto.user_name,
         password: evt._p.message.dto.password,
         colour: randomElement(USER_COLOURS),
@@ -87,7 +87,7 @@ export class UserGateway {
     const user = await this._userRepo.findByUserName(evt._p.message.dto.id);
 
     if (!user) {
-      evt._p.socket.send(new ServerMessageError({
+      evt._p.socket.send(new ErrorSmo({
         trace: evt.trace.clone(),
         code: 404,
         message: `User ${evt._p.message.dto.id} not found`,
@@ -97,7 +97,7 @@ export class UserGateway {
 
     await this._userService.update(
       user,
-      new UpdateUserDto({
+      new UpdateUserCmDto({
         id: user.id,
         user_name: evt._p.message.dto.user_name,
         password: evt._p.message.dto.password,

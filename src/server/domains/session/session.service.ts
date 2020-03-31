@@ -10,10 +10,10 @@ import { SessionModel } from "../../../shared/domains/session/session.model";
 import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { SocketClientFactory } from "../../global/socket-client/socket-client.factory";
 import { IdFactory } from "../../../shared/helpers/id.factory";
-import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
+import { UserLoggedInSeo, UserLoggedInSeDto } from "../../events/models/user.logged-in.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { HandleSe } from "../../decorators/handle-ce.decorator";
-import { UserLoggedOutSeo } from "../../events/models/user.logged-out.seo";
+import { UserLoggedOutSeo, UserLoggedOutSeDto } from "../../events/models/user.logged-out.seo";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { SEConsumer } from "../../decorators/se-consumer.decorator";
@@ -62,15 +62,17 @@ export class SessionService {
    *
    * @param session
    * @param user
+   * @param requester
    * @param trace
    */
   async authenticate(
     session: SessionModel,
     user: UserModel,
+    requester: UserModel | null,
     trace: Trace,
   ): Promise<void> {
     session.user_id = user.id;
-    session = await this._sessionRepo.upsert(session, trace);
+    session = await this._sessionRepo.upsert(session, requester, trace);
     const authToken = await this._reauthTokenService.create(
       {
         user: user,
@@ -80,11 +82,11 @@ export class SessionService {
       trace,
     );
     this._eb.fire(new UserLoggedInSeo({
-      _p: {
-        authToken,
-        session,
-        user,
-      },
+      dto: new UserLoggedInSeDto({
+        authToken: authToken,
+        session: session,
+        user: user,
+      }),
       trace: trace.clone(),
     }));
   }
@@ -116,11 +118,11 @@ export class SessionService {
     ]);
 
     this._eb.fire(new UserLoggedOutSeo({
-      _p: {
+      dto: new UserLoggedOutSeDto({
         session,
-        user,
         token,
-      },
+        user,
+      }),
       trace: trace.clone(),
     }));
   }
@@ -132,9 +134,15 @@ export class SessionService {
    * Delete a session
    *
    * @param session
+   * @param requester
+   * @param trace
    */
-  async delete(session: SessionModel, trace: Trace): Promise<SessionModel | null> {
-    return await this._sessionRepo.delete(session, trace);
+  async delete(
+    session: SessionModel,
+    requester: UserModel,
+    trace: Trace,
+  ): Promise<SessionModel | null> {
+    return await this._sessionRepo.delete(session, requester, trace);
   }
 
 
@@ -153,7 +161,7 @@ export class SessionService {
     const clientSocket = this._wscFactory.create({
       id: this._idFactory.create(),
       client_id: clientId,
-      rawWebSocket: evt._p.rawWebSocket,
+      rawWebSocket: evt.dto.rawWebSocket,
     })
     this._socketWarehouse.add(clientSocket);
     const rawClient: UnsavedModel<SessionModel> = {
@@ -165,6 +173,7 @@ export class SessionService {
     await this._sessionRepo.create(
       rawClient,
       clientId,
+      null,
       evt.trace
     );
   }
@@ -179,9 +188,9 @@ export class SessionService {
    */
   @HandleSe(SCCloseSeo)
   private async _handleSCCClose(evt: SCCloseSeo) {
-    this._log.info(`Removing closed socket ${evt._p.socket.id} (code: "${evt._p.code}", reason: "${evt._p.reason}")`);
-    const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
-    return await this._sessionRepo.delete(session, evt.trace);
+    this._log.info(`Removing closed socket ${evt.dto.socket.id} (code: "${evt.dto.code}", reason: "${evt.dto.reason}")`);
+    const session = await this._sessionRepo.findOneOrFail(evt.dto.socket.session_id);
+    return await this._sessionRepo.delete(session, null, evt.trace);
   }
 
 
@@ -195,6 +204,6 @@ export class SessionService {
    */
   @HandleSe(UserSignedUpSeo)
   private async _handleClientMessageSignUp(evt: UserSignedUpSeo) {
-    await this.authenticate(evt._p.session, evt._p.user, evt.trace);
+    await this.authenticate(evt.dto.session, evt.dto.user, null, evt.trace);
   }
 }

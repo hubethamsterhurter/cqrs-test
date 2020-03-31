@@ -1,13 +1,9 @@
 import { Type } from 'class-transformer'
 import { CHAT_DEFINITION } from './chat.definition';
 import { IsOptional, IsString, MaxLength, MinLength, IsDate } from 'class-validator';
-import { ID_DEFINITION } from '../id.definition';
-import { ModelType } from '../model.type';
+import { BaseModel } from '../../base/base.model';
 
-export class ChatModel implements ModelType {
-  @IsString()
-  id!: string;
-
+export class ChatModel extends BaseModel {
   @IsOptional()
   @IsString()
   author_id!: string | null;
@@ -18,27 +14,29 @@ export class ChatModel implements ModelType {
   content!: string;
 
   @IsDate() @Type(() => Date) sent_at!: Date;
-  @IsDate() @Type(() => Date) updated_at!: Date;
-  @IsDate() @Type(() => Date) created_at!: Date;
-  @IsOptional() @IsDate() @Type(() => Date) deleted_at!: Date | null;
 
-  constructor(props: {
-    id: string;
-    author_id: string | null;
-    content: string;
-    sent_at: Date;
-    updated_at: Date;
-    created_at: Date;
-    deleted_at: Date | null;
-  }) {
+  /**
+   * @constructor
+   *
+   * @param props 
+   */
+  constructor(
+    base: BaseModel,
+    props: {
+      id: string;
+      author_id: string | null;
+      content: string;
+      sent_at: Date;
+      updated_at: Date;
+      created_at: Date;
+      deleted_at: Date | null;
+    }
+  ) {
+    super(base);
     if (props) {
-      this.id = props.id;
       this.author_id = props.author_id;
       this.content = props.content;
       this.sent_at = props.sent_at;
-      this.updated_at = props.updated_at;
-      this.created_at = props.created_at;
-      this.deleted_at = props.deleted_at;
     }
   }
 }

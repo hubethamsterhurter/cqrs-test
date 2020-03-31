@@ -1,35 +1,30 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
-import { Model } from "../../../shared/domains/model";
-import { ClassType } from "class-transformer/ClassTransformer";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
-import { Type } from "class-transformer";
+import { IsObject, IsString } from "class-validator";
+import { IModel } from "../../../shared/interfaces/interface.model";
+import { ctorName } from "../../../shared/helpers/ctor-name.helper";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
+import { BaseDto } from "../../../shared/base/base.dto";
 
-interface Payload<M> {
-  readonly model: M,
-  readonly CTor: ClassType<M>
-}
-const _t = SERVER_EVENT_TYPE.MODEL_UPDATED;
-
-export class ModelUpdatedSeo<M extends Model = Model> implements EventType<SERVER_EVENT_TYPE['MODEL_UPDATED'], Payload<M>> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = ModelUpdatedSeo._t;
-
+export class ModelUpdatedSeDto<M extends IModel = IModel> extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  readonly model!: M;
 
-  readonly _p!: Payload<M>;
+  @IsString()
+  readonly CTorName!: string;
 
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload<M>,
-    trace: Trace,
+    readonly model: M,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.model = props.model;
+      this.CTorName = ctorName(props.model);
     }
   }
 }
+
+export class ModelUpdatedSeo extends CreateSe(ModelUpdatedSeDto) {}

@@ -1,37 +1,44 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
-import { ReauthSessionTokenModel } from "../../../shared/domains/auth-token/reauth-session-token.model";
+import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly session: SessionModel,
-  readonly user: UserModel,
-  readonly authToken: ReauthSessionTokenModel,
-}
-const _t = SERVER_EVENT_TYPE.USER_LOGGED_IN;
-
-export class UserLoggedInSeo implements EventType<SERVER_EVENT_TYPE['USER_LOGGED_IN'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = UserLoggedInSeo._t;
+export class UserLoggedInSeDto extends BaseDto {
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SessionModel)
+  readonly session!: SessionModel;
 
   @IsObject()
   @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => UserModel)
+  readonly user!: UserModel;
 
-  readonly _p!: Payload;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => ReauthSessionTokenModel)
+  readonly authToken!: ReauthSessionTokenModel;
 
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly session: SessionModel,
+    readonly user: UserModel,
+    readonly authToken: ReauthSessionTokenModel,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.session = props.session;
+      this.user = props.user;
+      this.authToken = props.authToken;
     }
   }
 }
+
+export class UserLoggedInSeo extends CreateSe(UserLoggedInSeDto) {}

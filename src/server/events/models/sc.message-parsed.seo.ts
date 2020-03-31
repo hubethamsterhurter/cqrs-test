@@ -1,37 +1,33 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { SocketClient } from "../../global/socket-client/socket-client";
-import { ClientMessage } from "../../../shared/message-client/modules/client-message-registry";
-import { ClassType } from "class-transformer/ClassTransformer";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsObject } from "class-validator";
 import { Type } from "class-transformer";
+import { IMessage } from "../../../shared/interfaces/interface.message";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload<M> {
-  readonly socket: SocketClient,
-  readonly message: M,
-  readonly Ctor: ClassType<M>
-};
-const _t = SERVER_EVENT_TYPE.SOCKET_CLIENT_MESSAGE;
-
-export class SCMessageSeo<M extends ClientMessage = ClientMessage> implements EventType<SERVER_EVENT_TYPE['SOCKET_CLIENT_MESSAGE'], Payload<M>> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SCMessageSeo._t;
+export class SCMessageSeDto<M extends IMessage = IMessage> extends BaseDto {
+  @IsObject()
+  @Type(() => SocketClient)
+  readonly socket!: SocketClient;
 
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  readonly message!: M;
 
-  readonly _p!: Payload<M>;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload<M>,
-    trace: Trace,
+    readonly socket: SocketClient,
+    readonly message: M,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.socket = props.socket;
+      this.message = props.message;
     }
   }
 }
+
+export class SCMessageSeo<M extends IMessage = IMessage> extends CreateSe(SCMessageSeDto)<SCMessageSeDto<M>> {}

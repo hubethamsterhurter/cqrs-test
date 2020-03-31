@@ -1,35 +1,34 @@
 import ws from 'ws';
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
 import { IncomingMessage } from "http";
-import { Equals, IsObject, ValidateNested } from 'class-validator';
-import { Trace } from '../../../shared/helpers/Tracking.helper';
+import { IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
+import { BaseDto } from '../../../shared/base/base.dto';
+import { CreateSe } from '../../../shared/helpers/create-se.helper';
 
-interface Payload {
-  readonly req: IncomingMessage,
-  readonly rawWebSocket: ws,
-}
-const _t = SERVER_EVENT_TYPE.SOCKET_SERVER_CONNECTION;
-
-export class SSConnectionSeo implements EventType<SERVER_EVENT_TYPE['SOCKET_SERVER_CONNECTION'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = SSConnectionSeo._t;
+export class SSConnectionSeDto extends BaseDto {
+  @IsObject()
+  @Type(() => IncomingMessage)
+  readonly req!: IncomingMessage;
 
   @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
+  @Type(() => ws)
+  readonly rawWebSocket!: ws;
 
-  readonly _p!: Payload;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly req: IncomingMessage,
+    readonly rawWebSocket: ws,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.req = props.req;
+      this.rawWebSocket = props.rawWebSocket;
     }
   }
 }
+
+export class SSConnectionSeo extends CreateSe(SSConnectionSeDto) {}

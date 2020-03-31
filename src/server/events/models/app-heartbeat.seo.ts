@@ -1,32 +1,26 @@
-import { EventType } from "../../../shared/types/event.type";
-import { SERVER_EVENT_TYPE } from "../modules/server-event-type";
-import { Equals, IsObject, ValidateNested } from "class-validator";
-import { Trace } from "../../../shared/helpers/Tracking.helper";
+import { IsDate } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
-interface Payload {
-  readonly at: Date;
-}
-const _t = SERVER_EVENT_TYPE.HEARTBEAT
+export class AppHeartbeatSeDto extends BaseDto {
+  @IsDate()
+  @Type(() => Date)
+  readonly at!: Date;
 
-export class AppHeartbeatSeo implements EventType<SERVER_EVENT_TYPE['HEARTBEAT'], Payload> {
-  static get _t() { return _t; }
-  @Equals(_t) readonly _t = AppHeartbeatSeo._t;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => Trace)
-  readonly trace!: Trace;
-
-  readonly _p!: Payload;
-
+  /**
+   * @constructor
+   *
+   * @param props
+   */
   constructor(props: {
-    _p: Payload,
-    trace: Trace,
+    readonly at: Date,
   }) {
+    super();
     if (props) {
-      this.trace = props.trace;
-      this._p = props._p;
+      this.at = props.at;
     }
   }
 }
+
+export class AppHeartbeatSeo extends CreateSe(AppHeartbeatSeDto) {}
