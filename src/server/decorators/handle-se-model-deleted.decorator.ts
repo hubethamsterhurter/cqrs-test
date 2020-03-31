@@ -2,11 +2,11 @@ import { ClassType } from "class-transformer/ClassTransformer";
 import { Model } from "../../shared/domains/model";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerModelDeletedEventHandlerMetadata } from "./meatadata/server-model-deleted-event-handler.metadata";
-import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+import { Logger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleServerModelDeletedEvent);
+const _log = new Logger(HandleSeModelDeleted);
 
-export function HandleServerModelDeletedEvent<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
+export function HandleSeModelDeleted<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
   /**
    * @decorator
    *
@@ -14,7 +14,7 @@ export function HandleServerModelDeletedEvent<M extends Model>(ModelCtor: ClassT
    * @param propertyKey     name of the member
    * @param descriptor      property descriptor for the member
    */
-  const doHandleServerModelEvent = function doHandleServerModelEvent(
+  const doHandleSeModelDeleted = function doHandleSeModelDeleted(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
@@ -30,13 +30,7 @@ export function HandleServerModelDeletedEvent<M extends Model>(ModelCtor: ClassT
       target,
       propertyKey,
     );
-
-    // const subscription = Container
-    //   .get(ServerEventStream)
-    //   .of(ServerEventModelDeleted)
-    //   .pipe(filter(serverModelDeletedEventOf(ModelCtor)))
-    //   .subscribe((evt) => descriptor.value.apply(this, evt));
   }
 
-  return doHandleServerModelEvent;
+  return doHandleSeModelDeleted;
 }

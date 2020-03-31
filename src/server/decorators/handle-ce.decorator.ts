@@ -2,9 +2,9 @@
 import { ServerEventCtor } from "../events/modules/server-event";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerEventHandlerMetadata } from "./meatadata/server-event-handler.metadata";
-import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+import { Logger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleSe);
+const _log = new Logger(HandleSe);
 
 export function HandleSe(ServerEventCtor: ServerEventCtor): MethodDecorator {
   /**

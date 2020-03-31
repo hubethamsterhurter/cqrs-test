@@ -9,6 +9,6 @@ export type ServerMetadataCtor =
   | typeof ServerEventHandlerMetadata
   | typeof ServerModelCreatedEventHandlerMetadata
   | typeof ServerModelUpdatedEventHandlerMetadata
-  | typeof ServerModelDeletedEventHandlerMetadata
+  | typeof ServerModelDeletedEventHandlerMetadata;
 
 export type ServerMetadata = ServerMetadataCtor['prototype']

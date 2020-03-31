@@ -1,6 +1,6 @@
 import Container from "typedi";
 import { $FIX_ME } from "../../shared/types/fix-me.type";
-import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+import { Logger } from "../../shared/helpers/class-logger.helper";
 import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
 import { ServerEventStream } from "../global/event-stream/server-event-stream";
 import { SCMessageSeo } from "../events/models/sc.message-parsed.seo";
@@ -16,8 +16,55 @@ import { serverModelDeletedEventOf, serverModelUpdatedEventOf, serverModelCreate
 import { ServerModelUpdatedEventHandlerMetadata } from "./meatadata/server-model-updated-event-handler.metadata";
 import { ServerMetadata } from "./meatadata/server-metadata.type";
 import { $DANGER } from "../../shared/types/danger.type";
+import { ServerMessageError } from "../../shared/message-server/models/server-message.error";
+import { HTTP_CODE } from "../../shared/constants/http-code.constant";
+import { ServerEvent } from "../events/modules/server-event";
 
-const _log = new ClassLogger('ServerEventConsumerDecorator');
+const _log = new Logger('ServerEventConsumerDecorator');
+
+/**
+ * @description
+ * Try/catch client message handlers
+ *
+ * @param instance
+ * @param propKey
+ */
+function fireCmHandler(instance: any, propKey: string | symbol) {
+  return async function doFireCmHandler(evt: SCMessageSeo) {
+    try {
+      await instance[propKey as $DANGER<keyof any>](evt)
+    } catch (err) {
+      if (err instanceof Error) {
+        evt._p.socket.send(new ServerMessageError({
+          code: HTTP_CODE._500,
+          message: `${err.name}: ${err.message}`,
+          trace: evt.trace.clone(),
+        }))
+      } else {
+        _log.error('UNHANDLED Client Message Handler Error', err);
+      }
+    }
+  }
+}
+
+/**
+ * @description
+ * Try/catch server event handlers
+ *
+ * @param instance
+ * @param propKey
+ */
+function fireSmHandler(instance: any, propKey: string | symbol) {
+  return async function doFireSmHandler(evt: ServerEvent) {
+    try {
+      await instance[propKey as $DANGER<keyof any>](evt)
+    } catch (err) {
+      _log.error('UNHANDLED Server Event Handler Error', err);
+    }
+  }
+}
+
+
 
 function bindMetadata(opts: {
   mdKey: string | symbol,
@@ -40,7 +87,7 @@ function bindMetadata(opts: {
       .get(ServerEventStream)
       .of(SCMessageSeo)
       .pipe(filter(ofClientMessage(metadata.ClientMessageCtor)))
-      .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
+      .subscribe(fireCmHandler(instance, propKey));
   }
 
   else if (metadata instanceof ServerModelCreatedEventHandlerMetadata) {
@@ -49,7 +96,7 @@ function bindMetadata(opts: {
       .get(ServerEventStream)
       .of(ModelCreatedSeo)
       .pipe(filter(serverModelCreatedEventOf(metadata.ModelCtor)))
-      .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
+      .subscribe(fireSmHandler(instance, propKey));
   }
 
   else if (metadata instanceof ServerModelUpdatedEventHandlerMetadata) {
@@ -58,7 +105,7 @@ function bindMetadata(opts: {
       .get(ServerEventStream)
       .of(ModelUpdatedSeo)
       .pipe(filter(serverModelUpdatedEventOf(metadata.ModelCtor)))
-      .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
+      .subscribe(fireSmHandler(instance, propKey));
   }
 
   else if (metadata instanceof ServerModelDeletedEventHandlerMetadata) {
@@ -67,7 +114,7 @@ function bindMetadata(opts: {
       .get(ServerEventStream)
       .of(ModelDeletedSeo)
       .pipe(filter(serverModelDeletedEventOf(metadata.ModelCtor)))
-      .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
+      .subscribe(fireSmHandler(instance, propKey));
   }
 
   else if (metadata instanceof ServerEventHandlerMetadata) {
@@ -75,7 +122,7 @@ function bindMetadata(opts: {
     Container
       .get(ServerEventStream)
       .of(metadata.ServerEventCtor)
-      .subscribe((evt) => instance[propKey as $DANGER<keyof any>](evt));
+      .subscribe(fireSmHandler(instance, propKey));
   }
 
   else {
@@ -92,7 +139,7 @@ function bindMetadata(opts: {
  * @description
  * Only works for DI'd classes
  */
-export function ServerEventConsumer(): ClassDecorator {
+export function SEConsumer(): ClassDecorator {
   // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
   // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
   // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
@@ -116,7 +163,7 @@ export function ServerEventConsumer(): ClassDecorator {
       //
       // THIS IS POTENTIALLY VERY DANGEROUS???????????????????????????????
       // WE'RE IN A CONSTRUCTOR FUNCTION CALLING A CONSTRUCTOR FUNCTION TO BUILD OURSELF
-      // I DON'T EVEN KNOW WHY THIS WORKS
+      // NOT 100% SURE WHY IT WORKS
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

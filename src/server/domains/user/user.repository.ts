@@ -32,6 +32,7 @@ export class UserRepository extends BaseRepository<UserModel> {
     super(_idFactory, UserModel, _eb);
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
+    Array.from(this.table).forEach(([, model]) => this._onCreateHook(model));
   }
 
   /** @inheritdoc */

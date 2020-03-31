@@ -1,6 +1,6 @@
-import { ClassLogger } from "../helpers/class-logger.helper";
+import { Logger } from "../helpers/class-logger.helper";
 
-const _log = new ClassLogger(LogConstruction);
+const _log = new Logger(LogConstruction);
 
 export function LogConstruction() {
   return function doLogConstruction(constructor: Function) {

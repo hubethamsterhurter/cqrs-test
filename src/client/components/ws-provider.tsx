@@ -1,12 +1,12 @@
 import * as op from 'rxjs/operators'; 
-import React, { createContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { ClientMessageParser } from '../../shared/message-client/modules/client-message-parser';
 import { ClientMessageCtor, ClientMessageRegistry, ClientMessage } from '../../shared/message-client/modules/client-message-registry';
 import { ServerMessageCtor, ServerMessageRegistry, ServerMessage } from '../../shared/message-server/modules/server-message-registry';
 import { ServerMessageParser } from '../../shared/message-server/modules/server-message-parser';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 import { ValidationError } from 'class-validator';
-import { ClassLogger } from '../../shared/helpers/class-logger.helper';
+import { Logger } from '../../shared/helpers/class-logger.helper';
 import { ParseResult, ParseInvalidPayload, ParseMalformedPayload } from '../../shared/helpers/parse-result.helper';
 
 // const messageStream = Subject
@@ -144,7 +144,7 @@ const messageMalformed$ = new Observable<ParseMalformedPayload>(function subscri
   });
 });
 
-const _log = new ClassLogger('WsProvider');
+const _log = new Logger('WsProvider');
 
 // rawMessage$.subscribe(evt => _log.info('received raw message:', evt.data));
 message$.subscribe(message => _log.info('Received message', message));
@@ -163,6 +163,7 @@ function send(msg: ClientMessage): void {
 
 
 interface WsContextValue {
+  wsState: WsState,
   send(msg: ClientMessage): void;
   stateChange$: Observable<{ old: WsState, new: WsState }>;
   open$: Observable<Event>;
@@ -176,6 +177,7 @@ interface WsContextValue {
 
 
 const wsContextValue: WsContextValue = {
+  wsState: ws.readyState,
   send,
   stateChange$,
   close$,
@@ -191,8 +193,17 @@ export const WsContext = createContext<WsContextValue>(wsContextValue);
 
 
 export const WsProvider: React.FC = function WsProvider(props) {
+  const [wsState, setWsState] = useState<WsContextValue>(wsContextValue);
+
+  useEffect(() => {
+    const subs: Subscription[] = [];
+    subs.push(stateChange$.subscribe(opt => setWsState(prev => ({...prev, wsState: opt.new}) )));
+    return () => subs.forEach(sub => sub.unsubscribe());
+  });
+
+  // wsContextValue.
   return (
-    <WsContext.Provider value={wsContextValue}>
+    <WsContext.Provider value={wsState}>
       {props.children}
     </WsContext.Provider>
   );

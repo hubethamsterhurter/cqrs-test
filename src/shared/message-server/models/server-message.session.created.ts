@@ -1,12 +1,12 @@
 import { Type } from 'class-transformer';
-import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
+import { SERVER_MESSAGE_TYPE, ServerModelChangedMessageType } from "../modules/server-message-type";
 import { ValidateNested, IsObject, Equals, } from "class-validator";
 import { SessionModel } from '../../domains/session/session.model';
 import { Trace } from '../../helpers/Tracking.helper';
 
 const _t = SERVER_MESSAGE_TYPE.SESSION_CREATED
 
-export class ServerMessageSessionCreated implements ServerMessageType<SERVER_MESSAGE_TYPE['SESSION_CREATED']> {
+export class ServerMessageSessionCreated implements ServerModelChangedMessageType<SERVER_MESSAGE_TYPE['SESSION_CREATED'], SessionModel> {
   static get _t() { return _t; }
   @Equals( _t) readonly _t = ServerMessageSessionCreated._t;
 

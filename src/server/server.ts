@@ -11,7 +11,7 @@ import { SCMessageInvalidSeo } from './events/models/sc.message-invalid.seo';
 import { SCMessageMalformedSeo } from './events/models/sc.message-errored.seo';
 import { SocketServer } from './global/socket-server/socket-server';
 import { ServerWatcher } from './global/server-watcher/sever-watcher';
-import { ClassLogger } from '../shared/helpers/class-logger.helper';
+import { Logger } from '../shared/helpers/class-logger.helper';
 import { UserService } from './domains/user/user.service';
 import { ChatService } from './domains/chat/chat.service';
 import { SessionService } from './domains/session/session.service';
@@ -24,14 +24,15 @@ import { SessionBroadcaster } from './domains/session/session.broadcaster';
 import { SessionGateway } from './domains/session/session.gateway';
 import { UserGateway } from './domains/user/user.gateway';
 import { ChatGateway } from './domains/chat/chat.gateway';
-import { AuthTokenBroadcaster } from './domains/auth-token/auth-token.broadcaster';
-import { AuthTokenService } from './domains/auth-token/auth-token.service';
+import { ReauthSessionTokenService } from './domains/auth-token/reauth-session-token.service';
+import { SessionRepository } from './domains/session/session.repository';
+import { Trace } from '../shared/helpers/Tracking.helper';
 
 
 
 
 async function bootstrap() {
-  const _log = new ClassLogger(bootstrap);
+  const _log = new Logger(bootstrap);
 
   Container.get(ServerEventBus);
   const es = Container.get(ServerEventStream);
@@ -49,8 +50,7 @@ async function bootstrap() {
   Container.get(SessionGateway);
   Container.get(UserGateway);
   Container.get(ChatGateway);
-  Container.get(AuthTokenBroadcaster);
-  Container.get(AuthTokenService);
+  Container.get(ReauthSessionTokenService);
 
   es
     .of(AppHeartbeatSeo)
@@ -79,6 +79,15 @@ async function bootstrap() {
   es
     .of(SCMessageMalformedSeo)
     .subscribe((evt) => _log.info('Message invalid:', evt._p.err));
+
+  es
+    .all()
+    .subscribe((evt) => _log.info(`\t -> \t EVENT           \t -> \t ${evt.constructor.name.padEnd(25, ' ')} \t -> \t ${evt.trace.origin_id}`));
+
+  const sessionService = Container.get(SessionService);
+  const oldSessions = await (await Container.get(SessionRepository).findAll()).filter(session => session.deleted_at === null);
+  const cleanupTrace = new Trace();
+  for (const session of oldSessions) { await sessionService.delete(session, cleanupTrace) }
 }
 
 bootstrap();

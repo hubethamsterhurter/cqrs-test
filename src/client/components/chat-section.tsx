@@ -5,8 +5,8 @@ import { ChatHistory } from './chat-history';
 export const ChatSection: React.FC = function ChatSection(props) {
   return (
     <>
-      <NewChat />
       <ChatHistory />
+      <NewChat />
     </>
   )
 }

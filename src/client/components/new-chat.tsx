@@ -36,6 +36,7 @@ export const NewChat: React.FC = function NewChat(props) {
           }),
           trace: new Trace(),
         }));
+        setDraftMessage('');
       })
     );
 

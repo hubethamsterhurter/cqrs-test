@@ -1,14 +1,18 @@
 import { Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { SocketClient } from "../socket-client/socket-client";
 import { ServerMessage } from "../../../shared/message-server/modules/server-message-registry";
+import { SEConsumer } from "../../decorators/se-consumer.decorator";
+import { HandleSe } from "../../decorators/handle-ce.decorator";
+import { SCCloseSeo } from "../../events/models/sc.close.seo";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
+@SEConsumer()
 export class SocketWarehouse {
-  private _log = new ClassLogger(this);
+  private _log = new Logger(this);
   private _allSockets: Map<string, SocketClient> = new Map();
   private _activeSockets: Map<string, SocketClient> = new Map();
 
@@ -40,11 +44,11 @@ export class SocketWarehouse {
    *
    * @param socket
    */
-  remove(socket: SocketClient): void {
-    this._activeSockets.delete(socket.id);
+  remove(socket_id: string): void {
+    this._activeSockets.delete(socket_id);
     // try to avoid race conditions if the socket is removed while messages are incoming
     const fifteenSeconds = 15000;
-    setTimeout(() => this._allSockets.delete(socket.id), fifteenSeconds);
+    setTimeout(() => this._allSockets.delete(socket_id), fifteenSeconds);
   }
 
 
@@ -94,6 +98,18 @@ export class SocketWarehouse {
    */
   broadcastOthers(msg: ServerMessage, except: SocketClient) {
     this._activeSockets.forEach(wsc => { if (wsc.id !== except.id) wsc.send(msg); })
+  }
+
+
+  /**
+   * @description
+   * Fired when a socket client disconnects
+   * 
+   * @param evt 
+   */
+  @HandleSe(SCCloseSeo)
+  private async _handleSCCClose(evt: SCCloseSeo) {
+    this.remove(evt._p.socket.id);
   }
 }
 

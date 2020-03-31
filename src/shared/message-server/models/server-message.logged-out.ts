@@ -1,5 +1,5 @@
 import { ServerMessageType, SERVER_MESSAGE_TYPE } from "../modules/server-message-type";
-import { Equals, IsObject, ValidateNested } from "class-validator";
+import { Equals, IsObject, ValidateNested, IsString } from "class-validator";
 import { Trace } from "../../helpers/Tracking.helper";
 import { Type } from "class-transformer";
 
@@ -14,16 +14,21 @@ export class ServerMessageLoggedOut implements ServerMessageType<SERVER_MESSAGE_
   @Type(() => Trace)
   readonly trace!: Trace;
 
+  @IsString()
+  readonly deletedReauthTokenId!: string;
+
   /**
    * @constructor
    *
    * @param props
    */
   constructor(props: {
+    deletedReauthTokenId: string,
     trace: Trace,
   }) {
     // props will not be defined if we do not construct ourselves
     if (props) {
+      this.deletedReauthTokenId = props.deletedReauthTokenId;
       this.trace = props.trace;
     }
   }

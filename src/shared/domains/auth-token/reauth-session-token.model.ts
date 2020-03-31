@@ -2,12 +2,12 @@ import { Type } from 'class-transformer'
 import { IsString, IsDate, IsOptional, } from 'class-validator';
 import { ModelType } from '../model.type';
 
-export class AuthTokenModel implements ModelType {
+export class ReauthSessionTokenModel implements ModelType {
   @IsString()
   id!: string;
 
   @IsString()
-  origin_session_id!: string;
+  session_id!: string;
 
   @IsString()
   user_id!: string;
@@ -33,7 +33,7 @@ export class AuthTokenModel implements ModelType {
     if (props) {
       this.id = props.id;
       this.user_id = props.user_id;
-      this.origin_session_id = props.origin_session_id;
+      this.session_id = props.origin_session_id;
       this.updated_at = props.updated_at;
       this.created_at = props.created_at;
       this.deleted_at = props.deleted_at;

@@ -2,11 +2,11 @@ import { ClassType } from "class-transformer/ClassTransformer";
 import { Model } from "../../shared/domains/model";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerModelCreatedEventHandlerMetadata } from "./meatadata/server-model-created-event-handler.metadata";
-import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+import { Logger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleServerModelCreatedEvent);
+const _log = new Logger(HandleSeModelCreated);
 
-export function HandleServerModelCreatedEvent<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
+export function HandleSeModelCreated<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
   /**
    * @decorator
    *
@@ -14,7 +14,7 @@ export function HandleServerModelCreatedEvent<M extends Model>(ModelCtor: ClassT
    * @param propertyKey     name of the member
    * @param descriptor      property descriptor for the member
    */
-  const doHandleServerModelEvent = function doHandleServerModelEvent(
+  const doHandleSeModelCreated = function doHandleSeModelCreated(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
@@ -30,13 +30,7 @@ export function HandleServerModelCreatedEvent<M extends Model>(ModelCtor: ClassT
       target,
       propertyKey,
     );
-
-    // const subscription = Container
-    //   .get(ServerEventStream)
-    //   .of(ServerEventModelCreated)
-    //   .pipe(filter(serverModelCreatedEventOf(ModelCtor)))
-    //   .subscribe((evt) => descriptor.value.apply(this, evt));
   }
 
-  return doHandleServerModelEvent;
+  return doHandleSeModelCreated;
 }

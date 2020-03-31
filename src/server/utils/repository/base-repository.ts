@@ -2,7 +2,7 @@ import * as op from 'rxjs/operators';
 import fs from 'fs';
 import { plainToClass, classToPlain } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
+import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { Model } from '../../../shared/domains/model';
 import { Subject, timer } from 'rxjs';
 import { IdFactory } from '../../../shared/helpers/id.factory';
@@ -20,7 +20,7 @@ function cloneFromClass<M>(Ctor: ClassType<M>, model: M): M {
   return cloned;
 }
 
-const TABLE_DIR = `${__dirname}/../../../db`;
+const TABLE_DIR = `${__dirname}/../../../../db`;
 
 // 5 sec
 const SYNC_THROTTLE_TIME = 5000;
@@ -30,10 +30,12 @@ const SYNC_THROTTLE_TIME = 5000;
  * TODO: sync to FS & serialize on reboot
  */
 export abstract class BaseRepository<M extends Model> {
-  private readonly _log = new ClassLogger(this);
+  private readonly _log = new Logger(this);
   private readonly _table: Map<string, M>;
   private readonly _save$: Subject<undefined> = new Subject();
   private readonly _tableFile: string;
+
+  protected get table(): Map<string, M> { return this._table }
 
   /**
    * @description
@@ -80,10 +82,9 @@ export abstract class BaseRepository<M extends Model> {
       // TODO: validate result shape (should be entries)
       this._log.info(`loaded table ${this._ModelCTor.name.toLowerCase()} from fs`, result)
       this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
-      for (const [,model] of this._table) { this._onCreateHook(model); }
     } catch (err) {
       // TODO: check if file is readable & lock instead of try catch
-      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`);
+      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`, err);
       this._table = new Map();
     }
 
@@ -224,7 +225,6 @@ export abstract class BaseRepository<M extends Model> {
     const result = Array
       .from(this._table)
       .map(([,model]) => cloneFromClass(this._ModelCTor, model));
-    console.log(result);
     return result;
   }
 

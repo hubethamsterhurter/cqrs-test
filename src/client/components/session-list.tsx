@@ -1,11 +1,11 @@
 import './session-list.css';
 import classnames from 'classnames';
 import React, { useContext } from 'react';
-import { AppStateDataContext } from './app-state-data-provider';
+import { DataCtx } from './app-state-data-provider';
 import { HMS } from './hms';
 
 export const SessionList: React.FC = function SessionList() {
-  const dataCtx = useContext(AppStateDataContext);
+  const dataCtx = useContext(DataCtx);
 
   return (
     <div className="session-list">

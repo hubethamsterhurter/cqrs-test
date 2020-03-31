@@ -16,6 +16,7 @@ import { LogConstruction } from "../../decorators/log-construction.decorator";
 import { UToKV } from "../../types/u-to-kv.type";
 import { ServerMessageClientMessageInvalid } from "../models/server-message.client-message-invalid";
 import { ServerMessageClientMessageMalformed } from "../models/server-message.client-message-malformed";
+import { ServerMessageInvalidReauthToken } from "../models/server-message.session-expired";
 
 export type ServerMessageCtor = 
   | typeof ServerMessageUserCreated
@@ -31,7 +32,8 @@ export type ServerMessageCtor =
   | typeof ServerMessageSessionDeleted
   | typeof ServerMessageClientMessageInvalid
   | typeof ServerMessageClientMessageMalformed
-  | typeof ServerMessageError;
+  | typeof ServerMessageError
+  | typeof ServerMessageInvalidReauthToken;
 
 export type ServerMessage = ServerMessageCtor['prototype']; 
 
@@ -50,6 +52,7 @@ const SERVER_MESSAGE_CTOR_MAP: UToKV<ServerMessageCtor, '_t'> = {
   [ServerMessageClientMessageInvalid._t]: ServerMessageClientMessageInvalid,
   [ServerMessageClientMessageMalformed._t]: ServerMessageClientMessageMalformed,
   [ServerMessageError._t]: ServerMessageError,
+  [ServerMessageInvalidReauthToken._t]: ServerMessageInvalidReauthToken,
 }
 
 const SERVER_MESSAGE_CTORS: ServerMessageCtor[] = Object.values(SERVER_MESSAGE_CTOR_MAP);

@@ -2,7 +2,7 @@ import { Service, Inject } from "typedi";
 import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { ChatRepository } from './chat.repository';
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { SessionRepository } from "../session/session.repository";
 import { CreateChatDto } from "../../../shared/domains/chat/dto/create-chat.dto";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
@@ -15,7 +15,7 @@ let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class ChatService {
-  private readonly _log = new ClassLogger(this)
+  private readonly _log = new Logger(this)
 
 
   /**

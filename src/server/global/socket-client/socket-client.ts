@@ -14,7 +14,7 @@ import { SCPongSeo } from '../../events/models/sc.pong.seo';
 import { SCPingSeo } from '../../events/models/sc.ping.seo';
 import { ServerMessage } from '../../../shared/message-server/modules/server-message-registry';
 import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
-import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
+import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
 
@@ -23,7 +23,7 @@ import { Trace } from '../../../shared/helpers/Tracking.helper';
 
 @LogConstruction()
 export class SocketClient {
-  private _log = new ClassLogger(this);
+  private _log = new Logger(this);
 
   /**
    * @constructor
@@ -175,7 +175,7 @@ export class SocketClient {
    */
   send(msg: ServerMessage) {
     const strMsg = JSON.stringify(msg);
-    this._log.info(`Sending Message ${msg.constructor.name} to ${this.id}`);
+    this._log.info(`-> \t SENDING MESSAGE \t -> \t ${msg?.constructor?.name?.padEnd(25, ' ')} \t -> \t ${msg?.trace?.origin_id}`);
     this._ws.send(strMsg);
   }
 }

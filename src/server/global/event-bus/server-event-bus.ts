@@ -6,15 +6,16 @@ import { ClassType } from "class-transformer/ClassTransformer";
 import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
 import { $DANGER } from "../../../shared/types/danger.type";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class ServerEventBus {
-  private _log = new ClassLogger(this);
+  private _log = new Logger(this);
   private _listeners: Map<ClassType<ServerEvent>, Listener<ServerEvent>[]> = new Map();
+  private _globalListeners: Listener<ServerEvent>[] = [];
   private _heartbeatInterval: NodeJS.Timeout;
 
   /**
@@ -25,11 +26,17 @@ export class ServerEventBus {
     __created__ = true;
 
     setTimeout(
-      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, trace: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({
+        _p: { at: new Date(), },
+        trace: new Trace(),
+      })),
       5000,
     );
     this._heartbeatInterval = setInterval(
-      () => this.fire(new AppHeartbeatSeo({ _p: { at: new Date(), }, trace: new Trace(), })),
+      () => this.fire(new AppHeartbeatSeo({
+        _p: { at: new Date(), },
+        trace: new Trace(),
+      })),
       20000,
     );
   }
@@ -50,9 +57,33 @@ export class ServerEventBus {
 
     setImmediate(async () => {
       // this._log.info(`Triggering ${this._listeners.get(Ctor)?.length ?? 0} listeners for evt: ${Ctor.name}`);
-      try { await Promise.all((this._listeners.get(Ctor) || []).map(ls => ls(evt))); }
+      try { await Promise.all(this._globalListeners.concat((this._listeners.get(Ctor) || [])).map(ls => ls(evt))); }
       catch(err) { this._log.error(`ERR: Failed firing event listeners. ${err}`, err); }
     });
+  }
+
+
+
+  /**
+   * @description
+   * Be notified of all events
+   * 
+   * @param newGlobalListener 
+   */
+  subscribeAll(
+    newGlobalListener: Listener<ServerEvent>,
+  ): { unsubscribe: () => void } {
+    this
+      ._globalListeners
+      .push(newGlobalListener);
+
+    return {
+      unsubscribe: () => {
+        this._globalListeners = this
+          ._globalListeners
+          .filter(oldListener => oldListener !== newGlobalListener);
+      }
+    };
   }
 
 
@@ -65,7 +96,7 @@ export class ServerEventBus {
    */
   subscribe<T extends ServerEvent>(
     EvtCtor: ClassType<T>,
-    listener: Listener<T>
+    listener: Listener<T>,
   ): { unsubscribe: () => void } {
     this
       ._listeners

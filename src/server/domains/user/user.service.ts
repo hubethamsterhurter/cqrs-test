@@ -1,7 +1,7 @@
 import { Service, Inject } from "typedi";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { UserRepository } from "./user.repository";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
@@ -18,7 +18,7 @@ let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class UserService {
-  private readonly _log = new ClassLogger(this);
+  private readonly _log = new Logger(this);
 
   /**
    * @constructor

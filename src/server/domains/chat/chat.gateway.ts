@@ -1,9 +1,9 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleCm } from '../../decorators/handle-client-message.decorator';
+import { HandleCm } from '../../decorators/handle-cm.decorator';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
-import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
-import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { Logger } from '../../../shared/helpers/class-logger.helper';
+import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { CreateChatCmo } from "../../../shared/message-client/models/create-chat.cmo";
 import { ChatRepository } from "./chat.repository";
 import { ChatService } from "./chat.service";
@@ -13,9 +13,9 @@ import { SessionRepository } from "../session/session.repository";
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@ServerEventConsumer()
+@SEConsumer()
 export class ChatGateway {
-  private _log = new ClassLogger(this);
+  private _log = new Logger(this);
 
 
   /**

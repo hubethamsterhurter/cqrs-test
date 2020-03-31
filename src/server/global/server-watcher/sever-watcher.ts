@@ -6,13 +6,13 @@ import { SSErrorSeo } from "../../events/models/ss.error.seo";
 import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
 import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class ServerWatcher {
-  private readonly _log = new ClassLogger(this);
+  private readonly _log = new Logger(this);
 
   /**
    * @constructor

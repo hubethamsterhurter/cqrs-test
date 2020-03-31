@@ -1,6 +1,6 @@
 import { Service, Inject } from "typedi";
 import { UserModel } from "../../../shared/domains/user/user.model";
-import { ClassLogger } from "../../../shared/helpers/class-logger.helper";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SessionRepository } from "./session.repository";
 import { ChatRepository } from "../chat/chat.repository";
@@ -20,26 +20,28 @@ import { ModelDeletedSeo } from "../../events/models/model-deleted.seo";
 import { ServerMessageSessionDeleted } from "../../../shared/message-server/models/server-message.session.deleted";
 import { ServerMessageAuthenticated } from "../../../shared/message-server/models/server-message.authenticated";
 import { UserLoggedInSeo } from "../../events/models/user.logged-in.seo";
-import { HandleServerModelCreatedEvent } from "../../decorators/handle-server-model-created-event.decorator";
-import { HandleSe } from "../../decorators/handle-server-event.decorator";
+import { HandleSeModelCreated } from "../../decorators/handle-se-model-created.decorator";
+import { HandleSe } from "../../decorators/handle-ce.decorator";
 import { SessionService } from "./session.service";
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
 import { ServerMessageClientMessageInvalid } from "../../../shared/message-server/models/server-message.client-message-invalid";
 import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
 import { ServerMessageClientMessageMalformed } from "../../../shared/message-server/models/server-message.client-message-malformed";
-import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
 import { ServerMessageServerHeartbeat } from "../../../shared/message-server/models/server-message.server-heartbeat";
+import { UserLoggedOutSeo } from "../../events/models/user.logged-out.seo";
+import { ServerMessageLoggedOut } from "../../../shared/message-server/models/server-message.logged-out";
 
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@ServerEventConsumer()
+@SEConsumer()
 export class SessionBroadcaster {
-  private readonly _log = new ClassLogger(this);
+  private readonly _log = new Logger(this);
 
   /**
    * @constructor
@@ -102,8 +104,6 @@ export class SessionBroadcaster {
    */
   @HandleSe(ModelCreatedSeo)
   private async _handleModelCreated(evt: ModelCreatedSeo) {
-    this._log.info('Broadcasting ServerEventModelCreated...', evt._p.CTor.name);
-
     if (serverModelCreatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserCreated({
         model: evt._p.model,
@@ -136,8 +136,6 @@ export class SessionBroadcaster {
    */
   @HandleSe(ModelUpdatedSeo)
   private async _handleModelUpdated(evt: ModelUpdatedSeo) {
-    this._log.info('Broadcasting ServerEventModelUpdated...', evt._p.CTor.name);
-
     if (serverModelUpdatedEventOf(UserModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageUserUpdated({
         model: evt._p.model,
@@ -163,8 +161,6 @@ export class SessionBroadcaster {
    */
   @HandleSe(ModelDeletedSeo)
   private async _handleModelDeleted(evt: ModelDeletedSeo) {
-    this._log.info('Broadcasting ServerEventModelDeleted...', evt._p.CTor.name);
-
     if (serverModelDeletedEventOf(SessionModel)(evt)) {
       this._socketWarehouse.broadcastAll(new ServerMessageSessionDeleted({
         model: evt._p.model,
@@ -239,7 +235,7 @@ export class SessionBroadcaster {
    *
    * @param evt
    */
-  @HandleServerModelCreatedEvent(SessionModel)
+  @HandleSeModelCreated(SessionModel)
   private async _handleClientCreated(evt: ModelCreatedSeo<SessionModel>) {
     this._log.info('initialising client');
     const [
@@ -259,5 +255,23 @@ export class SessionBroadcaster {
       trace: evt.trace.clone(),
     });
     socket.send(initMessage);
+  }
+
+
+  /**
+   * @description
+   * Fired when a ClientModel is updated
+   *
+   * @param evt
+   */
+  @HandleSe(UserLoggedOutSeo)
+  private async _handleUserLoggedOut(evt: UserLoggedOutSeo) {
+    const socket = this._socketWarehouse.findOne(evt._p.session.socket_id);
+    if (socket) {
+      socket.send(new ServerMessageLoggedOut({
+        deletedReauthTokenId: evt._p.token.id,
+        trace: evt.trace.clone(),
+      }));
+    }
   }
 }

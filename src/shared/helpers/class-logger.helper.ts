@@ -2,7 +2,7 @@ function formatDateLog(date: Date) {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getMilliseconds().toString().padStart(3, '0').substr(0, 2)}`;
 }
 
-export class ClassLogger {
+export class Logger {
   private _name: string;
 
   /**

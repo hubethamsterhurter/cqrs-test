@@ -1,4 +1,5 @@
 import { MessageType } from "../../types/message.type";
+import { Model } from "../../domains/model";
 
 export const SERVER_MESSAGE_TYPE = {
   MODEL_CREATED: 'model_created',
@@ -19,8 +20,13 @@ export const SERVER_MESSAGE_TYPE = {
   CLIENT_MESSAGE_MALFORMED: 'client_message_malformed',
   CLIENT_MESSAGE_INVALID: 'client_message_invalid',
   ERROR: 'error',
+  INVALID_REAUTH_TOKEN: 'invalid_reauth_token',
 } as const;
 export type SERVER_MESSAGE_TYPE = typeof SERVER_MESSAGE_TYPE;
 export type A_SERVER_MESSAGE_TYPE = SERVER_MESSAGE_TYPE[keyof SERVER_MESSAGE_TYPE];
 
-export type ServerMessageType<T extends A_SERVER_MESSAGE_TYPE> = MessageType<T>
+export type ServerMessageType<T extends A_SERVER_MESSAGE_TYPE> = MessageType<T>;
+
+export interface ServerModelChangedMessageType<T extends A_SERVER_MESSAGE_TYPE, M extends Model> extends ServerMessageType<T> {
+  readonly model: M,
+}

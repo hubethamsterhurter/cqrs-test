@@ -1,9 +1,9 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleCm } from '../../decorators/handle-client-message.decorator';
+import { HandleCm } from '../../decorators/handle-cm.decorator';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { UserRepository } from '../user/user.repository';
-import { ClassLogger } from '../../../shared/helpers/class-logger.helper';
+import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { USER_COLOURS } from '../../../shared/constants/user-colour';
 import { randomElement } from '../../../shared/helpers/random-element';
 import { CreateUserCmo } from '../../../shared/message-client/models/create-user.cmo';
@@ -11,7 +11,7 @@ import { UpdateUserCmo } from '../../../shared/message-client/models/update-user
 import { UserService } from '../user/user.service';
 import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
 import { ServerMessageError } from "../../../shared/message-server/models/server-message.error";
-import { ServerEventConsumer } from "../../decorators/server-event-consumer.decorator";
+import { SEConsumer } from "../../decorators/se-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
 import { SessionService } from "../session/session.service";
 import { CreateUserDto } from "../../../shared/domains/user/dto/create-user.dto";
@@ -21,9 +21,9 @@ import { UpdateUserDto } from "../../../shared/domains/user/dto/update-user.dto"
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@ServerEventConsumer()
+@SEConsumer()
 export class UserGateway {
-  private _log = new ClassLogger(this);
+  private _log = new Logger(this);
 
 
   /**

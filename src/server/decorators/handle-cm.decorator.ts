@@ -3,9 +3,9 @@ import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ClientMessageHandlerMetadata } from "./meatadata/client-message-handler.metadata";
 import { A_CLIENT_MESSAGE_TYPE } from "../../shared/message-client/modules/client-message-type";
 import { Has_t } from "../../shared/types/has-_t.type";
-import { ClassLogger } from "../../shared/helpers/class-logger.helper";
+import { Logger } from "../../shared/helpers/class-logger.helper";
 
-const _log = new ClassLogger(HandleCm);
+const _log = new Logger(HandleCm);
 
 export function HandleCm<T extends A_CLIENT_MESSAGE_TYPE>(
   ClientMessageCtor: Extract<ClientMessageCtor, Has_t<T>>

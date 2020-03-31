@@ -1,8 +1,8 @@
 import { ClassType } from "class-transformer/ClassTransformer";
-import { ServerMessage } from "../../shared/message-server/modules/server-message-registry";
+import { ServerMessageType } from "../../shared/message-server/modules/server-message-type";
 
-export function ofServerMessage<M extends ServerMessage>(MCtor: ClassType<M>) {
-  return function doFilter(message: ServerMessage): message is M {
+export function ofServerMessage<M extends ServerMessageType<any>>(MCtor: ClassType<M>) {
+  return function doFilter(message: ServerMessageType<any>): message is M {
     return message.constructor === MCtor;
   }
 }

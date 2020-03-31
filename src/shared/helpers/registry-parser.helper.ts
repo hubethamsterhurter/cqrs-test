@@ -9,12 +9,12 @@ import { LogConstruction } from "../decorators/log-construction.decorator";
 import { $FIX_ME } from "../types/fix-me.type";
 import { HasTrace } from "../types/has-_o.type";
 import { Trace } from "./Tracking.helper";
-import { ClassLogger } from "./class-logger.helper";
+import { Logger } from "./class-logger.helper";
 
 
 @LogConstruction()
 export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & HasTrace> & Has_t<PropertyKey>> {
-  _log = new ClassLogger(this);
+  _log = new Logger(this);
   #registry: Registry<C, '_t'>;
 
   /**

@@ -19,6 +19,20 @@ export class ServerEventStream {
     __created__ = true;
   }
 
+  /**
+   * @description
+   * Retrieve an observable listening to all events
+   */
+  all(): Observable<ServerEvent> {
+    const _eb = this._eb;
+    const event$ = new Observable(function subscribe(subscriber: Subscriber<ServerEvent>) {
+      // somehow map ctor to something I can get off a hashmap
+      const evtSubscription = _eb.subscribeAll((evt) => subscriber.next(evt));
+      // teardown logic
+      subscriber.add(evtSubscription);
+    });
+    return event$;
+  }
 
   /**
    * @description
