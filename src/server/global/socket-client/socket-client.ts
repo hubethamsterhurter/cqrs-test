@@ -2,18 +2,16 @@ import ws from 'ws';
 import { ServerEventBus } from '../event-bus/server-event-bus';
 import { ServerEventStream } from '../event-stream/server-event-stream';
 import { WS_EVENT } from '../../constants/ws.event';
-import { SCCloseSeo } from '../../events/models/sc.close.seo';
-import { SCErrorSeo } from '../../events/models/sc.error.seo';
+import { SCCloseSeo, SCCloseSeDto } from '../../events/models/sc.close.seo';
+import { SCErrorSeo, SCErrorSeDto } from '../../events/models/sc.error.seo';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
-import { SCMessageInvalidSeo } from '../../events/models/sc.message-invalid.seo';
-import { SCMessageMalformedSeo } from '../../events/models/sc.message-errored.seo';
+import { SCMessageInvalidSeo, SCMessageInvalidSeDto } from '../../events/models/sc.message-invalid.seo';
+import { SCMessageMalformedSeo, SCMessageMalformedSeDto } from '../../events/models/sc.message-errored.seo';
 import { SCOpenSeo } from '../../events/models/sc.open.seo';
 import { SCUnexpectedResponseSeo } from '../../events/models/sc.unexpected-response.seo';
 import { SCUpgradeSeo } from '../../events/models/sc.upgrade.seo';
 import { SCPongSeo } from '../../events/models/sc.pong.seo';
 import { SCPingSeo } from '../../events/models/sc.ping.seo';
-import { ServerMessage } from '../../../shared/smo/modules/server-message-registry';
-import { ClientMessageParser } from '../../../shared/message-client/modules/client-message-parser';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
@@ -42,18 +40,17 @@ export class SocketClient {
     private readonly _ws: ws,
     private readonly _eb: ServerEventBus,
     private readonly _es: ServerEventStream,
-    private readonly _parser: ClientMessageParser,
   ) {
     // emissions
 
     // close
     this._ws.on(WS_EVENT.CLOSE, async (code, reason) => {
       this._eb.fire(new SCCloseSeo({
-        _p: {
+        dto: new SCCloseSeDto({
           socket: this,
           code,
           reason,
-        },
+        }),
         trace: new Trace(),
       }));
     });
@@ -61,10 +58,10 @@ export class SocketClient {
     // error
     this._ws.on(WS_EVENT.ERROR, async (err) => {
       this._eb.fire(new SCErrorSeo({
-        _p: {
+        dto: new SCErrorSeDto({
           socket: this,
-          err,
-        },
+          err: err,
+        }),
         trace: new Trace(),
       }));
     });
@@ -75,25 +72,24 @@ export class SocketClient {
 
       if (result.malformed()) {
         // message -> malformed
-
         this._eb.fire(new SCMessageMalformedSeo({
-          _p: {
+          dto: new SCMessageMalformedSeDto({
             socket: this,
             err: result._u.err,
-          },
+          }),
           trace: new Trace(),
         }));
       }
 
       else if (result.invalid()) {
         // message -> invalid
-
         this._eb.fire(new SCMessageInvalidSeo({
-          _p: {
+          dto: new SCMessageInvalidSeDto({
             socket: this,
             errs: result._u.errs,
-            Ctor: result._u.Ctor,
-          },
+            MessageCtor: result,
+            // Ctor: result._u.Ctor,
+          }),
           trace: result._u.trace?.clone() ?? new Trace(),
         }));
       }

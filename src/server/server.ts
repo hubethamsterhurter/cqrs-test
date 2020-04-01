@@ -13,12 +13,8 @@ import { SocketServer } from './global/socket-server/socket-server';
 import { ServerWatcher } from './global/server-watcher/sever-watcher';
 import { Logger } from '../shared/helpers/class-logger.helper';
 import { UserService } from './domains/user/user.service';
-import { ChatService } from './domains/chat/chat.service';
-import { SessionService } from './domains/session/session.service';
-import { ServerMessageRegistry } from '../shared/smo/modules/server-message-registry';
-import { ServerMessageParser } from '../shared/smo/modules/server-message-parser';
-import { ClientMessageRegistry } from '../shared/message-client/modules/client-message-registry';
-import { ClientMessageParser } from '../shared/message-client/modules/client-message-parser';
+import { ChatCrudService } from './domains/chat/chat.crud.service';
+import { SessionService } from './domains/session/session.auth.service';
 import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
 import { SessionBroadcaster } from './domains/session/session.broadcaster';
 import { SessionGateway } from './domains/session/session.gateway';
@@ -27,6 +23,7 @@ import { ChatGateway } from './domains/chat/chat.gateway';
 import { ReauthSessionTokenService } from './domains/auth-token/reauth-session-token.service';
 import { SessionRepository } from './domains/session/session.repository';
 import { Trace } from '../shared/helpers/Tracking.helper';
+import { SessionListener } from './domains/session/session.listener';
 
 
 
@@ -39,12 +36,9 @@ async function bootstrap() {
   Container.set(SocketServer, Container.get(SocketServerFactory).create());
   Container.get(ServerWatcher);
   Container.get(UserService);
-  Container.get(ChatService);
+  Container.get(ChatCrudService);
   Container.get(SessionService);
-  Container.get(ServerMessageRegistry);
-  Container.get(ServerMessageParser);
-  Container.get(ClientMessageRegistry);
-  Container.get(ClientMessageParser);
+  Container.get(SessionListener);
   Container.get(SocketWarehouse);
   Container.get(SessionBroadcaster);
   Container.get(SessionGateway);

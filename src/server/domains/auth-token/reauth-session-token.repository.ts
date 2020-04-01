@@ -55,10 +55,10 @@ export class ReauthSessionTokenRepository extends BaseRepository<ReauthSessionTo
    * @description
    * Find a user by user_id
    * 
-   * @param original_session_id 
+   * @param arg 
    */
-  async findByOriginalSessionId(original_session_id: string): Promise<ReauthSessionTokenModel | null> {
-    const user = await this._index_session_id.get(original_session_id);
+  async findByOriginalSessionId(arg: { original_session_id: string }): Promise<ReauthSessionTokenModel | null> {
+    const user = await this._index_session_id.get(arg.original_session_id);
     return user ?? null;
   }
 
@@ -66,11 +66,11 @@ export class ReauthSessionTokenRepository extends BaseRepository<ReauthSessionTo
    * @description
    * Find a user by user_id
    * 
-   * @param original_session_id 
+   * @param arg 
    */
-  async findOrFailByOriginalSessionId(original_session_id: string): Promise<ReauthSessionTokenModel> {
-    const user = await this._index_session_id.get(original_session_id);
-    if (!user) throw new ReferenceError(`Failed to find ${ReauthSessionTokenModel.name} with original_session_id "${original_session_id}"`);
+  async findOrFailByOriginalSessionId(arg: { original_session_id: string }): Promise<ReauthSessionTokenModel> {
+    const user = await this._index_session_id.get(arg.original_session_id);
+    if (!user) throw new ReferenceError(`Failed to find ${ReauthSessionTokenModel.name} with original_session_id "${arg.original_session_id}"`);
     return user;
   }
 
@@ -78,10 +78,10 @@ export class ReauthSessionTokenRepository extends BaseRepository<ReauthSessionTo
    * @description
    * Find a user by user_id
    * 
-   * @param user_id 
+   * @param arg 
    */
-  async findByUserId(user_id: string): Promise<ReauthSessionTokenModel[] | null> {
-    const user = await this._index_user_id.get(user_id);
+  async findByUserId(arg: { user_id: string }): Promise<ReauthSessionTokenModel[] | null> {
+    const user = await this._index_user_id.get(arg.user_id);
     return user ?? null;
   }
 
@@ -89,11 +89,11 @@ export class ReauthSessionTokenRepository extends BaseRepository<ReauthSessionTo
    * @description
    * Find a user by user_id
    * 
-   * @param user_id 
+   * @param arg 
    */
-  async findOrFailByUserId(user_id: string): Promise<ReauthSessionTokenModel[]> {
-    const user = await this._index_user_id.get(user_id);
-    if (!user) throw new ReferenceError(`Failed to find ${ReauthSessionTokenModel.name} with user_id "${user_id}"`);
+  async findOrFailByUserId(arg: { user_id: string }): Promise<ReauthSessionTokenModel[]> {
+    const user = await this._index_user_id.get(arg.user_id);
+    if (!user) throw new ReferenceError(`Failed to find ${ReauthSessionTokenModel.name} with user_id "${arg.user_id}"`);
     return user;
   }
 }

@@ -1,12 +1,12 @@
 import { ClassType } from "class-transformer/ClassTransformer";
-import { Model } from "../../shared/domains/model";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerModelCreatedEventHandlerMetadata } from "./meatadata/server-model-created-event-handler.metadata";
 import { Logger } from "../../shared/helpers/class-logger.helper";
+import { IModel } from "../../shared/interfaces/interface.model";
 
 const _log = new Logger(HandleSeModelCreated);
 
-export function HandleSeModelCreated<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
+export function HandleSeModelCreated(ModelCtor: ClassType<IModel>): MethodDecorator {
   /**
    * @decorator
    *
@@ -14,7 +14,7 @@ export function HandleSeModelCreated<M extends Model>(ModelCtor: ClassType<M>): 
    * @param propertyKey     name of the member
    * @param descriptor      property descriptor for the member
    */
-  const doHandleSeModelCreated = function doHandleSeModelCreated(
+  const HandleSeModelCreatedDecorator = function HandleSeModelCreatedDecorator(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
@@ -32,5 +32,5 @@ export function HandleSeModelCreated<M extends Model>(ModelCtor: ClassType<M>): 
     );
   }
 
-  return doHandleSeModelCreated;
+  return HandleSeModelCreatedDecorator;
 }

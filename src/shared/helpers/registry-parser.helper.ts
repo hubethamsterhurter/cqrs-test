@@ -1,21 +1,22 @@
 import { validateSync } from "class-validator";
 import { plainToClass } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { Registry } from "./registry.helper";
 import { $DANGER } from "../types/danger.type";
-import { Has_t } from "../types/has-_t.type";
 import { ParseResult, ParseInvalidPayload, ParseSuccessPayload } from "./parse-result.helper";
 import { LogConstruction } from "../decorators/log-construction.decorator";
 import { $FIX_ME } from "../types/fix-me.type";
 import { HasTrace } from "../types/has-_o.type";
 import { Trace } from "./Tracking.helper";
 import { Logger } from "./class-logger.helper";
+import { Service } from "typedi";
 
 
+@Service({ global: true })
 @LogConstruction()
-export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & HasTrace> & Has_t<PropertyKey>> {
-  _log = new Logger(this);
-  #registry: Registry<C, '_t'>;
+export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTrace>> {
+  private _log = new Logger(this);
+  // #registry: Registry<string, C>;
+  #registry: Map<string, C>;
 
   /**
    * @constructor
@@ -23,21 +24,20 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
    * @param registry
    */
   constructor(
-    registry: Registry<C, '_t'>
+    registry: Map<string, C>
   ) {
     this.#registry = registry;
   }
 
-
-  // /**
-  //  * @description
-  //  * Parse a message from an object
-  //  * 
-  //  * @param data 
-  //  */
-  // fromObj<U>(data: {}): U extends MessageType<T> ? MessageParseResponse<U> : MessageParseResponse<T> {
-  //   return this._parse(data) as $FIX_ME<any>;
-  // }
+  /**
+   * @description
+   * Register a new constructor
+   *
+   * @param Ctor
+   */
+  register(Ctor: C) {
+    this.#registry.set(Ctor.name, Ctor);
+  }
 
   /**
    * @description
@@ -70,20 +70,20 @@ export abstract class RegistryParser<C extends ClassType<Has_t<PropertyKey> & Ha
       });
     }
 
-    const _t = rawJson._t as $DANGER<InstanceType<C>>['_t'];
-    if (!(typeof _t === 'string' || typeof _t === 'number')) {
+    const _n = rawJson._n as $DANGER<InstanceType<C>>['_n'];
+    if (typeof _n !== 'string') {
       return new ParseResult({
         status: 'malformed',
-        err: new Error(`Failed to parse message. _t must be a string or number.`),
+        err: new Error(`Failed to parse message. _n must be a string.`),
       });
     }
 
-    const Ctor = this.#registry.get(_t);
+    const Ctor = this.#registry.get(_n);
 
     if (!(Ctor)) {
       return new ParseResult({
         status: 'malformed',
-        err: new Error(`Unable to find MessageCtor for _t: ${_t}`)
+        err: new Error(`Unhandled message "${_n}".`)
       });
     }
 

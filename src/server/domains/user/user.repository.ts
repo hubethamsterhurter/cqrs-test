@@ -54,37 +54,48 @@ export class UserRepository extends BaseRepository<UserModel> {
   }
 
   /** @inheritdoc */
-  async create(
-    rawModel: UnsavedModel<UserModel>,
-    forceId: string | undefined = undefined,
+  async create(arg: {
+    inModel: UnsavedModel<UserModel>,
+    forceId: string | undefined,
+    requester: UserModel | null
     trace: Trace,
-  ): Promise<UserModel> {
-    if (this._index_user_name.has(rawModel.user_name)) {
+  }): Promise<UserModel> {
+    if (this._index_user_name.has(arg.inModel.user_name)) {
       throw new TypeError('user_name must be unique');
     }
-    return super.create(rawModel, forceId, trace);
+    return await super.create({
+      inModel: arg.inModel,
+      forceId: arg.forceId,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
   }
 
   /** @inheritdoc */
-  async upsert(
-    freshModel: UserModel,
+  async upsert(arg: {
+    inModel: UserModel,
+    requester: UserModel|  null,
     trace: Trace,
-  ): Promise<UserModel> {
-    const old = this._find(freshModel.id);
-    if (old && (old.user_name !== freshModel.user_name)) {
-      if (this._index_user_name.has(freshModel.user_name)) { throw new TypeError('user_name must be unique'); }
+  }): Promise<UserModel> {
+    const old = this._find(arg.inModel.id);
+    if (old && (old.user_name !== arg.inModel.user_name)) {
+      if (this._index_user_name.has(arg.inModel.user_name)) { throw new TypeError('user_name must be unique'); }
     }
-    return super.upsert(freshModel, trace);
+    return super.upsert({
+      inModel: arg.inModel,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
   }
 
   /**
    * @description
    * Find a user by user_name
    * 
-   * @param user_name 
+   * @param arg 
    */
-  async findByUserName(user_name: string): Promise<UserModel | null> {
-    const user = await this._index_user_name.get(user_name);
+  async findByUserName(arg: { user_name: string }): Promise<UserModel | null> {
+    const user = await this._index_user_name.get(arg.user_name);
     return user ?? null;
   }
 
@@ -92,11 +103,11 @@ export class UserRepository extends BaseRepository<UserModel> {
    * @description
    * Find a user by user_name
    * 
-   * @param user_name 
+   * @param arg 
    */
-  async findOrFailByUserName(user_name: string): Promise<UserModel> {
-    const user = await this._index_user_name.get(user_name);
-    if (!user) throw new ReferenceError(`Failed to find ${UserModel.name} with user_name "${user_name}"`);
+  async findOrFailByUserName(arg: { user_name: string }): Promise<UserModel> {
+    const user = await this._index_user_name.get(arg.user_name);
+    if (!user) throw new ReferenceError(`Failed to find ${UserModel.name} with user_name "${arg.user_name}"`);
     return user;
   }
 }

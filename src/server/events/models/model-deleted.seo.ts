@@ -27,4 +27,4 @@ export class ModelDeletedSeDto<M extends IModel = IModel> extends BaseDto {
   }
 }
 
-export class ModelDeletedSeo extends CreateSe(ModelDeletedSeDto) {}
+export class ModelDeletedSeo<M extends IModel = IModel> extends CreateSe(ModelDeletedSeDto)<ModelDeletedSeDto<M>> {}

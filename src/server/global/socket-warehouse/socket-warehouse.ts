@@ -2,15 +2,15 @@ import { Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { SocketClient } from "../socket-client/socket-client";
-import { ServerMessage } from "../../../shared/smo/modules/server-message-registry";
-import { SEConsumer } from "../../decorators/se-consumer.decorator";
+import { SeConsumer } from "../../decorators/se-consumer.decorator";
 import { HandleSe } from "../../decorators/handle-ce.decorator";
 import { SCCloseSeo } from "../../events/models/sc.close.seo";
+import { IMessage } from "../../../shared/interfaces/interface.message";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SEConsumer()
+@SeConsumer()
 export class SocketWarehouse {
   private _log = new Logger(this);
   private _allSockets: Map<string, SocketClient> = new Map();
@@ -84,7 +84,7 @@ export class SocketWarehouse {
    *
    * @param msg
    */
-  broadcastAll(msg: ServerMessage) {
+  broadcastAll(msg: IMessage) {
     this._activeSockets.forEach(wsc => wsc.send(msg));
   }
 
@@ -96,7 +96,7 @@ export class SocketWarehouse {
    * @param msg
    * @param except
    */
-  broadcastOthers(msg: ServerMessage, except: SocketClient) {
+  broadcastOthers(msg: IMessage, except: SocketClient) {
     this._activeSockets.forEach(wsc => { if (wsc.id !== except.id) wsc.send(msg); })
   }
 
@@ -109,7 +109,7 @@ export class SocketWarehouse {
    */
   @HandleSe(SCCloseSeo)
   private async _handleSCCClose(evt: SCCloseSeo) {
-    this.remove(evt._p.socket.id);
+    this.remove(evt.dto.socket.id);
   }
 }
 

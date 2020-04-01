@@ -21,4 +21,4 @@ export class ReAuthenticateCmDto extends BaseDto {
   }
 }
 
-export class LogoutCmo extends CreateMo(ReAuthenticateCmDto) {};
+export class ReAuthenticateCmo extends CreateMo(ReAuthenticateCmDto) {};

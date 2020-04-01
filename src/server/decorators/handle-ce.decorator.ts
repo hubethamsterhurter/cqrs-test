@@ -1,12 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ServerEventCtor } from "../events/modules/server-event";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerEventHandlerMetadata } from "./meatadata/server-event-handler.metadata";
 import { Logger } from "../../shared/helpers/class-logger.helper";
+import { IEvent } from "../../shared/interfaces/interface.event";
+import { ClassType } from "class-transformer/ClassTransformer";
 
 const _log = new Logger(HandleSe);
 
-export function HandleSe(ServerEventCtor: ServerEventCtor): MethodDecorator {
+export function HandleSe(ServerEventCtor: ClassType<IEvent>): MethodDecorator {
   /**
    * @decorator
    *
@@ -14,7 +15,7 @@ export function HandleSe(ServerEventCtor: ServerEventCtor): MethodDecorator {
    * @param propertyKey     name of the member
    * @param descriptor      property descriptor for the member
    */
-  const doHandleServerEvent: MethodDecorator = function doHandleServerEvent(
+  const HandleSeDecorator: MethodDecorator = function HandleSeDecorator(
     target: Object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
@@ -32,5 +33,5 @@ export function HandleSe(ServerEventCtor: ServerEventCtor): MethodDecorator {
     );
   }
 
-  return doHandleServerEvent;
+  return HandleSeDecorator;
 }

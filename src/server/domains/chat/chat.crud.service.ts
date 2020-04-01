@@ -7,16 +7,17 @@ import { SessionRepository } from "../session/session.repository";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
-import { UpdateChatCmDto } from "../../../shared/domains/chat/cmo/update-chat.cmo";
 import { UserModel } from "../../../shared/domains/user/user.model";
-import { fill } from "../../../shared/helpers/fill-fillable.helper";
+import { fillUpdate } from "../../../shared/helpers/fill.update.helper";
 import { CHAT_FILLABLE_FIELDS } from "../../../shared/domains/chat/chat.definition";
+import { AnElemOf } from "../../../shared/types/an-elem-of.type";
+import { fillCreate } from "../../../shared/helpers/fill.create.helper";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-export class ChatService {
+export class ChatCrudService {
   private readonly _log = new Logger(this)
 
 
@@ -42,26 +43,32 @@ export class ChatService {
    * @description
    * Create a model
    * 
-   * @param dto 
-   * @param auhtorId
-   * @param requester
-   * @param trace
+   * @param arg
    */
-  async create(opts: {
-    raw: {
-      content: ChatModel['content'],
-      sent_at: ChatModel['sent_at'],
-    },
-    authorId: string | null,
+  async create(arg: {
+    raw: Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>,
+    sent_at: Date,
+    author_id: string | null,
     requester: UserModel | null,
     trace: Trace,
   }): Promise<ChatModel> {
+    const filled = fillCreate({
+      keys: CHAT_FILLABLE_FIELDS,
+      using: arg.raw,
+    });
+
     const unsaved: UnsavedModel<ChatModel> = {
-      author_id: opts.authorId,
-      content: opts.raw.content,
-      sent_at: opts.raw.sent_at,
+      ...filled,
+      author_id: arg.author_id,
+      sent_at: arg.sent_at,
     };
-    const chat = await this._chatRepo.create(unsaved, undefined, opts.requester, opts.trace);
+
+    const chat = await this._chatRepo.create({
+      inModel: unsaved,
+      forceId: undefined,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
     return chat;
   }
 
@@ -70,19 +77,26 @@ export class ChatService {
    * @description
    * Update a model
    *
-   * @param model
-   * @param updates
-   * @param requester
-   * @param trace
+   * @param arg
    */
-  async update(opts: {
+  async update(arg: {
     model: ChatModel,
-    dto: UpdateChatCmDto,
+    raw: Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>,
     requester: UserModel | null,
     trace: Trace
   }): Promise<ChatModel> {
-    fill(opts.model, CHAT_FILLABLE_FIELDS, opts.dto);
-    const updated = await this._chatRepo.upsert(opts.model, opts.requester, opts.trace);
+    fillUpdate({
+      mutate: arg.model,
+      keys: CHAT_FILLABLE_FIELDS,
+      using: arg.raw,
+    });
+
+    const updated = await this._chatRepo.upsert({
+      inModel: arg.model,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
+
     return updated;
   }
 
@@ -91,17 +105,19 @@ export class ChatService {
    * @description
    * Delete a model
    *
-   * @param model 
-   * @param requester
-   * @param trace
+   * @param arg
    */
-  async delete(opts: {
+  async delete(arg: {
     model: ChatModel,
     requester: UserModel | null,
     trace: Trace,
   }): Promise<ChatModel> {
-    const deleted = await this._chatRepo.delete(opts.model, opts.requester, opts.trace);
-    if (!deleted) throw new Error(`Unable to delete ${opts.model.id}`);
+    const deleted = await this._chatRepo.delete({
+      inModel: arg.model,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
+    if (!deleted) throw new Error(`Unable to delete ${arg.model.id}`);
     return deleted;
   }
 }

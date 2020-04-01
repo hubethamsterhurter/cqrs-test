@@ -1,28 +1,29 @@
 import { Service, Inject } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { SEConsumer } from "../../decorators/se-consumer.decorator";
-import { SessionService } from "./session.service";
+import { SeConsumer } from "../../decorators/se-consumer.decorator";
+import { SessionService } from "./session.auth.service";
 import { UserService } from "../user/user.service";
 import { SessionRepository } from "./session.repository";
 import { UserRepository } from "../user/user.repository";
 import { HandleCm } from "../../decorators/handle-cm.decorator";
-import { SignUpCmo } from "../../../shared/message-client/models/sign-up.cmo";
 import { SCMessageSeo } from "../../events/models/sc.message-parsed.seo";
-import { ErrorSmo } from "../../../shared/smo/error.smo";
-import { LogInCmo } from "../../../shared/message-client/models/log-in.cmo";
-import { LogOutCmo } from "../../../shared/message-client/models/log-out.cmo";
-import { ReAuthenticateCmo } from "../../../shared/message-client/models/re-authenticate.cmo";
+import { ErrorSmo, ErrorSmDto } from "../../../shared/smo/error.smo";
 import { ReauthSessionTokenRepository } from "../auth-token/reauth-session-token.repository";
 import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
 import { SessionModel } from "../../../shared/domains/session/session.model";
-import { InvalidReauthTokenSmo } from "../../../shared/domains/session/smo/invalid-reauth-token.smo";
+import { InvalidReauthTokenSmo, InvalidReauthTokenSmDto } from "../../../shared/domains/session/smo/invalid-reauth-token.smo";
+import { ReAuthenticateCmo } from "../../../shared/domains/session/cmo/re-authenticate.cmo";
+import { SignupCmo } from "../../../shared/domains/session/cmo/signup.cmo";
+import { HTTP_CODE } from "../../../shared/constants/http-code.constant";
+import { loginCmo } from "../../../shared/domains/session/cmo/login.cmo";
+import { LogoutCmo } from "../../../shared/domains/session/cmo/logout.cmo";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SEConsumer()
+@SeConsumer()
 export class SessionGateway {
   private _log = new Logger(this);
 
@@ -54,15 +55,17 @@ export class SessionGateway {
       token,
       session,
     ] = await Promise.all<ReauthSessionTokenModel | null, SessionModel>([
-      this._authTokenRepo.findOne(evt._p.message.dto.auth_token_id),
-      this._sessionRepo.findOneOrFail(evt._p.socket.session_id),
+      this._authTokenRepo.findOne({ id: evt.dto.message.dto.auth_token_id }),
+      this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id }),
     ]);
 
     if (!token) {
-      evt._p.socket.send(new InvalidReauthTokenSmo({
+      evt.dto.socket.send(new InvalidReauthTokenSmo({
+        dto: new InvalidReauthTokenSmDto({
+          message: `Failed to login. Auth token not found.`,
+          invalidTokenId: evt.dto.message.dto.auth_token_id,
+        }),
         trace: evt.trace.clone(),
-        message: `Failed to login. Auth token not found.`,
-        invalidTokenId: evt._p.message.dto.auth_token_id,
       }));
       return;
     }
@@ -70,30 +73,35 @@ export class SessionGateway {
     const now = Date.now();
 
     if (token.deleted_at !== null || (token.expires_at && (token.expires_at.valueOf() >= now ))) {
-      evt._p.socket.send(new InvalidReauthTokenSmo({
+      evt.dto.socket.send(new InvalidReauthTokenSmo({
+        dto: new InvalidReauthTokenSmDto({
+          message: `Failed to log in. Your session has expired.`,
+          invalidTokenId: evt.dto.message.dto.auth_token_id,
+        }),
         trace: evt.trace.clone(),
-        message: `Failed to log in. Your session has expired.`,
-        invalidTokenId: evt._p.message.dto.auth_token_id,
       }));
       return;
     }
 
-    const user = await this._userRepo.findOne(token.user_id);
+    const user = await this._userRepo.findOne({ id: token.user_id });
 
     if (!user) {
-      evt._p.socket.send(new InvalidReauthTokenSmo({
+      evt.dto.socket.send(new InvalidReauthTokenSmo({
+        dto: new InvalidReauthTokenSmDto({
+          message: `Failed to log in. User has been deleted.`,
+          invalidTokenId: evt.dto.message.dto.auth_token_id,
+        }),
         trace: evt.trace.clone(),
-        message: `Failed to log in. User has been deleted.`,
-        invalidTokenId: evt._p.message.dto.auth_token_id,
       }));
       return;
     }
 
-    await this._sessionService.authenticate(
-      session,
-      user,
-      evt.trace,
-    );
+    await this._sessionService.authenticate({
+      session: session,
+      user: user,
+      requester: user,
+      trace: evt.trace,
+    });
   }
 
 
@@ -103,28 +111,28 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @HandleCm(SignUpCmo)
-  async signUp(evt: SCMessageSeo<SignUpCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name)
+  @HandleCm(SignupCmo)
+  async signUp(evt: SCMessageSeo<SignupCmo>) {
+    const user = await this._userRepo.findByUserName({ user_name: evt.dto.message.dto.user_name });
 
     if (user) {
-      evt._p.socket.send(new ErrorSmo({
+      evt.dto.socket.send(new ErrorSmo({
+        dto: new ErrorSmDto({
+          code: HTTP_CODE._422,
+          message: `User ${evt.dto.message.dto.user_name} already exists`,
+          trace: evt.trace.clone(),
+        }),
         trace: evt.trace.clone(),
-        code: 422,
-        message: `User ${evt._p.message.dto.user_name} already exists`,
       }));
       return;
     }
 
-    const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
-    await this._userService.signUp(
+    const session = await this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id });
+    await this._userService.signUp({
+      dto: evt.dto.message.dto,
+      trace: evt.trace,
       session,
-      {
-        user_name: evt._p.message.dto.user_name,
-        password: evt._p.message.dto.password,
-      },
-      evt.trace,
-    );
+    });
   }
 
 
@@ -134,40 +142,47 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @HandleCm(LogInCmo)
-  async logIn(evt: SCMessageSeo<LogInCmo>) {
-    const user = await this._userRepo.findByUserName(evt._p.message.dto.user_name);
+  @HandleCm(loginCmo)
+  async logIn(evt: SCMessageSeo<loginCmo>) {
+    const user = await this._userRepo.findByUserName({ user_name: evt.dto.message.dto.user_name });
 
     if (!user) {
       // can't find user
       const msg = 'Cannot log in. User not found.';
       this._log.warn(msg);
-      evt._p.socket.send(new ErrorSmo({
+      evt.dto.socket.send(new ErrorSmo({
+        dto: new ErrorSmDto({
+          code: HTTP_CODE._404,
+          message: msg,
+          trace: evt.trace.clone(),
+        }),
         trace: evt.trace.clone(),
-        code: 404,
-        message: msg,
       }));
       return;
     }
 
-    if (!this._userService.passwordMatch(user, evt._p.message.dto.password)) {
+    if (!this._userService.passwordMatch({ user, password: evt.dto.message.dto.password, })) {
       // failed to log in
       const msg = 'Cannot log in. Password does not match.';
       this._log.warn(msg);
-      evt._p.socket.send(new ErrorSmo({
+      evt.dto.socket.send(new ErrorSmo({
+        dto: new ErrorSmDto({
+          code: HTTP_CODE._422,
+          message: msg,
+          trace: evt.trace.clone(),
+        }),
         trace: evt.trace.clone(),
-        code: 422,
-        message: msg,
       }));
       return;
     }
 
-    const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
-    await this._sessionService.authenticate(
-      session,
-      user,
-      evt.trace,
-    );
+    const session = await this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id });
+    await this._sessionService.authenticate({
+      session: session,
+      user: user,
+      requester: user,
+      trace: evt.trace,
+    });
   }
 
 
@@ -178,9 +193,12 @@ export class SessionGateway {
    * 
    * @param evt 
    */
-  @HandleCm(LogOutCmo)
-  async logOut(evt: SCMessageSeo<LogOutCmo>) {
-    const session = await this._sessionRepo.findOneOrFail(evt._p.socket.session_id);
-    await this._sessionService.logout(session, evt.trace);
+  @HandleCm(LogoutCmo)
+  async logOut(evt: SCMessageSeo<LogoutCmo>) {
+    const session = await this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id });
+    await this._sessionService.logout({
+      session,
+      trace: evt.trace,
+    });
   }
 }

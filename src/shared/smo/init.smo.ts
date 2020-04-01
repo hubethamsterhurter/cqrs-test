@@ -6,7 +6,7 @@ import { SessionModel } from "../domains/session/session.model";
 import { BaseDto } from "../base/base.dto";
 import { CreateMo } from "../helpers/create-mo.helper";
 
-class InitSmDto extends BaseDto {
+export class InitSmDto extends BaseDto {
   @IsArray()
   @ValidateNested()
   @Type(() => UserModel)

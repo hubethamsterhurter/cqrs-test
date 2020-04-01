@@ -16,10 +16,12 @@ export class ModelUpdatedSmDto<T extends object = object> extends BaseDto {
    */
   constructor(props: {
     CtorName: string
+    model: T,
   }) {
     super();
     if (props) {
       this.CtorName = props.CtorName;
+      this.model = props.model;
     }
   }
 }

@@ -6,9 +6,7 @@ import { ClassType } from "class-transformer/ClassTransformer";
 
 const _log = new Logger(HandleCm);
 
-export function HandleCm<T extends IMessage>(
-  ClientMessageCtor: ClassType<T>
-): MethodDecorator {
+export function HandleCm(ClientMessageCtor: ClassType<IMessage>): MethodDecorator {
   /**
    * @decorator
    *

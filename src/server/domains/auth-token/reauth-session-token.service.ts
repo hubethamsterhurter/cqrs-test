@@ -89,9 +89,7 @@ export class ReauthSessionTokenService {
    * @description
    * Delete a model
    *
-   * @param model 
-   * @param requester
-   * @param tracking
+   * @param arg
    */
   async delete(arg: {
     model: ReauthSessionTokenModel,
@@ -103,7 +101,7 @@ export class ReauthSessionTokenService {
       requester: arg.requester,
       trace: arg.trace,
     });
-    if (!deleted) throw new Error(`Unable to delete ${model.id}`);
+    if (!deleted) throw new Error(`Unable to delete ${arg.model.id}`);
     return deleted;
   }
 }

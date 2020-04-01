@@ -3,7 +3,7 @@ import { ServerEventBus } from "../../global/event-bus/server-event-bus";
 import { UserRepository } from "./user.repository";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { UserSignedUpSeo } from "../../events/models/user.signed-up.seo";
+import { UserSignedUpSeo, UserSignedUpSeDto } from "../../events/models/user.signed-up.seo";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { randomElement } from "../../../shared/helpers/random-element";
@@ -15,7 +15,9 @@ import { UpdateUserCmDto } from "../../../shared/domains/user/cmo/update-user.cm
 import { USER_FILLABLE_FIELDS } from "../../../shared/domains/user/user.definition";
 import { IModel } from "../../../shared/interfaces/interface.model";
 import { BaseModel } from "../../../shared/base/base.model";
-import { fill } from "../../../shared/helpers/fill-fillable.helper";
+import { fillUpdate } from "../../../shared/helpers/fill.update.helper";
+import { AnElemOf } from "../../../shared/types/an-elem-of.type";
+import { fillCreate } from "../../../shared/helpers/fill.create.helper";
 
 
 let __created__ = false;
@@ -45,18 +47,20 @@ export class UserService {
    * @description
    * Sign up
    * 
-   * @param session
-   * @param dto 
-   * @param tracking
+   * @param arg
    */
-  async signUp(session: SessionModel, dto: CreateUserCmDto, tracking: Trace): Promise<void> {
-    const user = await this.create(dto, tracking);
+  async signUp(arg: {
+    session: SessionModel,
+    dto: CreateUserCmDto,
+    trace: Trace
+  }): Promise<void> {
+    const user = await this.create(arg.dto, arg.trace);
     this._eb.fire(new UserSignedUpSeo({
-      _p: {
-        session,
+      dto: new UserSignedUpSeDto({
+        session: arg.session,
         user,
-      },
-      trace: tracking.clone(),
+      }),
+      trace: arg.trace.clone(),
     }));
   }
 
@@ -65,11 +69,14 @@ export class UserService {
   /**
    * @description
    * Log in
-   * 
-   * @param data 
+   *
+   * @param arg
    */
-  passwordMatch(user: UserModel, password: string): boolean {
-    if (user.password !== password) return false;
+  passwordMatch(arg: {
+    user: UserModel,
+    password: string,
+  }): boolean {
+    if (arg.user.password !== arg.password) return false;
     return true;
   }
 
@@ -79,17 +86,33 @@ export class UserService {
    * @description
    * Create a model
    * 
-   * @param dto 
-   * @param trace
+   * @param arg
    */
-  async create(dto: CreateUserCmDto, trace: Trace): Promise<UserModel> {
+  async create(arg: {
+    raw: Pick<UserModel, AnElemOf<USER_FILLABLE_FIELDS>>,
+    user_name: string,
+    password: string,
+    requester: UserModel | null,
+    trace: Trace,
+  }): Promise<UserModel> {
+    const filled = fillCreate({
+      keys: USER_FILLABLE_FIELDS,
+      using: arg.raw,
+    });
+
     const unsaved: UnsavedModel<UserModel> = {
-      user_name: dto.user_name,
-      password: dto.password,
-      colour: dto.colour ?? randomElement(USER_COLOURS),
+      ...filled,
+      user_name: arg.user_name,
+      password: arg.password,
     };
 
-    const user = await this._userRepo.create(unsaved, undefined, trace,);
+    const user = await this._userRepo.create({
+      inModel: unsaved,
+      forceId: undefined,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
+
     return user;
   }
 
@@ -98,13 +121,30 @@ export class UserService {
    * @description
    * Update a model
    *
-   * @param model
-   * @param dto
-   * @param trace
+   * @param arg
    */
-  async update(model: UserModel, dto: UpdateUserCmDto, trace: Trace): Promise<UserModel> {
-    fill(model, USER_FILLABLE_FIELDS, dto);
-    const updated = await this._userRepo.upsert(model, trace);
+  async update(arg: {
+    model: UserModel,
+    raw: Pick<UserModel, AnElemOf<USER_FILLABLE_FIELDS>>,
+    user_name?: string,
+    password?: string,
+    requester: UserModel | null,
+    trace: Trace
+  }): Promise<UserModel> {
+    fillUpdate({
+      mutate: arg.model,
+      keys: USER_FILLABLE_FIELDS,
+      using: arg.raw,
+    });
+    if (arg.user_name) arg.model.user_name = arg.user_name;
+    if (arg.password) arg.model.password = arg.password;
+
+    const updated = await this._userRepo.upsert({
+      inModel: arg.model,
+      requester: arg.requester,
+      trace: arg.trace,
+    });
+
     return updated;
   }
 

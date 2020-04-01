@@ -15,11 +15,13 @@ export class ModelCreatedSmDto<T extends object = object> extends BaseDto {
    * @param props
    */
   constructor(props: {
-    CtorName: string
+    CtorName: string,
+    model: T,
   }) {
     super();
     if (props) {
       this.CtorName = props.CtorName;
+      this.model = props.model;
     }
   }
 }

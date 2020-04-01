@@ -3,7 +3,7 @@ import { ValidationError, IsArray, IsString } from "class-validator";
 import { CreateMo } from '../helpers/create-mo.helper';
 import { BaseDto } from '../base/base.dto';
 
-class CmInvalidSmDto extends BaseDto {
+export class CmInvalidSmDto extends BaseDto {
   // do not bother validate nested
   @IsArray()
   @Type(() => ValidationError)

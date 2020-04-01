@@ -139,22 +139,9 @@ function bindMetadata(opts: {
  * @description
  * Only works for DI'd classes
  */
-export function SEConsumer(): ClassDecorator {
-  // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-  // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-  // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-
-  const ServerEventConsumerFn: ClassDecorator = function ServerEventConsumerFn<T extends Function>(OriginalCtor: T) {
-    // console.log('-------------------------------------------------------------');
-    // console.log(`----------------    ${OriginalCtor.name}     ----------------`);
-    // console.log('-------------------------------------------------------------');
-
-    const ServerEventConsumerFn = function ServerEventConsumerFn(...args: any[]): $FIX_ME<any> {
-      // console.log('*************************************************************');
-      // console.log(`****************    ${OriginalCtor.name}     ****************`);
-      // console.log('*************************************************************');
-
-      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+export function SeConsumer(): ClassDecorator {
+  const SEConsmerDecorator: ClassDecorator = function SEConsumerDecorator<T extends Function>(OriginalCtor: T) {
+    const ModifiedSeConsumerCtor = function ModifiedSeConsumerCtor(...args: any[]): $FIX_ME<any> {
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       // @DANGER:
       //
@@ -164,7 +151,6 @@ export function SEConsumer(): ClassDecorator {
       // THIS IS POTENTIALLY VERY DANGEROUS???????????????????????????????
       // WE'RE IN A CONSTRUCTOR FUNCTION CALLING A CONSTRUCTOR FUNCTION TO BUILD OURSELF
       // NOT 100% SURE WHY IT WORKS
-      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       const propKeys = Reflect.ownKeys(OriginalCtor.prototype); // Reflect.getPrototypeOf()
@@ -188,8 +174,8 @@ export function SEConsumer(): ClassDecorator {
       return instance;
     } as $FIX_ME<unknown> as T
 
-    return ServerEventConsumerFn;
+    return ModifiedSeConsumerCtor;
   };
 
-  return ServerEventConsumerFn;
+  return SEConsmerDecorator;
 }

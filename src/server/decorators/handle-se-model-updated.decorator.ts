@@ -1,12 +1,12 @@
 import { ClassType } from "class-transformer/ClassTransformer";
-import { Model } from "../../shared/domains/model";
 import { SERVER_METADATA_KEY } from "./meatadata/metadata-key";
 import { ServerModelUpdatedEventHandlerMetadata } from "./meatadata/server-model-updated-event-handler.metadata";
 import { Logger } from "../../shared/helpers/class-logger.helper";
+import { IModel } from "../../shared/interfaces/interface.model";
 
 const _log = new Logger(HandleSeModelUpdated);
 
-export function HandleSeModelUpdated<M extends Model>(ModelCtor: ClassType<M>): MethodDecorator {
+export function HandleSeModelUpdated(ModelCtor: ClassType<IModel>): MethodDecorator {
   /**
    * @decorator
    *

@@ -3,9 +3,9 @@ import { LogConstruction } from "../../../shared/decorators/log-construction.dec
 import { HandleCm } from '../../decorators/handle-cm.decorator';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { SEConsumer } from "../../decorators/se-consumer.decorator";
+import { SeConsumer } from "../../decorators/se-consumer.decorator";
 import { ChatRepository } from "./chat.repository";
-import { ChatService } from "./chat.service";
+import { ChatCrudService } from "./chat.crud.service";
 import { SessionRepository } from "../session/session.repository";
 import { CreateChatCmo } from "../../../shared/domains/chat/cmo/create-chat.cmo";
 import { UserRepository } from "../user/user.repository";
@@ -14,7 +14,7 @@ import { UserRepository } from "../user/user.repository";
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SEConsumer()
+@SeConsumer()
 export class ChatGateway {
   private _log = new Logger(this);
 
@@ -29,7 +29,7 @@ export class ChatGateway {
    */
   constructor(
     @Inject(() => ChatRepository) private readonly _chatRepo: ChatRepository,
-    @Inject(() => ChatService) private readonly _chatService: ChatService,
+    @Inject(() => ChatCrudService) private readonly _chatService: ChatCrudService,
     @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
     @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
   ) {
@@ -46,14 +46,14 @@ export class ChatGateway {
    */
   @HandleCm(CreateChatCmo)
   async create(evt: SCMessageSeo<CreateChatCmo>) {
-    const session = await this._sessionRepo.findOneOrFail(evt.dto.socket.session_id);
-    const user = session.user_id ? await this._userRepo.findOneOrFail(session.user_id) : null;
+    const session = await this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id });
+    const user = session.user_id ? await this._userRepo.findOneOrFail({ id: session.user_id }) : null;
     await this._chatService.create({
       raw: {
         content: evt.dto.message.dto.content,
         sent_at: evt.dto.message.dto.sent_at,
       },
-      authorId: user ? user.id : null,
+      author_id: user ? user.id : null,
       requester: user,
       trace: evt.trace,
     });
