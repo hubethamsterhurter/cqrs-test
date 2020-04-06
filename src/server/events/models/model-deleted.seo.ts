@@ -9,7 +9,7 @@ export class ModelDeletedSeDto<M extends IModel = IModel> extends BaseDto {
   readonly model!: M;
 
   @IsString()
-  readonly CTorName!: string;
+  readonly CtorName!: string;
 
   /**
    * @constructor
@@ -22,7 +22,7 @@ export class ModelDeletedSeDto<M extends IModel = IModel> extends BaseDto {
     super();
     if (props) {
       this.model = props.model;
-      this.CTorName = ctorName(props.model);
+      this.CtorName = ctorName(props.model);
     }
   }
 }

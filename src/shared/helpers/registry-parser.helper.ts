@@ -1,6 +1,5 @@
 import { validateSync } from "class-validator";
 import { plainToClass } from 'class-transformer';
-import { ClassType } from 'class-transformer/ClassTransformer';
 import { $DANGER } from "../types/danger.type";
 import { ParseResult, ParseInvalidPayload, ParseSuccessPayload } from "./parse-result.helper";
 import { LogConstruction } from "../decorators/log-construction.decorator";
@@ -9,35 +8,20 @@ import { HasTrace } from "../types/has-_o.type";
 import { Trace } from "./Tracking.helper";
 import { Logger } from "./class-logger.helper";
 import { Service } from "typedi";
-
+import { Constructor } from "../types/constructor.type";
+import { Has_n } from "../types/has-_n.type";
 
 @Service({ global: true })
 @LogConstruction()
-export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTrace>> {
+export abstract class RegistryParser<T extends Has_n & HasTrace> {
   private _log = new Logger(this);
-  // #registry: Registry<string, C>;
-  #registry: Map<string, C>;
 
   /**
    * @constructor
    *
    * @param registry
    */
-  constructor(
-    registry: Map<string, C>
-  ) {
-    this.#registry = registry;
-  }
-
-  /**
-   * @description
-   * Register a new constructor
-   *
-   * @param Ctor
-   */
-  register(Ctor: C) {
-    this.#registry.set(Ctor.name, Ctor);
-  }
+  constructor(readonly registry: { get(arg: string): Constructor<T> | undefined, add(arg: Constructor<T>): void; }) {}
 
   /**
    * @description
@@ -45,14 +29,23 @@ export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTra
    * 
    * @param data 
    */
-  fromString(data: string): ParseResult<C> {
+  fromString(data: string): ParseResult<T> {
     let json: {};
+
+    // JSON parse
     try {
       json = JSON.parse(data);
     } catch (err) {
       return new ParseResult({ status: 'malformed', err: new Error('Failed to parse as json.') });
     }
-    return this._parse(json);
+
+    // custom parse
+    try {
+      return this._parse(json);
+    } catch (err) {
+      this._log.error('Failed to parse json', err);
+      return new ParseResult({ status: 'malformed', err: new Error('Failed to parse message json.') });
+    }
   }
 
 
@@ -62,7 +55,7 @@ export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTra
    *
    * @param rawJson 
    */
-  private _parse(rawJson: Record<string | number, any>): ParseResult<C> {
+  private _parse(rawJson: Record<string | number, any>): ParseResult<T> {
     if (typeof rawJson !== 'object' || rawJson === null) {
       return new ParseResult({
         status: 'malformed',
@@ -70,7 +63,7 @@ export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTra
       });
     }
 
-    const _n = rawJson._n as $DANGER<InstanceType<C>>['_n'];
+    const _n = rawJson._n as $DANGER<T>['_n'];
     if (typeof _n !== 'string') {
       return new ParseResult({
         status: 'malformed',
@@ -78,28 +71,29 @@ export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTra
       });
     }
 
-    const Ctor = this.#registry.get(_n);
+    const Ctor = this.registry.get(_n);
 
     if (!(Ctor)) {
+      this._log.warn(`Unhandled message ${_n}`);
       return new ParseResult({
-        status: 'malformed',
-        err: new Error(`Unhandled message "${_n}".`)
+        status: 'unhandled',
+        raw: rawJson,
       });
     }
 
-    const instance = plainToClass(Ctor, rawJson) as $FIX_ME<InstanceType<C>>;
+    const instance = plainToClass(Ctor, rawJson) as $FIX_ME<T>;
     const validationErrors = validateSync(instance);
 
     if (validationErrors.length) {
       // recover the trace if possible
-      const trace = rawJson.trace as $DANGER<InstanceType<C>>['trace'];
+      const trace = rawJson.trace as $DANGER<T>['trace'];
       const recoveredTrace = plainToClass(Trace, trace);
       const traceValidationErrors = validateSync(recoveredTrace);
 
       if (traceValidationErrors.length) this._log.warn('Unable to recover trace from message', traceValidationErrors);
       // try to parse the Trace independently
 
-      const payload: ParseInvalidPayload<C> = {
+      const payload: ParseInvalidPayload<T> = {
         status: 'invalid',
         errs: validationErrors,
         Ctor: Ctor,
@@ -109,7 +103,7 @@ export abstract class RegistryParser<C extends ClassType<{ _n: string } & HasTra
       return new ParseResult(payload);
     }
 
-    const payload: ParseSuccessPayload<C> = {
+    const payload: ParseSuccessPayload<T> = {
       status: 'success',
       instance,
       Ctor,

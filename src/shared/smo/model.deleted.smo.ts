@@ -1,13 +1,14 @@
 import { IsString, IsObject } from "class-validator";
 import { BaseDto } from "../base/base.dto";
 import { CreateMo } from "../helpers/create-mo.helper";
+import { IModel } from "../interfaces/interface.model";
 
-export class ModelDeletedSmDto<T extends object = object> extends BaseDto {
+export class ModelDeletedSmDto<M extends IModel = IModel> extends BaseDto {
   @IsString()
   CtorName!: string
 
   @IsObject()
-  model!: T;
+  model!: M;
 
   /**
    * @constructor
@@ -16,7 +17,7 @@ export class ModelDeletedSmDto<T extends object = object> extends BaseDto {
    */
   constructor(props: {
     CtorName: string,
-    model: T,
+    model: M,
   }) {
     super();
     if (props) {
@@ -26,4 +27,4 @@ export class ModelDeletedSmDto<T extends object = object> extends BaseDto {
   }
 }
 
-export class ModelDeletedSmo extends CreateMo(ModelDeletedSmDto) {}
+export class ModelDeletedSmo<M extends IModel = IModel> extends CreateMo(ModelDeletedSmDto)<ModelDeletedSmDto<M>> {}

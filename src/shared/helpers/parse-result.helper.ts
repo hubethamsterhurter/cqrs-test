@@ -1,38 +1,44 @@
 import { ValidationError } from "class-validator";
-import { ClassType } from "class-transformer/ClassTransformer";
-import { Has_u } from "../types/has-_d.type";
+import { Has_u } from "../types/has-_u.type";
 import { LogConstruction } from "../decorators/log-construction.decorator";
 import { Trace } from "./Tracking.helper";
+import { Constructor } from "../types/constructor.type";
+import { $FIX_ME } from "../types/fix-me.type";
 
-export interface ParseSuccessPayload<C extends ClassType<any>> {
+export interface ParseSuccessPayload<T> {
   readonly status: 'success',
-  readonly instance: InstanceType<C>,
-  readonly Ctor: C,
+  readonly instance: T,
+  readonly Ctor: Constructor<T>,
 }
-export interface ParseInvalidPayload<C extends ClassType<any>> {
+export interface ParseInvalidPayload<T> {
   readonly status: 'invalid',
   readonly trace: null | Trace,
   readonly errs: ValidationError[],
-  readonly Ctor: C,
+  readonly Ctor: Constructor<T>,
 };
 export interface ParseMalformedPayload {
   readonly status: 'malformed',
   readonly err: Error
 }
+export interface ParseUnhandledPayload {
+  readonly status: 'unhandled',
+  readonly raw: unknown,
+}
 
-export type AParsePayload<C extends ClassType<any>> =
-  | ParseSuccessPayload<C>
-  | ParseInvalidPayload<C>
-  | ParseMalformedPayload;
+export type AParsePayload<T> =
+  | ParseSuccessPayload<T>
+  | ParseInvalidPayload<T>
+  | ParseMalformedPayload
+  | ParseUnhandledPayload;
 
 @LogConstruction()
-export class ParseResult<C extends ClassType<any>> implements Has_u<AParsePayload<C>> {
+export class ParseResult<T> implements Has_u<AParsePayload<T>> {
   /**
    * @constructor
    *
    * @param _u
    */
-  constructor(readonly _u: AParsePayload<C>) {}
+  constructor(readonly _u: AParsePayload<T>) {}
 
 
   /**
@@ -41,7 +47,15 @@ export class ParseResult<C extends ClassType<any>> implements Has_u<AParsePayloa
    *
    * @param parseResponse 
    */
-  success(): this is Has_u<ParseSuccessPayload<C>> { return this._u.status === 'success'; }
+  success(): this is Has_u<ParseSuccessPayload<T>> { return this._u.status === 'success'; }
+
+  /**
+   * @description
+   * Was a message successfully parsed & validated?
+   * 
+   * @param message
+   */
+  static success<U>(parse: ParseResult<U>): parse is ParseResult<U> & Has_u<ParseSuccessPayload<U>> { return (parse).success() }
 
   /**
    * @description
@@ -49,7 +63,31 @@ export class ParseResult<C extends ClassType<any>> implements Has_u<AParsePayloa
    *
    * @param parseResponse 
    */
-  invalid(): this is Has_u<ParseInvalidPayload<C>> { return this._u.status === 'invalid'; }
+  invalid(): this is Has_u<ParseInvalidPayload<T>> { return this._u.status === 'invalid'; }
+
+  /**
+   * @description
+   * Was the message invalid?
+   * 
+   * @param message
+   */
+  static invalid<U>(parse: ParseResult<U>): parse is ParseResult<U> & Has_u<ParseInvalidPayload<U>> { return (parse).invalid() }
+
+  /**
+   * @description
+   * Was the message unhandled / not found?
+   *
+   * @param parseResponse 
+   */
+  unhandled(): this is Has_u<ParseUnhandledPayload> { return this._u.status === 'unhandled'; }
+
+  /**
+   * @description
+   * Was the message invalid?
+   * 
+   * @param message
+   */
+  static unhandled<U>(parse: ParseResult<U>): parse is ParseResult<U> & Has_u<ParseUnhandledPayload> { return (parse).unhandled() }
 
   /**
    * @description
@@ -57,5 +95,13 @@ export class ParseResult<C extends ClassType<any>> implements Has_u<AParsePayloa
    *
    * @param parseResponse 
    */
-  malformed<M>(): this is Has_u<ParseMalformedPayload> { return this._u.status === 'malformed'; }
+  malformed(): this is Has_u<ParseMalformedPayload> { return this._u.status === 'malformed'; }
+
+  /**
+   * @description
+   * Was the message malformed?
+   * 
+   * @param message
+   */
+  static malformed<U>(parse: ParseResult<U>): parse is ParseResult<U> & Has_u<ParseMalformedPayload> { return (parse).malformed() }
 }

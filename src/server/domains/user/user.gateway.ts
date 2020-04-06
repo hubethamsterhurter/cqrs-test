@@ -1,20 +1,21 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleCm } from '../../decorators/handle-cm.decorator';
+import { SubscribeMessage } from '../../decorators/subscribe-message.decorator';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { UserRepository } from '../user/user.repository';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { USER_COLOURS, USER_COLOUR } from '../../../shared/constants/user-colour';
-import { randomElement } from '../../../shared/helpers/random-element';
-import { UserService } from '../user/user.service';
-import { SocketWarehouse } from "../../global/socket-warehouse/socket-warehouse";
+import { USER_COLOUR } from '../../../shared/constants/user-colour';
+import { UserCrudService } from './user.crud.service';
+import { SocketWarehouse } from "../../web-sockets/socket-warehouse/socket-warehouse";
 import { ErrorSmo, ErrorSmDto } from "../../../shared/smo/error.smo";
 import { SeConsumer } from "../../decorators/se-consumer.decorator";
 import { SessionRepository } from "../session/session.repository";
-import { SessionService } from "../session/session.auth.service";
-import { CreateUserCmDto, CreateUserCmo } from "../../../shared/domains/user/cmo/create-user.cmo";
-import { UpdateUserCmDto, UpdateUserCmo } from "../../../shared/domains/user/cmo/update-user.cmo";
+import { SessionCrudService } from "../session/session.crud.service";
+import { CreateUserCmo } from "../../../shared/domains/user/cmo/create-user.cmo";
+import { UpdateUserCmo } from "../../../shared/domains/user/cmo/update-user.cmo";
 import { HTTP_CODE } from "../../../shared/constants/http-code.constant";
+import { ctorName } from "../../../shared/helpers/ctor-name.helper";
+import { UserModel } from "../../../shared/domains/user/user.model";
 
 
 let __created__ = false;
@@ -34,8 +35,8 @@ export class UserGateway {
    * @param _userRepo
    */
   constructor(
-    @Inject(() => SessionService) private readonly _sessionService: SessionService,
-    @Inject(() => UserService) private readonly _userService: UserService,
+    @Inject(() => SessionCrudService) private readonly _sessionService: SessionCrudService,
+    @Inject(() => UserCrudService) private readonly _userService: UserCrudService,
     @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
     @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
     @Inject(() => SocketWarehouse) private readonly _socketWarehouse: SocketWarehouse,
@@ -51,7 +52,7 @@ export class UserGateway {
    * 
    * @param evt 
    */
-  @HandleCm(CreateUserCmo)
+  @SubscribeMessage(CreateUserCmo)
   async create(evt: SCMessageSeo<CreateUserCmo>) {
     const user = await this._userRepo.findByUserName({ user_name: evt.dto.message.dto.user_name });
 
@@ -68,18 +69,13 @@ export class UserGateway {
     }
 
     await this._userService.create({
-      raw: {
+      fill: {
         colour: evt.dto.message.dto.colour || USER_COLOUR.BLACK,
       },
       user_name: evt.dto.message.dto.user_name,
       password: evt.dto.message.dto.password,
-      requester: evt.,
-      // new CreateUserCmDto({
-      //   user_name: evt.dto.message.dto.user_name,
-      //   password: evt.dto.message.dto.password,
-      //   colour: randomElement(USER_COLOURS),
-      // }),
-      // evt.trace,
+      requester: null,
+      trace: evt.trace,
     });
   }
 
@@ -90,16 +86,16 @@ export class UserGateway {
    * 
    * @param evt 
    */
-  @HandleCm(UpdateUserCmo)
+  @SubscribeMessage(UpdateUserCmo)
   async update(evt: SCMessageSeo<UpdateUserCmo>) {
     // TODO:
-    const user = await this._userRepo.findByUserName({ user_name: evt.dto.message.dto.user_name });
+    const user = await this._userRepo.findOne({ id: evt.dto.message.dto.id });
 
     if (!user) {
       evt.dto.socket.send(new ErrorSmo({
         dto: new ErrorSmDto({
           code: HTTP_CODE._404,
-          message: `User ${evt._p.message.dto.id} not found`,
+          message: `${ctorName(UserModel)}.${evt.dto.message.dto.id} not found`,
           trace: evt.trace.clone(),
         }),
         trace: evt.trace.clone(),
@@ -107,15 +103,16 @@ export class UserGateway {
       return;
     }
 
-    await this._userService.update(
-      user,
-      new UpdateUserCmDto({
-        id: user.id,
-        user_name: evt.dto.message.dto.user_name,
-        password: evt.dto.message.dto.password,
+    await this._userService.update({
+      // user,
+      id: user.id,
+      fill: {
         colour: evt.dto.message.dto.colour,
-      }),
-      evt.trace,
-    );
+      },
+      user_name: evt.dto.message.dto.user_name,
+      password: evt.dto.message.dto.password,
+      requester: user,
+      trace: evt.trace,
+    });
   }
 }

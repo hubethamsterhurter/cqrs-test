@@ -8,17 +8,17 @@ import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
 import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { UserModel } from "../../../shared/domains/user/user.model";
-import { fillUpdate } from "../../../shared/helpers/fill.update.helper";
 import { CHAT_FILLABLE_FIELDS } from "../../../shared/domains/chat/chat.definition";
 import { AnElemOf } from "../../../shared/types/an-elem-of.type";
-import { fillCreate } from "../../../shared/helpers/fill.create.helper";
+import { fillAll } from "../../../shared/helpers/fill-all.helper";
+import { fillPartial } from "../../../shared/helpers/fill-partial.helper";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
 export class ChatCrudService {
-  private readonly _log = new Logger(this)
+  readonly #log = new Logger(this)
 
 
   /**
@@ -46,15 +46,15 @@ export class ChatCrudService {
    * @param arg
    */
   async create(arg: {
-    raw: Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>,
+    fill: Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>,
     sent_at: Date,
     author_id: string | null,
     requester: UserModel | null,
     trace: Trace,
   }): Promise<ChatModel> {
-    const filled = fillCreate({
+    const filled = fillAll({
       keys: CHAT_FILLABLE_FIELDS,
-      using: arg.raw,
+      data: arg.fill,
     });
 
     const unsaved: UnsavedModel<ChatModel> = {
@@ -80,19 +80,19 @@ export class ChatCrudService {
    * @param arg
    */
   async update(arg: {
-    model: ChatModel,
-    raw: Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>,
+    id: string,
+    fill: Partial<Pick<ChatModel, AnElemOf<CHAT_FILLABLE_FIELDS>>>,
     requester: UserModel | null,
     trace: Trace
   }): Promise<ChatModel> {
-    fillUpdate({
-      mutate: arg.model,
+    const filled = fillPartial({
       keys: CHAT_FILLABLE_FIELDS,
-      using: arg.raw,
+      data: arg.fill,
     });
 
-    const updated = await this._chatRepo.upsert({
-      inModel: arg.model,
+    const updated = await this._chatRepo.update({
+      id: arg.id,
+      fill: filled,
       requester: arg.requester,
       trace: arg.trace,
     });
@@ -108,16 +108,16 @@ export class ChatCrudService {
    * @param arg
    */
   async delete(arg: {
-    model: ChatModel,
+    id: string,
     requester: UserModel | null,
     trace: Trace,
-  }): Promise<ChatModel> {
+  }): Promise<ChatModel | null> {
     const deleted = await this._chatRepo.delete({
-      inModel: arg.model,
+      id: arg.id,
       requester: arg.requester,
       trace: arg.trace,
     });
-    if (!deleted) throw new Error(`Unable to delete ${arg.model.id}`);
+    if (!deleted) this.#log.info(`Unable to delete ${ChatModel.name}.${arg.id}: not found`);
     return deleted;
   }
 }

@@ -1,12 +1,11 @@
 import './alert-container.css';
 import { toast } from 'react-toastify';
 import React, { useContext, useEffect } from 'react';
-import { WsContext } from './ws-provider';
+import { WsContext } from '../providers/ws.provider';
 import { Subscription } from 'rxjs';
 import { ValidationError } from 'class-validator';
 import { filter } from 'rxjs/operators';
 import { ErrorSmo } from '../../shared/smo/error.smo';
-import { ofServerMessage } from '../../server/helpers/server-server-message-event-filter.helper';
 import { CmInvalidSmo } from '../../shared/smo/cm.invalid.smo';
 import { CMMalformedSmo } from '../../shared/smo/cm.malformed.smo';
 
@@ -48,15 +47,14 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     // errors (like http errors)
     subs.push(
       wsCtx
-        .message$
-        .pipe(filter(ofServerMessage(ErrorSmo)))
+        .messageOf$(ErrorSmo)
         .subscribe(evt => {
           console.warn('Received error from server', evt);
           const msg = (
             <div>
               <h3 className='alert-header'>{`Error`}</h3>
-              <div>{`Code: ${evt.code}`}</div>
-              <div>{`Message: ${evt.message}`}</div>
+              <div>{`Code: ${evt.dto.code}`}</div>
+              <div>{`Message: ${evt.dto.message}`}</div>
             </div>
           );
           toast.error(msg);
@@ -66,14 +64,13 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     // echo invalid client messages
     subs.push(
       wsCtx
-        .message$
-        .pipe(filter(ofServerMessage(CmInvalidSmo)))
+        .messageOf$(CmInvalidSmo)
         .subscribe(evt => {
           console.warn('Message invalidated by server', evt);
           const msg = (
             <div>
               <h3 className='alert-header'>{`Invalid`}</h3>
-              {jsxValidationErrors(evt.errors, '- ', '  ')}
+              {jsxValidationErrors(evt.dto.errors, '- ', '  ')}
             </div>
           );
           toast.error(msg);
@@ -83,15 +80,14 @@ export const AlertContainer: React.FC = function AlertContainer(props) {
     // echo malformed client messagess
     subs.push(
       wsCtx
-        .message$
-        .pipe(filter(ofServerMessage(CMMalformedSmo)))
+        .messageOf$(CMMalformedSmo)
         .subscribe(evt => {
           console.warn('Message invalidated by server', evt);
           const msg = (
             <div>
               <h3 className='alert-header'>{`Malformed Client Message`}</h3>
-              <div>{`- name: ${evt.error.name}`}</div>
-              <div>{`- message: ${evt.error.message}`}</div>
+              <div>{`- name: ${evt.dto.error.name}`}</div>
+              <div>{`- message: ${evt.dto.error.message}`}</div>
             </div>
           );
           toast.error(msg);

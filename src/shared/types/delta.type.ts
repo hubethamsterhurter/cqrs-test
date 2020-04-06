@@ -1,0 +1,1 @@
+export interface Delta<T> { old: T, new: T, };

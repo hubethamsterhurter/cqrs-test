@@ -1,9 +1,9 @@
 import { Service, Inject } from "typedi";
 import { IdFactory } from "../../../shared/helpers/id.factory";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
-import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { BaseRepository } from "../../utils/repository/base-repository";
 import { ChatModel } from "../../../shared/domains/chat/chat.model";
+import { Db } from "../../utils/db/db";
 
 let __created__ = false;
 @Service({ global: true })
@@ -16,11 +16,11 @@ export class ChatRepository extends BaseRepository<ChatModel> {
    * @param _es
    */
   constructor(
-    @Inject(() => IdFactory) readonly _idFactory: IdFactory,
-    @Inject(() => ServerEventBus) readonly _eb: ServerEventBus,
-    @Inject(() => ServerEventStream) private readonly _es: ServerEventStream,
+    @Inject(() => IdFactory) _idFactory: IdFactory,
+    @Inject(() => ServerEventBus) _eb: ServerEventBus,
+    @Inject(() => Db) _db: Db,
   ) {
-    super(_idFactory, ChatModel, _eb);
+    super(_db, _idFactory, ChatModel, _eb);
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
   }

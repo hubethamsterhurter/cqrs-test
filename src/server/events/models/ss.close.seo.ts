@@ -1,4 +1,5 @@
 import { BaseDto } from "../../../shared/base/base.dto";
+import { CreateSe } from "../../../shared/helpers/create-se.helper";
 
 export class SSCloseSeDto extends BaseDto {
   /**
@@ -16,4 +17,4 @@ export class SSCloseSeDto extends BaseDto {
   }
 }
 
-export class SSCloseSeo extends SSCloseSeDto {}
+export class SSCloseSeo extends CreateSe(SSCloseSeDto) {}

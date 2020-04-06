@@ -3,12 +3,11 @@ import * as op from 'rxjs/operators';
 import React, { useContext } from 'react';
 import { race } from 'rxjs';
 import { Formik } from 'formik';
-import { WsContext } from './ws-provider';
-import { SignUpCmo } from '../../shared/message-client/models/sign-up.cmo';
+import { WsContext } from '../providers/ws.provider';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { of } from 'rxjs';
-import { ServerMessage } from '../../shared/smo/modules/server-message-registry';
-import { SignupCmDto } from '../../shared/domains/session/cmo/signup.cmo';
+import { SignupCmDto, SignupCmo } from '../../shared/domains/auth/cmo/signup.cmo';
+import { IMessage } from '../../shared/interfaces/interface.message';
 
 
 interface NewUser {
@@ -31,14 +30,15 @@ export const SignupPage: React.FC = function SignupPage(props) {
 
           const UNRESPONSIVE_WAIT = 5000;
 
-          race<undefined | ServerMessage>(
+          // TODO: fix mem leak
+          race<undefined | IMessage>(
             wsCtx.message$.pipe(op.filter(evt => evt.trace.origin_id === trace.id)),
             of(undefined).pipe(op.delay(UNRESPONSIVE_WAIT)),
           )
             .pipe(op.take(1))
             .subscribe((evt) => { opts.setSubmitting(false); });
 
-          wsCtx.send(new SignUpCmo({
+          wsCtx.send(new SignupCmo({
             dto: new SignupCmDto({
               user_name: values.user_name,
               password: values.password,

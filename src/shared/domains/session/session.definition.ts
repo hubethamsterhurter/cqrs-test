@@ -16,6 +16,7 @@ export const SESSION_FIELD: Omit<K2K<SessionModel>, keyof BaseModel> = {
 export type SESSION_FIELD = typeof SESSION_FIELD;
 export type A_SESSION_FIELD = SESSION_FIELD[keyof SESSION_FIELD];
 
-export const SESSION_FILLABLE_FIELDS: A_SESSION_FIELD[] = [
+export const SESSION_FILLABLE_FIELDS = [
   //
-];
+] as const;
+export type SESSION_FILLABLE_FIELDS = typeof SESSION_FILLABLE_FIELDS;

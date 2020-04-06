@@ -1,11 +1,11 @@
-import { ClassType } from "class-transformer/ClassTransformer";
 import { IsObject, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { Trace } from "./Tracking.helper";
 import { BaseMessage } from "../base/base.message";
+import { Constructor } from "../types/constructor.type";
 
-export function CreateMo<D extends object>(DtoCtor: ClassType<D>) {
-  abstract class MessageCore extends BaseMessage {
+export function CreateMo<T extends object>(DtoCtor: Constructor<T>) {
+  abstract class MessageCore<D extends T = T> extends BaseMessage<D> {
     @IsObject()
     @ValidateNested()
     @Type(() => Trace)

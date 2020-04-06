@@ -1,7 +1,6 @@
 import { Service, Inject } from "typedi";
 import { IdFactory } from "../../../shared/helpers/id.factory";
 import { ServerEventBus } from "../../global/event-bus/server-event-bus";
-import { ServerEventStream } from "../../global/event-stream/server-event-stream";
 import { UserModel } from "../../../shared/domains/user/user.model";
 import { BaseRepository } from "../../utils/repository/base-repository";
 import { addToManyIndex } from "../../utils/repository/modules/add-to-many-index.helper";
@@ -10,6 +9,7 @@ import { UnsavedModel } from "../../../shared/types/unsaved-model.type";
 import { Trace } from "../../../shared/helpers/Tracking.helper";
 import { addToUniqueIndex } from "../../utils/repository/modules/add-to-unique-index.helper";
 import { updateUniqueIndex } from "../../utils/repository/modules/update-unique-index.helper";
+import { Db } from "../../utils/db/db";
 
 let __created__ = false;
 @Service({ global: true })
@@ -25,11 +25,11 @@ export class UserRepository extends BaseRepository<UserModel> {
    * @param _es
    */
   constructor(
-    @Inject(() => IdFactory) readonly _idFactory: IdFactory,
-    @Inject(() => ServerEventBus) readonly _eb: ServerEventBus,
-    @Inject(() => ServerEventStream) private readonly _es: ServerEventStream,
+    @Inject(() => IdFactory) _idFactory: IdFactory,
+    @Inject(() => ServerEventBus) _eb: ServerEventBus,
+    @Inject(() => Db) _db: Db,
   ) {
-    super(_idFactory, UserModel, _eb);
+    super(_db, _idFactory, UserModel, _eb);
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
     Array.from(this.table).forEach(([, model]) => this._onCreateHook(model));
@@ -72,17 +72,19 @@ export class UserRepository extends BaseRepository<UserModel> {
   }
 
   /** @inheritdoc */
-  async upsert(arg: {
-    inModel: UserModel,
+  async update(arg: {
+    id: string;
+    fill: Partial<UnsavedModel<UserModel>>,
     requester: UserModel|  null,
     trace: Trace,
   }): Promise<UserModel> {
-    const old = this._find(arg.inModel.id);
-    if (old && (old.user_name !== arg.inModel.user_name)) {
-      if (this._index_user_name.has(arg.inModel.user_name)) { throw new TypeError('user_name must be unique'); }
+    const old = this._find(arg.id);
+    if (old && (arg.fill.user_name !== undefined) && (arg.fill.user_name !== old.user_name)) {
+      if (this._index_user_name.has(arg.fill.user_name)) { throw new TypeError('user_name must be unique'); }
     }
-    return super.upsert({
-      inModel: arg.inModel,
+    return super.update({
+      id: arg.id,
+      fill: arg.fill,
       requester: arg.requester,
       trace: arg.trace,
     });

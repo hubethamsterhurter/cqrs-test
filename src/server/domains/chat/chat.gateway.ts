@@ -1,10 +1,9 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { HandleCm } from '../../decorators/handle-cm.decorator';
+import { SubscribeMessage } from '../../decorators/subscribe-message.decorator';
 import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { SeConsumer } from "../../decorators/se-consumer.decorator";
-import { ChatRepository } from "./chat.repository";
 import { ChatCrudService } from "./chat.crud.service";
 import { SessionRepository } from "../session/session.repository";
 import { CreateChatCmo } from "../../../shared/domains/chat/cmo/create-chat.cmo";
@@ -16,19 +15,17 @@ let __created__ = false;
 @LogConstruction()
 @SeConsumer()
 export class ChatGateway {
-  private _log = new Logger(this);
+  readonly #log = new Logger(this);
 
 
   /**
    * @constructor
    * 
-   * @param _sessionService
-   * @param _userService
+   * @param _chatService
    * @param _sessionRepo
-   * @param _userRepo
+   * @param _sessionRepo
    */
   constructor(
-    @Inject(() => ChatRepository) private readonly _chatRepo: ChatRepository,
     @Inject(() => ChatCrudService) private readonly _chatService: ChatCrudService,
     @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
     @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
@@ -44,15 +41,15 @@ export class ChatGateway {
    * 
    * @param evt 
    */
-  @HandleCm(CreateChatCmo)
+  @SubscribeMessage(CreateChatCmo)
   async create(evt: SCMessageSeo<CreateChatCmo>) {
-    const session = await this._sessionRepo.findOneOrFail({ id: evt.dto.socket.session_id });
-    const user = session.user_id ? await this._userRepo.findOneOrFail({ id: session.user_id }) : null;
+    const session = evt.dto.socket.session;
+    const user = evt.dto.socket.user;
     await this._chatService.create({
-      raw: {
+      fill: {
         content: evt.dto.message.dto.content,
-        sent_at: evt.dto.message.dto.sent_at,
       },
+      sent_at: evt.dto.message.dto.sent_at,
       author_id: user ? user.id : null,
       requester: user,
       trace: evt.trace,

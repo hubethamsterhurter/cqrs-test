@@ -1,5 +1,5 @@
 import ws from 'ws';
-import { SocketClient } from "../../global/socket-client/socket-client";
+import { SocketClient } from "../../web-sockets/socket-client/socket-client";
 import { IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BaseDto } from '../../../shared/base/base.dto';

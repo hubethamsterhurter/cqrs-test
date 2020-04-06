@@ -2,86 +2,60 @@ import 'reflect-metadata';
 import { Container } from 'typedi';
 import { ServerEventBus } from './global/event-bus/server-event-bus';
 import { ServerEventStream } from './global/event-stream/server-event-stream';
-import { SocketServerFactory } from './global/socket-server/socket-server.factory';
-import * as op from 'rxjs/operators';
-import { AppHeartbeatSeo } from './events/models/app-heartbeat.seo';
-import { SSListeningSeo } from './events/models/ss.listening.seo';
-import { SCMessageSeo } from './events/models/sc.message-parsed.seo';
-import { SCMessageInvalidSeo } from './events/models/sc.message-invalid.seo';
-import { SCMessageMalformedSeo } from './events/models/sc.message-errored.seo';
-import { SocketServer } from './global/socket-server/socket-server';
-import { ServerWatcher } from './global/server-watcher/sever-watcher';
+import { SocketServerFactory } from './web-sockets/socket-server/socket-server.factory';
+import { SocketServer } from './web-sockets/socket-server/socket-server';
+import { ServerWatcher } from './global/watcher/sever-watcher';
 import { Logger } from '../shared/helpers/class-logger.helper';
-import { UserService } from './domains/user/user.service';
+import { UserCrudService } from './domains/user/user.crud.service';
 import { ChatCrudService } from './domains/chat/chat.crud.service';
-import { SessionService } from './domains/session/session.auth.service';
-import { SocketWarehouse } from './global/socket-warehouse/socket-warehouse';
-import { SessionBroadcaster } from './domains/session/session.broadcaster';
-import { SessionGateway } from './domains/session/session.gateway';
+import { SessionCrudService } from './domains/session/session.crud.service';
+import { SocketWarehouse } from './web-sockets/socket-warehouse/socket-warehouse';
+import { AuthGateway } from './domains/auth/auth.gateway';
 import { UserGateway } from './domains/user/user.gateway';
 import { ChatGateway } from './domains/chat/chat.gateway';
-import { ReauthSessionTokenService } from './domains/auth-token/reauth-session-token.service';
+import { AuthTokenCrudService } from './domains/auth-token/auth-token.crud.service';
 import { SessionRepository } from './domains/session/session.repository';
 import { Trace } from '../shared/helpers/Tracking.helper';
-import { SessionListener } from './domains/session/session.listener';
+import { SocketDoor } from './web-sockets/socket-door/socket.door';
+import { MessageRegistry } from '../shared/util/message-registry.util';
+import { MessageParser } from '../shared/util/message-parser.util';
+import { DataChannel } from './web-sockets/socket-channels/data-channel';
+import { EchoChannel } from './web-sockets/socket-channels/echo-channel';
 
 
 
+
+const _log = new Logger(bootstrap);
 
 async function bootstrap() {
-  const _log = new Logger(bootstrap);
 
   Container.get(ServerEventBus);
   const es = Container.get(ServerEventStream);
+  Container.get(MessageRegistry);
+  Container.get(MessageParser);
   Container.set(SocketServer, Container.get(SocketServerFactory).create());
   Container.get(ServerWatcher);
-  Container.get(UserService);
+  Container.get(UserCrudService);
   Container.get(ChatCrudService);
-  Container.get(SessionService);
-  Container.get(SessionListener);
+  Container.get(SessionCrudService);
+  Container.get(SocketDoor);
   Container.get(SocketWarehouse);
-  Container.get(SessionBroadcaster);
-  Container.get(SessionGateway);
+  Container.get(AuthGateway);
   Container.get(UserGateway);
   Container.get(ChatGateway);
-  Container.get(ReauthSessionTokenService);
+  Container.get(AuthTokenCrudService);
+  Container.get(DataChannel);
+  Container.get(EchoChannel);
+  Container.get(SocketDoor);
 
-  es
-    .of(AppHeartbeatSeo)
-    .subscribe((evt) => _log.info(' 1 ] hearbeat', evt._p.at))
-
-  es
-    .of(AppHeartbeatSeo)
-    .pipe(op.take(5))
-    .subscribe((evt) => _log.info(' 2 ] hearbeat', evt._p.at))
-
-  es
-    .of(SSListeningSeo)
-    .subscribe((evt) => _log.info('socket server listening'));
-
-  // successful message
-  es
-    .of(SCMessageSeo)
-    .subscribe((evt) => _log.info(`Message parsed: ${evt._p.Ctor.name}`));
-
-  // invalid message
-  es
-    .of(SCMessageInvalidSeo)
-    .subscribe((evt) => _log.info('Message invalid:', evt._p.errs));
-
-  // errored message
-  es
-    .of(SCMessageMalformedSeo)
-    .subscribe((evt) => _log.info('Message invalid:', evt._p.err));
-
-  es
-    .all()
-    .subscribe((evt) => _log.info(`\t -> \t EVENT           \t -> \t ${evt.constructor.name.padEnd(25, ' ')} \t -> \t ${evt.trace.origin_id}`));
-
-  const sessionService = Container.get(SessionService);
+  const sessionService = Container.get(SessionCrudService);
   const oldSessions = await (await Container.get(SessionRepository).findAll()).filter(session => session.deleted_at === null);
   const cleanupTrace = new Trace();
-  for (const session of oldSessions) { await sessionService.delete(session, cleanupTrace) }
+  for (const session of oldSessions) { await sessionService.delete({
+    id: session.id,
+    requester: null,
+    trace: cleanupTrace,
+  }) }
 }
 
 bootstrap();

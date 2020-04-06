@@ -2,12 +2,10 @@ import './new-chat.css';
 import * as op from 'rxjs/operators';
 import React, { useContext, useState, useEffect } from 'react';
 import { Subject, Subscription, timer, of } from 'rxjs';
-import { WsContext } from './ws-provider';
-import { CreateChatCmo } from '../../shared/message-client/models/create-chat.cmo';
+import { WsContext } from '../providers/ws.provider';
 import { Trace } from '../../shared/helpers/Tracking.helper';
-import { CreateChatCmDto } from '../../shared/domains/chat/cmo/create-chat.cmo';
-import { UserTypingCmDto } from '../../shared/domains/user/cmo/user-typing.cmo';
-import { UserTypingCmo } from '../../shared/message-client/models/user-typing.cmo';
+import { CreateChatCmDto, CreateChatCmo } from '../../shared/domains/chat/cmo/create-chat.cmo';
+import { UserTypingCmDto, UserTypingCmo } from '../../shared/domains/user/cmo/user-typing.cmo';
 
 const TYPING_DEBOUNCE = 2500;
 const SUBMIT_DEBOUNCE = 0.1;

@@ -1,5 +1,6 @@
-export interface IModel {
-  readonly _n: string;
+import { Has_n } from "../types/has-_n.type";
+
+export interface IModel extends Has_n {
   readonly id: string;
 
   // created

@@ -1,12 +1,8 @@
-import * as op from 'rxjs/operators';
-import fs from 'fs';
 import { plainToClass, classToPlain } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { Subject, timer } from 'rxjs';
 import { IdFactory } from '../../../shared/helpers/id.factory';
 import { ServerEventBus } from '../../global/event-bus/server-event-bus';
-import { $DANGER } from '../../../shared/types/danger.type';
 import { UnsavedModel } from '../../../shared/types/unsaved-model.type';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
 import { ModelCreatedSeo, ModelCreatedSeDto } from '../../events/models/model-created.seo';
@@ -15,26 +11,21 @@ import { ModelUpdatedSeo, ModelUpdatedSeDto } from '../../events/models/model-up
 import { ModelDeletedSeo, ModelDeletedSeDto } from '../../events/models/model-deleted.seo';
 import { UserModel } from '../../../shared/domains/user/user.model';
 import { IModel } from '../../../shared/interfaces/interface.model';
+import { Db } from '../db/db';
+import { Constructor } from '../../../shared/types/constructor.type';
 
 function clone<M>(Ctor: ClassType<M>, model: M): M {
   const cloned = plainToClass(Ctor, classToPlain(model));
   return cloned;
 }
 
-const TABLE_DIR = `${__dirname}/../../../../db`;
-
-// 5 sec
-const SYNC_THROTTLE_TIME = 5000;
-
 /**
  * TODO: soft delete scope
  * TODO: sync to FS & serialize on reboot
  */
 export abstract class BaseRepository<M extends IModel> {
-  private readonly _log = new Logger(this);
+  readonly #log = new Logger(this);
   private readonly _table: Map<string, M>;
-  private readonly _save$: Subject<undefined> = new Subject();
-  private readonly _tableFile: string;
 
   protected get table(): Map<string, M> { return this._table }
 
@@ -70,48 +61,46 @@ export abstract class BaseRepository<M extends IModel> {
    * @param _eb
    */
   constructor(
+    protected readonly _db: Db,
     protected readonly _idFactory: IdFactory,
-    protected readonly _ModelCTor: ClassType<M>,
+    protected readonly _ModelCTor: Constructor<M>,
     protected readonly _eb: ServerEventBus,
   ) {
-    this._tableFile = `${TABLE_DIR}/${this._ModelCTor.name.toLowerCase()}.json`;
-    // 1 -
-    // read sync from FS on boot
-    // TODO: find more efficient way to do this...
-    try {
-      const result = JSON.parse(fs.readFileSync(this._tableFile, { }).toString());
-      // TODO: validate result shape (should be entries)
-      this._log.info(`loaded table ${this._ModelCTor.name.toLowerCase()} from fs`, result)
-      this._table = new Map(result.map(([k, v]: $DANGER<any>) => [k, plainToClass(this._ModelCTor, v)]));
-    } catch (err) {
-      // TODO: check if file is readable & lock instead of try catch
-      this._log.info(`Unable to read table ${this._ModelCTor.name.toLowerCase()} from fs ${err}.`, err);
-      this._table = new Map();
-    }
-
-    // 2 - set throttled syncs to fs
-    // TODO: find more efficient way to do this...
-    this
-      ._save$
-      .pipe(op.throttle(() => timer(SYNC_THROTTLE_TIME), { leading: true, trailing: true }))
-      .subscribe(async () => {
-        const entries = Array.from(this._table.entries());
-        const entriesStr = JSON.stringify(entries, null, 2);
-        new Promise((res, rej) => fs.writeFile(
-          this._tableFile,
-          entriesStr,
-          (err) => (err) ? rej(err) : res(),
-        )).then(
-          () => { this._log.info(`Write ${this._ModelCTor.name} to db`); },
-          (err) => { this._log.error(`Failed writing ${this._ModelCTor.name} to db`, err); },
-        );
-      });
+    this._table = _db.init(_ModelCTor);
   }
 
 
+
+  /**
+   * @description
+   * Clone the instance
+   *
+   * @param instance
+   */
+  private _clone(instance: M) { return clone(this._ModelCTor, instance); }
+
+
+
+  /**
+   * @description
+   * Sync to persistance layer
+   *
+   * @param instance
+   */
+  private _sync() { this._db.sync(this._ModelCTor); }
+
+
+
+  /**
+   * @description
+   * Find a model
+   *
+   * @param id
+   */
   protected _find(id: string) {
     return this._table.get(id);
   }
+
 
 
   /**
@@ -143,14 +132,14 @@ export abstract class BaseRepository<M extends IModel> {
       deleted_by_id: null,
     } as $FIX_ME<M>;
     const newModel = plainToClass(this._ModelCTor, preparedModel);
-    this._log.info(`Creating`, id, this._ModelCTor.name);
+    this.#log.info(`Creating`, id, this._ModelCTor.name);
     this._table.set(newModel.id, newModel);
     this._onCreateHook(clone(this._ModelCTor, newModel));
     this._eb.fire(new ModelCreatedSeo({
       dto: new ModelCreatedSeDto({ model: clone(this._ModelCTor, newModel), }),
       trace: arg.trace.clone(),
     }));
-    this._save$.next();
+    this._sync();
     return clone(this._ModelCTor, newModel);
   }
 
@@ -159,39 +148,32 @@ export abstract class BaseRepository<M extends IModel> {
    * @description
    * Upsert a model
    *
-   * @param inModel 
-   * @param requester
-   * @param trace
+   * @param arg
    */
-  async upsert(arg: {
-    inModel: M,
+  async update(arg: {
+    id: string,
+    fill: Partial<UnsavedModel<M>>,
     requester: UserModel | null,
     trace: Trace,
   }): Promise<M> {
-    const updatedModel = clone(this._ModelCTor, arg.inModel);
-    const match = this._table.get(arg.inModel.id);
+    // const updatedModel = clone(this._ModelCTor, arg.id);
+    const match = this._table.get(arg.id);
+    if (!match) { throw new Error(`Cannot update ${this._ModelCTor.name}.${arg.id}: not found`); }
+    const updated = plainToClass(this._ModelCTor, { ...match, ...arg.fill });
     const now = new Date();
-    updatedModel.updated_at = now;
-    updatedModel.updated_by_id = arg.requester?.id ?? null;
-    if (match) {
-      this._table.set(updatedModel.id, updatedModel);
-      this._log.info(`Upserting ${this._ModelCTor.name} - ${arg.inModel.id}`);
-      this._onUpdateHook({ old: match, new: clone(this._ModelCTor, updatedModel) })
-    } else {
-      (updatedModel as $DANGER<any>).created_at = now;
-      (updatedModel as $DANGER<any>).created_by_id = arg.requester?.id ?? null;
-      this._table.set(updatedModel.id, updatedModel);
-      this._log.info(`Creating ${this._ModelCTor.name} - ${arg.inModel.id}`);
-      this._onCreateHook(clone(this._ModelCTor, updatedModel));
-    }
+    updated.updated_at = now;
+    updated.updated_by_id = arg.requester?.id ?? null;
+    this._table.set(updated.id, updated);
+    this.#log.info(`Updating ${this._ModelCTor.name} - ${arg.id}`);
+    this._onUpdateHook({ old: match, new: this._clone(updated) })
     this._eb.fire(new ModelUpdatedSeo({
       dto: new ModelUpdatedSeDto({
-        model: clone(this._ModelCTor, updatedModel),
+        model: this._clone(updated),
       }),
       trace: arg.trace.clone(),
     }));
-    this._save$.next();
-    return clone(this._ModelCTor, updatedModel);
+    this._sync();
+    return this._clone(updated);
   }
 
 
@@ -202,9 +184,9 @@ export abstract class BaseRepository<M extends IModel> {
    * @param id
    */
   async findOne(arg: { id: string }): Promise<M | null> {
-    this._log.info(`Finding`, arg.id, this._ModelCTor.name);
+    this.#log.info(`Finding`, this._ModelCTor.name, arg.id);
     const found = this._table.get(arg.id);
-    return found ? clone(this._ModelCTor, found) : null;
+    return found ? this._clone(found) : null;
   }
 
 
@@ -215,10 +197,10 @@ export abstract class BaseRepository<M extends IModel> {
    * @param id
    */
   async findOneOrFail(arg: { id: string }): Promise<M> {
-    this._log.info(`Finding (or failing)`, arg.id, this._ModelCTor.name);
-    let found = this._table.get(arg.id);
+    this.#log.info(`Getting`, this._ModelCTor.name, arg.id);
+    const found = this._table.get(arg.id);
     if (!found) throw new ReferenceError(`Unable to find ${this._ModelCTor.name} with id ${arg.id}`);
-    return clone(this._ModelCTor, found);
+    return this._clone(found);
   }
 
 
@@ -227,10 +209,10 @@ export abstract class BaseRepository<M extends IModel> {
    * Find all
    */
   async findAll(): Promise<M[]> {
-    this._log.info(`Finding all`, this._ModelCTor.name);
+    this.#log.info(`Finding all`, this._ModelCTor.name);
     const result = Array
       .from(this._table)
-      .map(([,model]) => clone(this._ModelCTor, model));
+      .map(([,model]) => this._clone(model));
     return result;
   }
 
@@ -243,37 +225,35 @@ export abstract class BaseRepository<M extends IModel> {
    * 
    * ensure no side effects
    *
-   * @param inModel
-   * @param requester
-   * @param trace
+   * @arg
    */
   async delete(arg: {
-    inModel: M,
+    id: string,
     requester: UserModel | null,
     trace: Trace,
   }): Promise<M | null> {
-    this._log.info('Deleting', arg.inModel.id, this._ModelCTor.name);
-    let match = this._table.get(arg.inModel.id);
+    this.#log.info('Deleting', this._ModelCTor.name, arg.id);
+    let match = this._table.get(arg.id);
 
     //not found
     if (!match) { return null; }
 
-    const deletedModel = clone(this._ModelCTor, match);
+    const deleted = this._clone(match);
 
     // already deleted
-    if (deletedModel.deleted_at) { return clone(this._ModelCTor, deletedModel); }
+    if (deleted.deleted_at) { return this._clone(deleted); }
 
-    deletedModel.deleted_at = new Date();
-    deletedModel.deleted_by_id = arg.requester?.id ?? null;
-    this._table.set(deletedModel.id, deletedModel);
-    this._onDeleteHook({ old: match, new: deletedModel  });
+    deleted.deleted_at = new Date();
+    deleted.deleted_by_id = arg.requester?.id ?? null;
+    this._table.set(deleted.id, deleted);
+    this._onDeleteHook({ old: match, new: deleted  });
     this._eb.fire(new ModelDeletedSeo({
       dto: new ModelDeletedSeDto({
-        model: clone(this._ModelCTor, deletedModel),
+        model: clone(this._ModelCTor, deleted),
       }),
       trace: arg.trace.clone()
     }));
-    this._save$.next();
-    return clone(this._ModelCTor, deletedModel);
+    this._sync();
+    return clone(this._ModelCTor, deleted);
   }
 }

@@ -1,10 +1,11 @@
-import { SocketClient } from "../../global/socket-client/socket-client";
+import { SocketClient } from "../../web-sockets/socket-client/socket-client";
 import { ValidationError, IsObject, IsArray } from "class-validator";
 import { Type } from "class-transformer";
 import { ClassType } from "class-transformer/ClassTransformer";
 import { BaseDto } from "../../../shared/base/base.dto";
 import { CreateSe } from "../../../shared/helpers/create-se.helper";
 import { IMessage } from "../../../shared/interfaces/interface.message";
+import { Constructor } from "../../../shared/types/constructor.type";
 
 export class SCMessageInvalidSeDto<M extends IMessage = IMessage> extends BaseDto {
   @IsObject()
@@ -16,7 +17,7 @@ export class SCMessageInvalidSeDto<M extends IMessage = IMessage> extends BaseDt
   readonly errs!: ValidationError[];
 
   @IsObject()
-  readonly MessageCtor!: ClassType<ClassType<M>>
+  readonly MessageCtor!: Constructor<M>
 
   /**
    * @constructor
@@ -26,7 +27,7 @@ export class SCMessageInvalidSeDto<M extends IMessage = IMessage> extends BaseDt
   constructor(props: {
     readonly socket: SocketClient;
     readonly errs: ValidationError[];
-    readonly MessageCtor: ClassType<ClassType<M>>;
+    readonly MessageCtor: Constructor<M>;
   }) {
     super();
     if (props) {

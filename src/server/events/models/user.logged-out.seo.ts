@@ -1,26 +1,18 @@
 import { UserModel } from "../../../shared/domains/user/user.model";
-import { SessionModel } from "../../../shared/domains/session/session.model";
 import { IsObject, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
-import { ReauthSessionTokenModel } from "../../../shared/domains/reauth-session-token/reauth-session-token.model";
 import { BaseDto } from "../../../shared/base/base.dto";
 import { CreateSe } from "../../../shared/helpers/create-se.helper";
+import { SocketClient } from "../../web-sockets/socket-client/socket-client";
 
 export class UserLoggedOutSeDto extends BaseDto {
   @IsObject()
-  @ValidateNested()
-  @Type(() => SessionModel)
-  readonly session!: SessionModel;
+  readonly socket!: SocketClient;
 
   @IsObject()
   @ValidateNested()
   @Type(() => UserModel)
-  readonly user!: UserModel;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => ReauthSessionTokenModel)
-  readonly token!: ReauthSessionTokenModel;
+  readonly formerUser!: UserModel;
 
   /**
    * @constructor
@@ -28,15 +20,13 @@ export class UserLoggedOutSeDto extends BaseDto {
    * @param props
    */
   constructor(props: {
-      readonly session: SessionModel,
-      readonly user: UserModel,
-      readonly token: ReauthSessionTokenModel,
+      readonly socket: SocketClient,
+      readonly formerUser: UserModel,
   }) {
     super();
     if (props) {
-      this.session = props.session;
-      this.user = props.user;
-      this.token = props.token;
+      this.socket = props.socket;
+      this.formerUser = props.formerUser;
     }
   }
 }
