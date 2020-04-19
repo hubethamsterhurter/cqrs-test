@@ -1,23 +1,23 @@
 import { Service, Inject } from "typedi";
-import { ServerEventBus } from "../event-bus/server-event-bus";
-import { ServerEventStream } from "../event-stream/server-event-stream";
-import { SCErrorSeo } from "../../events/models/sc.error.seo";
-import { SCMessageMalformedSeo } from "../../events/models/sc.message-errored.seo";
-import { SCMessageInvalidSeo } from "../../events/models/sc.message-invalid.seo";
+import { EventBus } from "../event-bus/event-bus";
+import { EventStream } from "../event-stream/event-stream";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
-import { AppHeartbeatSeo } from "../../events/models/app-heartbeat.seo";
-import { SSListeningSeo } from '../../events/models/ss.listening.seo';
-import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { ctorName } from '../../../shared/helpers/ctor-name.helper';
-import { SeConsumer } from '../../decorators/se-consumer.decorator';
+import { EventStation } from '../../decorators/event-station.decorator';
 import { SubscribeEvent } from '../../decorators/subscribe-event.decorator';
-import { SCMessageUnhandledSeo } from '../../events/models/sc.message-unhandled.seo';
+import { SCErrorEvent } from "../../events/event.sc.error";
+import { SCMessageMalformedEvent } from "../../events/event.sc.message-errored";
+import { SCMessageInvalidEvent } from "../../events/event.sc.message-invalid";
+import { SCMessageUnhandledEvent } from "../../events/event.sc.message-unhandled";
+import { SCMessageEvent } from "../../events/event.sc.message";
+import { AppHeartbeatEvent } from "../../events/event.app-heartbeat";
+import { SSListeningEvent } from "../../events/event.ss.listening";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SeConsumer()
+@EventStation()
 export class ServerWatcher {
   private readonly _log = new Logger(this);
 
@@ -28,8 +28,8 @@ export class ServerWatcher {
    * @param _es
    */
   constructor(
-    @Inject(() => ServerEventBus) private readonly _eb: ServerEventBus,
-    @Inject(() => ServerEventStream) private readonly _es: ServerEventStream,
+    @Inject(() => EventBus) private readonly _eb: EventBus,
+    @Inject(() => EventStream) private readonly _es: EventStream,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
@@ -47,9 +47,9 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(SCErrorSeo)
-  onSocketError(evt: SCErrorSeo) {
-    this._log.warn(`Error event ] "${SCErrorSeo.name}"`, evt.dto.err);
+  @SubscribeEvent(SCErrorEvent)
+  onSocketError(evt: SCErrorEvent) {
+    this._log.warn(`Error event ] "${SCErrorEvent.name}"`, evt.err);
   }
 
   /**
@@ -58,9 +58,9 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(SCMessageMalformedSeo)
-  onMessageMalformed(evt: SCMessageMalformedSeo) {
-    this._log.warn(`Detected malformed message ] "${SCMessageMalformedSeo.name}"`, evt.dto.err);
+  @SubscribeEvent(SCMessageMalformedEvent)
+  onMessageMalformed(evt: SCMessageMalformedEvent) {
+    this._log.warn(`Detected malformed message ] "${SCMessageMalformedEvent.name}"`, evt.err);
   }
 
   /**
@@ -69,9 +69,9 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(SCMessageInvalidSeo)
-  onMessageInvalid(evt: SCMessageInvalidSeo) {
-    this._log.warn(`Detected invalid message ] "${SCMessageInvalidSeo.name}"`, evt.dto.errs);
+  @SubscribeEvent(SCMessageInvalidEvent)
+  onMessageInvalid(evt: SCMessageInvalidEvent) {
+    this._log.warn(`Detected invalid message ] "${SCMessageInvalidEvent.name}"`, evt.errs);
   }
 
   /**
@@ -80,9 +80,9 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(SCMessageUnhandledSeo)
-  onMessageUhandled (evt: SCMessageUnhandledSeo) {
-    this._log.warn(`Detected unhandled message ] "${SCMessageInvalidSeo.name}"`, evt.dto.message);
+  @SubscribeEvent(SCMessageUnhandledEvent)
+  onMessageUhandled (evt: SCMessageUnhandledEvent) {
+    this._log.warn(`Detected unhandled message ] "${SCMessageUnhandledEvent.name}"`, evt.message);
   }
 
   /**
@@ -91,9 +91,9 @@ export class ServerWatcher {
    * 
    * @param evt 
    */
-  @SubscribeEvent(SCMessageSeo)
-  onMessage(evt: SCMessageSeo) {
-    this._log.info(`Detected message ] ${ctorName(evt.dto.message)}`);
+  @SubscribeEvent(SCMessageEvent)
+  onMessage(evt: SCMessageEvent) {
+    this._log.info(`Detected message ] ${ctorName(evt.message)}`);
   }
 
   /**
@@ -102,9 +102,9 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(AppHeartbeatSeo)
-  onAppHeartbeat(evt: AppHeartbeatSeo) {
-    this._log.info('Heartbeat ]', evt.dto.at);
+  @SubscribeEvent(AppHeartbeatEvent)
+  onAppHeartbeat(evt: AppHeartbeatEvent) {
+    this._log.info('Heartbeat ]', evt.at);
   }
 
   /**
@@ -113,8 +113,8 @@ export class ServerWatcher {
    *
    * @param evt
    */
-  @SubscribeEvent(SSListeningSeo)
-  onSocketServerListening(evt: SSListeningSeo) {
+  @SubscribeEvent(SSListeningEvent)
+  onSocketServerListening(evt: SSListeningEvent) {
     this._log.info('Socket Server listening ]');
   }
 }

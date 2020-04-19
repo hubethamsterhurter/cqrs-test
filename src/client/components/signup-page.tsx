@@ -6,7 +6,7 @@ import { Formik } from 'formik';
 import { WsContext } from '../providers/ws.provider';
 import { Trace } from '../../shared/helpers/Tracking.helper';
 import { of } from 'rxjs';
-import { SignupCmDto, SignupCmo } from '../../shared/domains/auth/cmo/signup.cmo';
+import { SignupCommand, SignupCommand } from '../../shared/domains/auth/command.signup';
 import { IMessage } from '../../shared/interfaces/interface.message';
 
 
@@ -38,8 +38,8 @@ export const SignupPage: React.FC = function SignupPage(props) {
             .pipe(op.take(1))
             .subscribe((evt) => { opts.setSubmitting(false); });
 
-          wsCtx.send(new SignupCmo({
-            dto: new SignupCmDto({
+          wsCtx.send(new SignupCommand({
+            dto: new SignupCommand({
               user_name: values.user_name,
               password: values.password,
             }),

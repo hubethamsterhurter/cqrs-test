@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import './chat-history.css';
 import React, { useContext, useLayoutEffect, useState, useRef, useEffect } from 'react';
 import { DataContext } from '../providers/data.provider';
-import { UserModel } from '../../shared/domains/user/user.model';
+import { UserModel } from '../../server/domains/user/user.model';
 import { USER_COLOUR } from '../../shared/constants/user-colour';
 import { HMS } from './hms';
 

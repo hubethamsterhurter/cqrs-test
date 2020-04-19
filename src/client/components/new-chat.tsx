@@ -4,8 +4,8 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Subject, Subscription, timer, of } from 'rxjs';
 import { WsContext } from '../providers/ws.provider';
 import { Trace } from '../../shared/helpers/Tracking.helper';
-import { CreateChatCmDto, CreateChatCmo } from '../../shared/domains/chat/cmo/create-chat.cmo';
-import { UserTypingCmDto, UserTypingCmo } from '../../shared/domains/user/cmo/user-typing.cmo';
+import { CreateChatCommand, CreateChatCommand } from '../../shared/domains/chat/command.create-chat';
+import { UserTypingCmDto, UserTypingCommand } from '../../shared/domains/user/command.user-typing';
 
 const TYPING_DEBOUNCE = 2500;
 const SUBMIT_DEBOUNCE = 0.1;
@@ -27,8 +27,8 @@ export const NewChat: React.FC = function NewChat(props) {
     subs.push(enterKey$
       .pipe(op.throttle(() => timer(SUBMIT_DEBOUNCE), { leading: true, trailing: false }))
       .subscribe(enterEvt => {
-        wsCtx.send(new CreateChatCmo({
-          dto: new CreateChatCmDto({
+        wsCtx.send(new CreateChatCommand({
+          dto: new CreateChatCommand({
             content: enterEvt.currentTarget.value,
             sent_at: new Date(),
           }),
@@ -45,7 +45,7 @@ export const NewChat: React.FC = function NewChat(props) {
         op.switchMap((evt) => of(evt).pipe(op.takeUntil(enterKey$))),
       )
       .subscribe(nonEnterEvt => {
-        wsCtx.send(new UserTypingCmo({
+        wsCtx.send(new UserTypingCommand({
           dto: new UserTypingCmDto(),
           trace: new Trace(),
         }));

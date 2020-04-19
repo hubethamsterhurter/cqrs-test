@@ -1,16 +1,16 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { SeHandlerMetadata } from "../global/metadata-container/metadata/se.handler.method.metadata";
+import { EventHandlerMethodMetadata } from "../global/metadata-container/metadata/event-handler.method.metadata";
 import { Logger } from "../../shared/helpers/class-logger.helper";
-import { IEvent } from "../../shared/interfaces/interface.event";
 import { ClassType } from "class-transformer/ClassTransformer";
 import Container from "typedi";
-import { ServerMetadataContainer } from "../global/metadata-container/server-metadata-container";
+import { MetadataContainer } from "../global/metadata-container/metadata-container";
 import { Constructor } from "../../shared/types/constructor.type";
 import { Prototype } from "../../shared/types/prototype.type";
+import { BaseEvent } from "../base/base.event";
 
 const _log = new Logger(SubscribeEvent);
 
-export function SubscribeEvent(SeCtor: ClassType<IEvent>): MethodDecorator {
+export function SubscribeEvent(SeCtor: ClassType<BaseEvent>): MethodDecorator {
   /**
    * @decorator
    *
@@ -29,7 +29,7 @@ export function SubscribeEvent(SeCtor: ClassType<IEvent>): MethodDecorator {
       throw new TypeError(`${SubscribeEvent.name} is not supported on static methods`);
     }
 
-    const actionableMetadata = new SeHandlerMetadata({
+    const actionableMetadata = new EventHandlerMethodMetadata({
       TargetSeCtor: SeCtor,
       HostCtor: prototype.constructor as Constructor,
       prototype: prototype as Prototype,
@@ -37,7 +37,7 @@ export function SubscribeEvent(SeCtor: ClassType<IEvent>): MethodDecorator {
       propertyKey: propertyKey,
     });
 
-    Container.get(ServerMetadataContainer).registerMethodMetadata({
+    Container.get(MetadataContainer).registerMethodMetadata({
       Ctor: prototype.constructor as Constructor,
       propertyKey: propertyKey,
       metadata: actionableMetadata,

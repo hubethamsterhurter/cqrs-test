@@ -1,35 +1,36 @@
 import ws from 'ws';
 import * as op from 'rxjs/operators';
 import { autobind } from 'core-decorators';
-import { ServerEventBus } from '../../global/event-bus/server-event-bus';
+import { EventBus } from '../../global/event-bus/event-bus';
 import { WS_EVENT } from '../../constants/ws.event';
-import { SCCloseSeo, SCCloseSeDto } from '../../events/models/sc.close.seo';
-import { SCErrorSeo, SCErrorSeDto } from '../../events/models/sc.error.seo';
-import { SCMessageSeo, SCMessageSeDto } from '../../events/models/sc.message-parsed.seo';
-import { SCMessageInvalidSeo, SCMessageInvalidSeDto } from '../../events/models/sc.message-invalid.seo';
-import { SCMessageMalformedSeo, SCMessageMalformedSeDto } from '../../events/models/sc.message-errored.seo';
-import { SCOpenSeo, SCOpenSeDto } from '../../events/models/sc.open.seo';
-import { SCUnexpectedResponseSeo, SCUnexpectedResponseSeDto } from '../../events/models/sc.unexpected-response.seo';
-import { SCUpgradeSeo, SCUpgradeSeDto } from '../../events/models/sc.upgrade.seo';
-import { SCPongSeo, SCPongSeDto } from '../../events/models/sc.pong.seo';
-import { SCPingSeo, SCPingSeDto } from '../../events/models/sc.ping.seo';
+import { SCCloseEvent } from '../../events/event.sc.close';
+import { SCErrorEvent } from '../../events/event.sc.error';
+import { SCOpenEvent } from '../../events/event.sc.open';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
-import { IMessage } from '../../../shared/interfaces/interface.message';
 import { MessageParser } from '../../../shared/util/message-parser.util';
-import { SCMessageUnhandledSeo, SCMessageUnhandledSeDto } from '../../events/models/sc.message-unhandled.seo';
-import { SessionModel } from '../../../shared/domains/session/session.model';
-import { UserModel } from '../../../shared/domains/user/user.model';
+import { SCMessageUnhandledEvent } from '../../events/event.sc.message-unhandled';
+import { UserModel } from '../../domains/user/user.model';
 import { Subscription, Subject, BehaviorSubject } from 'rxjs';
-import { ServerEventStream } from '../../global/event-stream/server-event-stream';
-import { ModelUpdatedSeo } from '../../events/models/model-updated.seo';
-import { ModelDeletedSeo } from '../../events/models/model-deleted.seo';
+import { EventStream } from '../../global/event-stream/event-stream';
+import { BaseMessage } from '../../../shared/base/base.message';
+import { SessionModel } from '../../domains/session/session.model';
+import { ModelUpdatedEvent } from '../../events/event.model-updated';
+import { ModelDeletedEvent } from '../../events/event.model-deleted';
+import { createEvent } from '../../helpers/create-event.helper';
+import { SCMessageMalformedEvent } from '../../events/event.sc.message-errored';
+import { SCMessageInvalidEvent } from '../../events/event.sc.message-invalid';
+import { SCMessageEvent } from '../../events/event.sc.message';
+import { SCPingEvent } from '../../events/event.sc.ping';
+import { SCPongEvent } from '../../events/event.sc.pong';
+import { SCUpgradeEvent } from '../../events/event.sc.upgrade';
+import { SCUnexpectedResponseEvent } from '../../events/event.sc.unexpected-response';
 
 
 @LogConstruction()
 export class SocketClient {
-  private _log = new Logger(this);
+  readonly #log = new Logger(this);
 
   get session(): SessionModel { return this.session$.getValue(); }
   set session(arg: SessionModel) { this.session$.next(arg) }
@@ -57,8 +58,8 @@ export class SocketClient {
     user: UserModel | null,
     private readonly _parser: MessageParser,
     private readonly _ws: ws,
-    private readonly _eb: ServerEventBus,
-    private readonly _es: ServerEventStream,
+    private readonly _eb: EventBus,
+    private readonly _es: EventStream,
   ) {
     // emissions
     this._ws.on(WS_EVENT.CLOSE, this._handleClose);
@@ -76,33 +77,33 @@ export class SocketClient {
     // heavy to do this on for every connection TODO: mediator pattern
     this.#updatedSub = this
       ._es
-      .of(ModelUpdatedSeo)
+      .of(ModelUpdatedEvent)
       .pipe(
         op.takeWhile(() => !!this.user$.getValue()),
         op.filter((evt) =>
-          ((evt.dto.model instanceof UserModel) && (evt.dto.model.id === this.user?.id))
-          || ((evt.dto.model instanceof SessionModel) && (evt.dto.model.id === this.session?.id))
+          ((evt.model instanceof UserModel) && (evt.model.id === this.user?.id))
+          || ((evt.model instanceof SessionModel) && (evt.model.id === this.session?.id))
           ),
       )
       .subscribe((evt) => {
-        if (evt.dto.model instanceof UserModel) { this.user$.next(evt.dto.model); }
-        if (evt.dto.model instanceof SessionModel) { this.session$.next(evt.dto.model); }
+        if (evt.model instanceof UserModel) { this.user$.next(evt.model); }
+        if (evt.model instanceof SessionModel) { this.session$.next(evt.model); }
       });
 
     // heavy to do this on for every connection TODO: mediator pattern
     this.#deletedSub = this
       ._es
-      .of(ModelDeletedSeo)
+      .of(ModelDeletedEvent)
       .pipe(
         op.takeWhile(() => !!this.user$.getValue()),
         op.filter((evt) =>
-          ((evt.dto.model instanceof UserModel) && (evt.dto.model.id === this.user?.id))
-          || ((evt.dto.model instanceof SessionModel) && (evt.dto.model.id === this.session?.id))
+          ((evt.model instanceof UserModel) && (evt.model.id === this.user?.id))
+          || ((evt.model instanceof SessionModel) && (evt.model.id === this.session?.id))
           ),
       )
       .subscribe((evt) => {
-        if (evt.dto.model instanceof UserModel) { this.user$.next(evt.dto.model); }
-        if (evt.dto.model instanceof SessionModel) { this.session$.next(evt.dto.model); }
+        if (evt.model instanceof UserModel) { this.user$.next(evt.model); }
+        if (evt.model instanceof SessionModel) { this.session$.next(evt.model); }
       })
   }
 
@@ -117,12 +118,10 @@ export class SocketClient {
    */
   @autobind
   private async _handleClose(code: number, reason: string) {
-    this._eb.fire(new SCCloseSeo({
-      dto: new SCCloseSeDto({
-        socket: this,
-        code,
-        reason,
-      }),
+    this._eb.fire(createEvent(SCCloseEvent, {
+      socket: this,
+      code,
+      reason,
       trace: new Trace(),
     }));
     this.close$.next();
@@ -151,11 +150,9 @@ export class SocketClient {
    */
   @autobind
   private async _handleError(error: Error) {
-    this._eb.fire(new SCErrorSeo({
-      dto: new SCErrorSeDto({
-        socket: this,
-        err: error,
-      }),
+    this._eb.fire(createEvent(SCErrorEvent, {
+      socket: this,
+      err: error,
       trace: new Trace(),
     }));
   }
@@ -174,23 +171,19 @@ export class SocketClient {
 
     if (result.malformed()) {
       // message -> malformed
-      this._eb.fire(new SCMessageMalformedSeo({
-        dto: new SCMessageMalformedSeDto({
-          socket: this,
-          err: result._u.err,
-        }),
+      this._eb.fire(createEvent(SCMessageMalformedEvent, {
+        socket: this,
+        err: result._u.err,
         trace: new Trace(),
       }));
     }
 
     else if (result.invalid()) {
       // message -> invalid
-      this._eb.fire(new SCMessageInvalidSeo({
-        dto: new SCMessageInvalidSeDto({
-          socket: this,
-          errs: result._u.errs,
-          MessageCtor: result._u.Ctor,
-        }),
+      this._eb.fire(createEvent(SCMessageInvalidEvent, {
+        socket: this,
+        errs: result._u.errs,
+        MessageCtor: result._u.Ctor,
         trace: result._u.trace?.clone() ?? new Trace(),
       }));
     }
@@ -198,11 +191,9 @@ export class SocketClient {
     else if (result.success()) {
       // message -> success
 
-      this._eb.fire(new SCMessageSeo({
-        dto: new SCMessageSeDto({
-          socket: this,
-          message: result._u.instance,
-        }),
+      this._eb.fire(createEvent(SCMessageEvent, {
+        socket: this,
+        message: result._u.instance,
         trace: result._u.instance.trace.clone(),
       }));
     }
@@ -210,11 +201,9 @@ export class SocketClient {
     else if (result.unhandled()) {
       // message -> success
 
-      this._eb.fire(new SCMessageUnhandledSeo({
-        dto: new SCMessageUnhandledSeDto({
-          socket: this,
-          message: result._u.raw,
-        }),
+      this._eb.fire(createEvent(SCMessageUnhandledEvent, {
+        socket: this,
+        message: result._u.raw,
         trace: new Trace(),
       }));
     }
@@ -228,10 +217,8 @@ export class SocketClient {
    */
   @autobind
   private async _handleOpen() {
-    this._eb.fire(new SCOpenSeo({
-      dto: new SCOpenSeDto({
-        socket: this,
-      }),
+    this._eb.fire(createEvent(SCOpenEvent, {
+      socket: this,
       trace: new Trace(),
     }));
   }
@@ -244,10 +231,8 @@ export class SocketClient {
    */
   @autobind
   private async _handlePing() {
-    this._eb.fire(new SCPingSeo({
-      dto: new SCPingSeDto({
-        socket: this,
-      }),
+    this._eb.fire(createEvent(SCPingEvent, {
+      socket: this,
       trace: new Trace(),
     }));
   }
@@ -260,10 +245,8 @@ export class SocketClient {
    */
   @autobind
   private async _handlePong() {
-    this._eb.fire(new SCPongSeo({
-      dto: new SCPongSeDto({
-        socket: this,
-      }),
+    this._eb.fire(createEvent(SCPongEvent, {
+      socket: this,
       trace: new Trace(),
     }));
   }
@@ -276,10 +259,8 @@ export class SocketClient {
    */
   @autobind
   private async _handleUpgrade() {
-      this._eb.fire(new SCUpgradeSeo({
-      dto: new SCUpgradeSeDto({
-        socket: this,
-      }),
+      this._eb.fire(createEvent(SCUpgradeEvent, {
+      socket: this,
       trace: new Trace(),
     }));
   }
@@ -292,14 +273,25 @@ export class SocketClient {
    */
   @autobind
   private async _handleUnexpectedResponse() {
-    this._eb.fire(new SCUnexpectedResponseSeo({
-      dto: new SCUnexpectedResponseSeDto({
-        socket: this,
-      }),
+    this._eb.fire(createEvent(SCUnexpectedResponseEvent, {
+      socket: this,
       trace: new Trace(),
     }));
   }
 
+
+  /**
+   * @description
+   * Send a message to the client
+   *
+   * @param msg
+   */
+  send(message: BaseMessage) {
+    // wrap
+    this.#log.message(message);
+    const strMsg = JSON.stringify(message);
+    return this.sendRaw(strMsg);
+  }
 
 
   /**
@@ -308,9 +300,7 @@ export class SocketClient {
    *
    * @param msg 
    */
-  send(msg: IMessage) {
-    const strMsg = JSON.stringify(msg);
-    this._log.info(`\t->\t SENDING MESSAGE \t -> \t ${msg?.constructor?.name?.padEnd(25, ' ')} \t -> \t ${msg?.trace?.origin_id}`);
-    this._ws.send(strMsg);
+  sendRaw(msg: string) {
+    this._ws.send(msg);
   }
 }

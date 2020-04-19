@@ -1,0 +1,1 @@
+export type StrRecord<T extends string> = Record<T, string>;

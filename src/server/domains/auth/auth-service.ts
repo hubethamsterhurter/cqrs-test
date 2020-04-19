@@ -1,27 +1,24 @@
 import * as tEither from 'fp-ts/lib/TaskEither';
-import { Service, Inject } from "typedi";
+import { Inject } from "typedi";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
-import { SeConsumer } from "../../decorators/se-consumer.decorator";
 import { UserRepository } from "../user/user.repository";
 import { AuthTokenRepository } from "../auth-token/auth-token.repository";
 import { SessionCrudService } from "../session/session.crud.service";
-import { UserModel } from '../../../shared/domains/user/user.model';
+import { UserModel } from '../user/user.model';
 import { left, right } from 'fp-ts/lib/Either';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
 import { AuthTokenCrudService } from '../auth-token/auth-token.crud.service';
-import { AuthenticatedSmo, AuthenticatedSmDto } from '../../../shared/domains/auth/smo/authenticated.smo';
-import { UserLoggedInSeo, UserLoggedInSeDto } from '../../events/models/user.logged-in.seo';
-import { ServerEventBus } from '../../global/event-bus/server-event-bus';
+import { AuthenticatedBroadcast, } from '../../../shared/domains/auth/broadcast.authenticated';
+import { EventBus } from '../../global/event-bus/event-bus';
 import { SocketClient } from '../../web-sockets/socket-client/socket-client';
-import { UnauthenticatedSmo, UnauthenticatedSmDto } from '../../../shared/domains/auth/smo/unauthenticated.smo';
-import { UserLoggedOutSeo, UserLoggedOutSeDto } from '../../events/models/user.logged-out.seo';
+import { UnauthenticatedBroadcast } from '../../../shared/domains/auth/broadcast.unauthenticated';
+import { createMessage } from '../../../shared/helpers/create-message.helper';
+import { UserLoggedInEvent } from '../../events/event.user.logged-in';
+import { createEvent } from '../../helpers/create-event.helper';
 
 
-let __created__ = false;
 @LogConstruction()
-@Service({ global: true })
-@SeConsumer()
 export class AuthService {
   private readonly _log = new Logger(this);
 
@@ -40,11 +37,8 @@ export class AuthService {
     @Inject(() => SessionCrudService) private readonly  _sessionCrudService: SessionCrudService,
     @Inject(() => AuthTokenCrudService) private readonly  _authTokenCrudService: AuthTokenCrudService,
     @Inject(() => AuthTokenRepository) private readonly  _authTokenRepo: AuthTokenRepository,
-    @Inject(() => ServerEventBus) private readonly  _eb: ServerEventBus,
-  ) {
-    if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
-    __created__ = true;
-  }
+    @Inject(() => EventBus) private readonly  _eb: EventBus,
+  ) {}
 
 
   /**
@@ -130,20 +124,23 @@ export class AuthService {
     });
 
     // notify user
-    arg.socket.send(new AuthenticatedSmo({
-      dto: new AuthenticatedSmDto({
-        token: newToken,
-        you: arg.user,
-      }),
+    // {
+    //   token: newToken,
+    //   you: arg.user,
+    //   trace: arg.trace.clone(),
+    // }
+    const msg = createMessage(AuthenticatedBroadcast, {
+      token: newToken,
+      you: arg.user,
       trace: arg.trace.clone(),
-    }));
+    });
+
+    arg.socket.send(msg);
 
     // notify server
-    this._eb.fire(new UserLoggedInSeo({
-      dto: new UserLoggedInSeDto({
-        session: arg.socket.session,
-        user: arg.user,
-      }),
+    this._eb.fire(createEvent(UserLoggedInEvent, {
+      session: arg.socket.session,
+      user: arg.user,
       trace: arg.trace.clone(),
     }));
   }
@@ -165,12 +162,12 @@ export class AuthService {
 
     arg.socket.user = null;
 
-    let authToken = await this._authTokenRepo.findBySessionId({
-      session_id: arg.socket.session.id
+    let authToken = await this._authTokenRepo.findOne({
+      session_id: arg.socket.session.id,
     });
 
     if (authToken) {
-      authToken = await this._authTokenRepo.delete({
+      authToken = await this._authTokenCrudService.delete({
         id: authToken.id,
         requester: arg.socket.user,
         trace: arg.trace,
@@ -191,7 +188,7 @@ export class AuthService {
 
     // notify user
     arg.socket.send(new UnauthenticatedSmo({
-        dto: new UnauthenticatedSmDto({
+        dto: new UnauthenticatedBroadcast({
           deletedAuthTokenId: authToken?.id ?? null,
         }),
         trace: arg.trace.clone(),

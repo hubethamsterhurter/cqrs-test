@@ -5,9 +5,9 @@ import { WsContext } from '../providers/ws.provider';
 import { Subscription } from 'rxjs';
 import { ValidationError } from 'class-validator';
 import { filter } from 'rxjs/operators';
-import { ErrorSmo } from '../../shared/smo/error.smo';
-import { CmInvalidSmo } from '../../shared/smo/cm.invalid.smo';
-import { CMMalformedSmo } from '../../shared/smo/cm.malformed.smo';
+import { ErrorSmo } from '../../shared/broadcasts/broadcast.error';
+import { CmInvalidSmo } from '../../shared/broadcasts/broadcast.command-invalid';
+import { CMMalformedSmo } from '../../shared/broadcasts/broadcast.command-malformed';
 
 // https://stackoverflow.com/questions/37909134/nbsp-jsx-not-working
 // function rws(str: string) { return str.replace(/ /g, '&nbsp;'); }

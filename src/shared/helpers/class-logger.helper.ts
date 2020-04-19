@@ -1,3 +1,5 @@
+import { BaseMessage } from "../base/base.message";
+
 function formatDateLog(date: Date) {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getMilliseconds().toString().padStart(3, '0').substr(0, 2)}`;
 }
@@ -30,5 +32,9 @@ export class Logger {
 
   error(...args: any[]) {
     console.error(`[${formatDateLog(new Date())}] ${this._name}:`, ...args);
+  }
+
+  message(message: BaseMessage) {
+    this.info(`\t->\t SENDING MESSAGE \t -> \t ${message?._n?.padEnd(25, ' ')} \t -> \t ${message?.trace?.origin_id}`);
   }
 }

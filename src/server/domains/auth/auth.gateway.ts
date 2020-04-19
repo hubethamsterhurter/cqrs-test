@@ -1,15 +1,15 @@
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { SeConsumer } from "../../decorators/se-consumer.decorator";
+import { EventStation } from "../../decorators/event-station.decorator";
 import { UserCrudService } from "../user/user.crud.service";
 import { UserRepository } from "../user/user.repository";
 import { SubscribeMessage } from "../../decorators/subscribe-message.decorator";
-import { SCMessageSeo } from "../../events/models/sc.message-parsed.seo";
-import { ErrorSmo, ErrorSmDto } from "../../../shared/smo/error.smo";
-import { SignupCmo } from "../../../shared/domains/auth/cmo/signup.cmo";
+import { SCMessageSeo } from "../../events/event.sc.message";
+import { ErrorSmo, ErrorBroadcast } from "../../../shared/broadcasts/broadcast.error";
+import { SignupCommand } from "../../../shared/domains/auth/command.signup";
 import { HTTP_CODE } from "../../../shared/constants/http-code.constant";
-import { loginCmo } from "../../../shared/domains/auth/cmo/login.cmo";
-import { LogoutCmo } from "../../../shared/domains/auth/cmo/logout.cmo";
+import { loginCmo } from "../../../shared/domains/auth/command.login";
+import { LogoutCommand } from "../../../shared/domains/auth/command.logout";
 import { AuthService } from "./auth-service";
 import { USER_COLOUR } from "../../../shared/constants/user-colour";
 import { Service, Inject } from "typedi";
@@ -18,7 +18,7 @@ import { Service, Inject } from "typedi";
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SeConsumer()
+@EventStation()
 export class AuthGateway {
   private _log = new Logger(this);
 
@@ -44,14 +44,14 @@ export class AuthGateway {
    *
    * @param evt
    */
-  @SubscribeMessage(SignupCmo)
-  async signUp(evt: SCMessageSeo<SignupCmo>) {
+  @SubscribeMessage(SignupCommand)
+  async signUp(evt: SCMessageSeo<SignupCommand>) {
     // already signed in
     if (evt.dto.socket.user) {
       const msg = 'Cannot sign up: already logged in.'
       this._log.info(msg);
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._422,
           message: msg,
           trace: evt.trace.clone(),
@@ -66,7 +66,7 @@ export class AuthGateway {
     // user already exists
     if (existingUser) {
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._422,
           message: `User ${evt.dto.message.dto.user_name} already exists`,
           trace: evt.trace.clone(),
@@ -107,7 +107,7 @@ export class AuthGateway {
       const msg = 'Cannot log in: already logged in.'
       this._log.info(msg);
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._404,
           message: msg,
           trace: evt.trace.clone(),
@@ -124,7 +124,7 @@ export class AuthGateway {
       const msg = 'Cannot log in: user not found.';
       this._log.warn(msg);
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._422,
           message: msg,
           trace: evt.trace.clone(),
@@ -142,7 +142,7 @@ export class AuthGateway {
       const msg = 'Cannot log in: password does not match.';
       this._log.warn(msg);
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._422,
           message: msg,
           trace: evt.trace.clone(),
@@ -168,14 +168,14 @@ export class AuthGateway {
    * 
    * @param evt 
    */
-  @SubscribeMessage(LogoutCmo)
-  async logout(evt: SCMessageSeo<LogoutCmo>) {
+  @SubscribeMessage(LogoutCommand)
+  async logout(evt: SCMessageSeo<LogoutCommand>) {
     const formerUser = evt.dto.socket.user;
 
     if (!formerUser) {
       this._log.info('Cannot log out: not logged in');
       evt.dto.socket.send(new ErrorSmo({
-        dto: new ErrorSmDto({
+        dto: new ErrorBroadcast({
           code: HTTP_CODE._422,
           message: 'Not logged in',
           trace: evt.trace.clone(),

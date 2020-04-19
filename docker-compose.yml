@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+  test_cqrs_mq:
+    container_name: test_cqrs_mq_container
+    image: rabbitmq:3.8.3
+    restart: unless-stopped
+    ports:
+      - ${MQ_PORT}:5672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASSWORD}
+    volumes:
+      - rabbitmqvol:/var/lib/rabbitmq
+  test_cqrs_db:
+    container_name: test_cqrs_db_container
+    image: postgres:9.6.17-alpine
+    restart: unless-stopped
+    ports:
+      - ${DB_PORT}:5432
+    environment: 
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgresdbvol:/var/lib/postgresql/data
+volumes:
+  postgresdbvol: 
+  rabbitmqvol: 

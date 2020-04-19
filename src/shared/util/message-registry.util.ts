@@ -1,13 +1,13 @@
 import { Constructor } from "../types/constructor.type";
-import { IMessage } from "../interfaces/interface.message";
 import { LogConstruction } from "../decorators/log-construction.decorator";
 import { Service } from "typedi";
+import { BaseMessage } from "../base/base.message";
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-export class MessageRegistry<T extends IMessage = IMessage> {
-  #registry: Map<string, Constructor<T>> = new Map();
+export class MessageRegistry<M extends BaseMessage = BaseMessage> {
+  #registry: Map<string, Constructor<M>> = new Map();
 
   /**
    * @constructor
@@ -23,7 +23,7 @@ export class MessageRegistry<T extends IMessage = IMessage> {
    *
    * @param arg
    */
-  add(CmCtor: Constructor<T>) {
+  add(CmCtor: Constructor<M>) {
     this.#registry.set(CmCtor.name, CmCtor);
   }
 

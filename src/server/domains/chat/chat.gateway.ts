@@ -1,19 +1,17 @@
 import { Inject, Service } from "typedi";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SubscribeMessage } from '../../decorators/subscribe-message.decorator';
-import { SCMessageSeo } from '../../events/models/sc.message-parsed.seo';
 import { Logger } from '../../../shared/helpers/class-logger.helper';
-import { SeConsumer } from "../../decorators/se-consumer.decorator";
-import { ChatCrudService } from "./chat.crud.service";
-import { SessionRepository } from "../session/session.repository";
-import { CreateChatCmo } from "../../../shared/domains/chat/cmo/create-chat.cmo";
-import { UserRepository } from "../user/user.repository";
+import { EventStation } from "../../decorators/event-station.decorator";
+import { CreateChatCommand } from "../../../shared/domains/chat/command.create-chat";
+import { ChatIngress } from "./chat.ingress";
+import { SCMessageEvent } from "../../events/event.sc.message";
 
 
 let __created__ = false;
 @Service({ global: true })
 @LogConstruction()
-@SeConsumer()
+@EventStation()
 export class ChatGateway {
   readonly #log = new Logger(this);
 
@@ -21,14 +19,10 @@ export class ChatGateway {
   /**
    * @constructor
    * 
-   * @param _chatService
-   * @param _sessionRepo
-   * @param _sessionRepo
+   * @param _chatIngress
    */
   constructor(
-    @Inject(() => ChatCrudService) private readonly _chatService: ChatCrudService,
-    @Inject(() => UserRepository) private readonly _userRepo: UserRepository,
-    @Inject(() => SessionRepository) private readonly _sessionRepo: SessionRepository,
+    @Inject(() => ChatIngress) private readonly _chatIngress: ChatIngress,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
@@ -41,8 +35,8 @@ export class ChatGateway {
    * 
    * @param evt 
    */
-  @SubscribeMessage(CreateChatCmo)
-  async create(evt: SCMessageSeo<CreateChatCmo>) {
+  @SubscribeMessage(CreateChatCommand)
+  async create(evt: SCMessageEvent<CreateChatCommand>) {
     const session = evt.dto.socket.session;
     const user = evt.dto.socket.user;
     await this._chatService.create({

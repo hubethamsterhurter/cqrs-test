@@ -1,15 +1,15 @@
 import { Logger } from "../../shared/helpers/class-logger.helper";
-import { IMessage } from "../../shared/interfaces/interface.message";
 import Container from "typedi";
 import { Constructor } from "../../shared/types/constructor.type";
 import { Prototype } from "../../shared/types/prototype.type";
-import { CmHandlerMetadata } from "../global/metadata-container/metadata/cm.handler.method.metadata";
-import { ServerMetadataContainer } from "../global/metadata-container/server-metadata-container";
+import { CommandHandlerMetadata } from "../global/metadata-container/metadata/command-handler.method.metadata";
+import { MetadataContainer } from "../global/metadata-container/metadata-container";
 import { MessageRegistry } from "../../shared/util/message-registry.util";
+import { BaseMessage } from "../../shared/base/base.message";
 
 const _log = new Logger(SubscribeMessage);
 
-export function SubscribeMessage(CmCtor: Constructor<IMessage>): MethodDecorator {
+export function SubscribeMessage(CmCtor: Constructor<BaseMessage>): MethodDecorator {
   /**
    * @decorator
    *
@@ -28,7 +28,7 @@ export function SubscribeMessage(CmCtor: Constructor<IMessage>): MethodDecorator
       throw new TypeError(`${SubscribeMessage.name} is not supported on static methods`);
     }
 
-    const actionableMetadata = new CmHandlerMetadata({
+    const actionableMetadata = new CommandHandlerMetadata({
       TargetCmCtor: CmCtor,
       HostCtor: prototype.constructor as Constructor,
       prototype: prototype as Prototype,
@@ -36,7 +36,7 @@ export function SubscribeMessage(CmCtor: Constructor<IMessage>): MethodDecorator
       propertyKey: propertyKey,
     });
 
-    Container.get(ServerMetadataContainer).registerMethodMetadata({
+    Container.get(MetadataContainer).registerMethodMetadata({
       Ctor: prototype.constructor as Constructor,
       propertyKey: propertyKey,
       metadata: actionableMetadata,

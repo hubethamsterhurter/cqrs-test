@@ -1,13 +1,9 @@
-import { IModel } from "../interfaces/interface.model";
+import { DeepPartial } from "typeorm";
+import { HasId } from "./has-id.type";
+import { ISoftDeleteable } from "../interfaces/interface.soft-deleteable";
+import { ICreateable } from "../interfaces/interface.createable";
+import { IUpdateable } from "../interfaces/interface.updateable";
 
-export type UnsavedModel<M extends IModel> = Omit<M,
-  'id'
-  | '_n'
-  | 'updated_at'
-  | 'created_at'
-  | 'deleted_at'
-  | 'updated_by_id'
-  | 'created_by_id'
-  | 'deleted_by_id'
-  | 'description'
->
+export type UnsavedModel<A extends HasId> =
+  & Omit<A, 'id' | keyof ICreateable | keyof IUpdateable | keyof ISoftDeleteable>
+  & DeepPartial<Pick<A, 'id'>>

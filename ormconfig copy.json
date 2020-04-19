@@ -1,0 +1,20 @@
+{
+  "type": "postgres",
+  "host": "127.0.0.1",
+  "port": 5432,
+  "database": "gw_elo",
+  "username": "db_admin",
+  "password": "verySecretPassword!",
+  "entities": [
+    "src/server/domains/**/*.model.ts"
+  ],
+  "migrations": [
+    "src/server/migrations/*-migration.ts"
+  ],
+  "synchronize": false,
+  "logging": false,
+  "cli": {
+    "entitiesDir": "src/server/entities",
+    "migrationsDir": "src/server/migrations"
+  }
+}

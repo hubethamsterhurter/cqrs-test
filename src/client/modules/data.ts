@@ -1,10 +1,10 @@
 import { merge, BehaviorSubject } from "rxjs";
 import { WsConnection } from "./ws-connection";
-import { InitSmo } from "../../shared/smo/init.smo";
-import { ModelCreatedSmo } from "../../shared/smo/model.created.smo";
+import { InitSmo } from "../../shared/broadcasts/broadcast.init";
+import { ModelCreatedSmo } from "../../shared/broadcasts/broadcast.model.created";
 import { Logger } from "../../shared/helpers/class-logger.helper";
-import { ModelUpdatedSmo } from "../../shared/smo/mode.updated.smo";
-import { ModelDeletedSmo } from "../../shared/smo/model.deleted.smo";
+import { ModelUpdatedSmo } from "../../shared/broadcasts/broadcast.model.updated";
+import { ModelDeletedSmo } from "../../shared/broadcasts/broadcast.model.deleted";
 import * as op from "rxjs/operators";
 import { DataState, initialDataCtx, dataReducer } from "./data.state";
 import { IMessage } from "../../shared/interfaces/interface.message";

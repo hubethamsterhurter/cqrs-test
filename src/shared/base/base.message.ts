@@ -1,11 +1,19 @@
-import { IsString } from "class-validator";
-import { Trace } from "../helpers/Tracking.helper";
-import { IMessage } from "../interfaces/interface.message";
-import { ctorName } from "../helpers/ctor-name.helper";
+import { ctorName } from "../../shared/helpers/ctor-name.helper";
+import { IsString, IsObject, ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
+import { Trace } from "../../shared/helpers/Tracking.helper";
+import { Has_n } from "../types/has-_n.type";
+import { Has_t } from "../types/has-_t.type";
 
-export abstract class BaseMessage<D extends object = object> implements IMessage<D> {
+export abstract class BaseMessage implements Has_n, Has_t<'msg'> {
   @IsString()
-  readonly _n = ctorName(this);
-  abstract trace: Trace
-  abstract dto: D
+  readonly _t = 'msg';
+
+  @IsString()
+  readonly _n: string = ctorName(this)
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Trace)
+  readonly trace!: Trace;
 }

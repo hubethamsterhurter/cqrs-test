@@ -3,20 +3,21 @@ import { Service, Inject } from "typedi";
 import { Logger } from "../../../shared/helpers/class-logger.helper";
 import { LogConstruction } from "../../../shared/decorators/log-construction.decorator";
 import { SessionRepository } from "../../domains/session/session.repository";
-import { SSConnectionSeo } from "../../events/models/ss.connection.seo";
-import { SCCloseSeo } from "../../events/models/sc.close.seo";
 import { SocketClientFactory } from "../socket-client/socket-client.factory";
 import { IdFactory } from "../../../shared/helpers/id.factory";
 import { SubscribeEvent } from "../../decorators/subscribe-event.decorator";
 import { SocketWarehouse } from "../socket-warehouse/socket-warehouse";
-import { SeConsumer } from "../../decorators/se-consumer.decorator";
+import { EventStation } from "../../decorators/event-station.decorator";
 import { AuthService } from "../../domains/auth/auth-service";
-import { UserModel } from '../../../shared/domains/user/user.model';
+import { UserModel } from '../../domains/user/user.model';
 import { UserRepository } from '../../domains/user/user.repository';
 import { ChatRepository } from '../../domains/chat/chat.repository';
-import { InitSmo, InitSmDto } from '../../../shared/smo/init.smo';
 import { SessionCrudService } from '../../domains/session/session.crud.service';
-import { InvalidAuthTokenSmo, InvalidAuthTokenSmDto } from '../../../shared/domains/auth-token/smo/invalid-auth-token.smo';
+import { SSConnectionEvent } from '../../events/event.ss.connection';
+import { createMessage } from '../../../shared/helpers/create-message.helper';
+import { InvalidAuthTokenBroadcast } from '../../../shared/domains/auth-token/broadcast.invalid-auth-token';
+import { InitBroadcast } from '../../../shared/broadcasts/broadcast.init';
+import { SCCloseEvent } from '../../events/event.sc.close';
 
 
 // TODO: timeout clients regularly with heartbeat
@@ -24,7 +25,7 @@ import { InvalidAuthTokenSmo, InvalidAuthTokenSmDto } from '../../../shared/doma
 let __created__ = false;
 @LogConstruction()
 @Service({ global: true })
-@SeConsumer()
+@EventStation()
 export class SocketDoor {
   private readonly _log = new Logger(this);
 
@@ -59,12 +60,12 @@ export class SocketDoor {
    *
    * @param evt
    */
-  @SubscribeEvent(SSConnectionSeo)
-  private async _onSocketConnection(evt: SSConnectionSeo) {
+  @SubscribeEvent(SSConnectionEvent)
+  private async _onSocketConnection(evt: SSConnectionEvent) {
     // find the corresponding token & user
     this._log.info('socket connected');
     const socketId = this._idFactory.create();
-    const rememberToken =  evt.dto.req?.url?.match(/auth=([^&]*)/)?.[1];
+    const rememberToken =  evt.req?.url?.match(/auth=([^&]*)/)?.[1];
     const eUser = rememberToken ? await this._authService.userFromTokenId({ token_id: rememberToken })() : null;
     const user: UserModel | null = eUser ? either.isRight(eUser) ? eUser.right : null : null;
     console.log('HANDLE CONNECTION', rememberToken, eUser);
@@ -85,7 +86,7 @@ export class SocketDoor {
       id: socketId,
       user: user,
       session: session,
-      rawWebSocket: evt.dto.rawWebSocket,
+      rawWebSocket: evt.rawWebSocket,
     })
 
     this._socketWarehouse.sockets.add(socket);
@@ -99,13 +100,11 @@ export class SocketDoor {
         trace: evt.trace,
       });
     } else if (rememberToken) {
-      socket.send(new InvalidAuthTokenSmo({
-        dto: new InvalidAuthTokenSmDto({
-          invalidTokenId: rememberToken,
-          message: 'Token expired',
-        }),
+      socket.send(createMessage(InvalidAuthTokenBroadcast, {
+        invalidTokenId: rememberToken,
+        message: 'Token expired',
         trace: evt.trace.clone(),
-      }))
+      }));
     }
 
     // TODO: send init after
@@ -115,16 +114,14 @@ export class SocketDoor {
       users,
       sessions,
     ] = await Promise.all([
-      this._chatRepo.findAll(),
-      this._userRepo.findAll(),
-      this._sessionRepo.findAll(),
+      this._chatRepo.find(),
+      this._userRepo.find(),
+      this._sessionRepo.find(),
     ]);
-    const initMessage = new InitSmo({
-      dto: new InitSmDto({
-        sessions: sessions.filter(model => model.deleted_at === null),
-        chats: chats.filter(model => model.deleted_at === null),
-        users: users.filter(model => model.deleted_at === null),
-      }),
+    const initMessage = createMessage(InitBroadcast, {
+      sessions: sessions.filter(model => model.deleted_at === null),
+      chats: chats.filter(model => model.deleted_at === null),
+      users: users.filter(model => model.deleted_at === null),
       trace: evt.trace.clone(),
     });
 
@@ -139,21 +136,21 @@ export class SocketDoor {
    * 
    * @param evt 
    */
-  @SubscribeEvent(SCCloseSeo)
-  private async _onSocketConnectionClose(evt: SCCloseSeo) {
-    this._log.info(`Removing closed socket ${evt.dto.socket.id} (code: "${evt.dto.code}", reason: "${evt.dto.reason}")`);
+  @SubscribeEvent(SCCloseEvent)
+  private async _onSocketConnectionClose(evt: SCCloseEvent) {
+    this._log.info(`Removing closed socket ${evt.socket.id} (code: "${evt.code}", reason: "${evt.reason}")`);
 
     // disconnect session
     await this._sessionCrudService.update({
       fill: {},
-      id: evt.dto.socket.session.id,
+      id: evt.socket.session.id,
       disconnected_at: new Date(),
       user: undefined,
       // TODO: maybe someone else requested this?
-      requester: evt.dto.socket.user,
+      requester: evt.socket.user,
       trace: evt.trace,
     });
 
-    this._socketWarehouse.sockets.remove(evt.dto.socket);
+    this._socketWarehouse.sockets.remove(evt.socket);
   }
 }

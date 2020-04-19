@@ -1,7 +1,8 @@
 import 'reflect-metadata';
+import { useContainer } from 'typeorm';
 import { Container } from 'typedi';
-import { ServerEventBus } from './global/event-bus/server-event-bus';
-import { ServerEventStream } from './global/event-stream/server-event-stream';
+import { EventBus } from './global/event-bus/event-bus';
+import { EventStream } from './global/event-stream/event-stream';
 import { SocketServerFactory } from './web-sockets/socket-server/socket-server.factory';
 import { SocketServer } from './web-sockets/socket-server/socket-server';
 import { ServerWatcher } from './global/watcher/sever-watcher';
@@ -23,14 +24,15 @@ import { DataChannel } from './web-sockets/socket-channels/data-channel';
 import { EchoChannel } from './web-sockets/socket-channels/echo-channel';
 
 
+useContainer(Container);
 
 
 const _log = new Logger(bootstrap);
 
 async function bootstrap() {
 
-  Container.get(ServerEventBus);
-  const es = Container.get(ServerEventStream);
+  Container.get(EventBus);
+  const es = Container.get(EventStream);
   Container.get(MessageRegistry);
   Container.get(MessageParser);
   Container.set(SocketServer, Container.get(SocketServerFactory).create());
@@ -49,7 +51,7 @@ async function bootstrap() {
   Container.get(SocketDoor);
 
   const sessionService = Container.get(SessionCrudService);
-  const oldSessions = await (await Container.get(SessionRepository).findAll()).filter(session => session.deleted_at === null);
+  const oldSessions = await (await Container.get(SessionRepository).find()).filter(session => session.deleted_at === null);
   const cleanupTrace = new Trace();
   for (const session of oldSessions) { await sessionService.delete({
     id: session.id,

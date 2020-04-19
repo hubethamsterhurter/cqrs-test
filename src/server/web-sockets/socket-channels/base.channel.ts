@@ -1,8 +1,11 @@
 import { ObservableCollection } from "../../../shared/util/observable-collection.util";
 import { SocketClient } from "../socket-client/socket-client";
-import { IMessage } from "../../../shared/interfaces/interface.message";
+import { BaseMessage } from "../../../shared/base/base.message";
+import { Logger } from "../../../shared/helpers/class-logger.helper";
 
 export abstract class BaseChannel {
+  readonly #log = new Logger(this)
+
   get viewers(): ObservableCollection<SocketClient> { return this._viewers; }
   protected abstract readonly _viewers: ObservableCollection<SocketClient>;
 
@@ -11,10 +14,12 @@ export abstract class BaseChannel {
    * @description
    * Broadcast a message to all clients
    *
-   * @param msg
+   * @param message
    */
-  broadcastAll(msg: IMessage) {
-    this.viewers.all.forEach(sc => sc.send(msg));
+  broadcastAll(message: BaseMessage) {
+    this.#log.message(message);
+    const strMsg = JSON.stringify(message);
+    this.viewers.all.forEach(sc => sc.sendRaw(strMsg));
   }
 
 
@@ -22,10 +27,12 @@ export abstract class BaseChannel {
    * @description
    * Broadcast a message to other sockets
    *
-   * @param msg
+   * @param message
    * @param except
    */
-  broadcastOthers(msg: IMessage, except: SocketClient) {
-    this.viewers.all.forEach(sc => { if (sc !== except) sc.send(msg); })
+  broadcastOthers(message: BaseMessage, except: SocketClient) {
+    this.#log.message(message);
+    const strMsg = JSON.stringify(message);
+    this.viewers.all.forEach(sc => { if (sc !== except) sc.sendRaw(strMsg); })
   }
 }

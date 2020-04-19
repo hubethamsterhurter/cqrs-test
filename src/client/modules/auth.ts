@@ -2,16 +2,16 @@ import * as opt from 'fp-ts/lib/Option';
 import * as op from 'rxjs/operators';
 import { Logger } from '../../shared/helpers/class-logger.helper';
 import { WsConnection } from './ws-connection';
-import { UserModel } from '../../shared/domains/user/user.model';
+import { UserModel } from '../../server/domains/user/user.model';
 import { Observable, Subject, BehaviorSubject, timer, race } from 'rxjs';
-import { AuthenticatedSmo } from '../../shared/domains/auth/smo/authenticated.smo';
-import { UnauthenticatedSmo } from '../../shared/domains/auth/smo/unauthenticated.smo';
+import { AuthenticatedBroadcast } from '../../shared/domains/auth/broadcast.authenticated';
+import { UnauthenticatedSmo } from '../../shared/domains/auth/broadcast.unauthenticated';
 import { Delta } from '../../shared/types/delta.type';
-import { loginCmo } from '../../shared/domains/auth/cmo/login.cmo';
-import { LogoutCmo } from '../../shared/domains/auth/cmo/logout.cmo';
-import { SignupCmo } from '../../shared/domains/auth/cmo/signup.cmo';
+import { loginCmo } from '../../shared/domains/auth/command.login';
+import { LogoutCommand } from '../../shared/domains/auth/command.logout';
+import { SignupCommand } from '../../shared/domains/auth/command.signup';
 import { LOCAL_STORAGE_AUTH_KEY } from '../constants/local-storage-auth-key.constant';
-import { InvalidAuthTokenSmDto, InvalidAuthTokenSmo } from '../../shared/domains/auth-token/smo/invalid-auth-token.smo';
+import { InvalidAuthTokenBroadcast, InvalidAuthTokenBroadcast } from '../../shared/domains/auth-token/broadcast.invalid-auth-token';
 
 
 
@@ -40,10 +40,10 @@ export class Auth {
   readonly #log = new Logger(this);
   readonly delta$: Observable<AuthDelta>;
   readonly state$: BehaviorSubject<AuthState> = new BehaviorSubject(initialAuthState);
-  readonly authenticated$: Observable<AuthenticatedSmo>;
+  readonly authenticated$: Observable<AuthenticatedBroadcast>;
   readonly unauthenticated$: Observable<UnauthenticatedSmo>;
 
-  readonly #authenticate$: Subject<SignupCmo | loginCmo> = new Subject();
+  readonly #authenticate$: Subject<SignupCommand | loginCmo> = new Subject();
 
 
   /**
@@ -60,7 +60,7 @@ export class Auth {
     const self = this;
     if (window) { Object.defineProperty(window, '_AUTH', { get() { return self.state$.getValue(); } }) };
 
-    const authenticated$ = _connection.messageOf$(AuthenticatedSmo);
+    const authenticated$ = _connection.messageOf$(AuthenticatedBroadcast);
     const unauthenticated$ = _connection.messageOf$(UnauthenticatedSmo);
 
     authenticated$.subscribe((message) => this.state$.next({ status: 'authenticated', user: message.dto.you }));
@@ -95,7 +95,7 @@ export class Auth {
 
     // set & unset local storage auth
     _connection
-      .messageOf$(InvalidAuthTokenSmo)
+      .messageOf$(InvalidAuthTokenBroadcast)
       .subscribe(message => {
         const rememberToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
         if (rememberToken === message.dto.invalidTokenId) {
@@ -105,7 +105,7 @@ export class Auth {
 
     // set & unset local storage auth
     _connection
-      .messageOf$(AuthenticatedSmo)
+      .messageOf$(AuthenticatedBroadcast)
       .subscribe(message => {
         localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, message.dto.token.id);
       });
@@ -121,7 +121,7 @@ export class Auth {
    *
    * @param arg
    */
-  signUp(message: SignupCmo) { this.#authenticate$.next(message); }
+  signUp(message: SignupCommand) { this.#authenticate$.next(message); }
 
   /**
    * @description
@@ -137,7 +137,7 @@ export class Auth {
    *
    * @param arg
    */
-  logout(message: LogoutCmo) { this._connection.send(message); }
+  logout(message: LogoutCommand) { this._connection.send(message); }
 
   /**
    * @description

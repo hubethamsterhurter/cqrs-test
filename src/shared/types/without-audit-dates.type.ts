@@ -1,0 +1,1 @@
+export type WithoutAuditDates<A> = Omit<A, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>

@@ -1,15 +1,16 @@
 import ws from 'ws';
 import { Service } from "typedi";
-import { ServerEventBus } from '../../global/event-bus/server-event-bus';
+import { EventBus } from '../../global/event-bus/event-bus';
 import { WSS_EVENT } from '../../constants/wss.event';
-import { ServerEventStream } from '../../global/event-stream/server-event-stream';
-import { SSCloseSeo, SSCloseSeDto } from '../../events/models/ss.close.seo';
-import { SSConnectionSeo, SSConnectionSeDto } from '../../events/models/ss.connection.seo';
-import { SSErrorSeo, SSErrorSeDto } from '../../events/models/ss.error.seo';
-import { SSListeningSeo, SSListeningSeDto } from '../../events/models/ss.listening.seo';
-import { SSHeadersSeo, SSHeadersSeDto } from '../../events/models/ss.headers.seo';
+import { EventStream } from '../../global/event-stream/event-stream';
 import { LogConstruction } from '../../../shared/decorators/log-construction.decorator';
 import { Trace } from '../../../shared/helpers/Tracking.helper';
+import { SSCloseEvent } from '../../events/event.ss.close';
+import { createEvent } from '../../helpers/create-event.helper';
+import { SSConnectionEvent } from '../../events/event.ss.connection';
+import { SSErrorEvent } from '../../events/event.ss.error';
+import { SSHeadersEvent } from '../../events/event.ss.headers';
+import { SSListeningEvent } from '../../events/event.ss.listening';
 
 
 let __created__ = false;
@@ -25,56 +26,48 @@ export class SocketServer {
    */
   constructor(
     private _wss: ws.Server,
-    private _eb: ServerEventBus,
-    private _es: ServerEventStream,
+    private _eb: EventBus,
+    private _es: EventStream,
   ) {
     if (__created__) throw new Error(`Can only create one instance of "${this.constructor.name}".`);
     __created__ = true;
 
     // close
     this._wss.on(WSS_EVENT.CLOSE, () => {
-      this._eb.fire(new SSCloseSeo({
-        dto: new SSCloseSeDto({}),
+      this._eb.fire(createEvent(SSCloseEvent, {
         trace: new Trace(),
       }));
     });
 
     // connection
     this._wss.on(WSS_EVENT.CONNECTION, async (socket, req) => {
-      this._eb.fire(new SSConnectionSeo({
-        dto: new SSConnectionSeDto({
-          req,
-          rawWebSocket: socket,
-        }),
+      this._eb.fire(createEvent(SSConnectionEvent, {
+        req,
+        rawWebSocket: socket,
         trace: new Trace(),
       }));
     });
 
     // error
     this._wss.on(WSS_EVENT.ERROR, (err) => {
-      this._eb.fire(new SSErrorSeo({
-        dto: new SSErrorSeDto({
-          err,
-        }),
+      this._eb.fire(createEvent(SSErrorEvent, {
+        err,
         trace: new Trace(),
       }));
     });
 
     // headers
     this._wss.on(WSS_EVENT.HEADERS, (headers, req) => {
-      this._eb.fire(new SSHeadersSeo({
-        dto: new SSHeadersSeDto({
-          headers,
-          req,
-        }),
+      this._eb.fire(createEvent(SSHeadersEvent, {
+        headers,
+        req,
         trace: new Trace(),
       }));
     });
 
     // listening
     this._wss.on(WSS_EVENT.LISTENING, () => {
-      this._eb.fire(new SSListeningSeo({
-        dto: new SSListeningSeDto({}),
+      this._eb.fire(createEvent(SSListeningEvent, {
         trace: new Trace(),
       }));
     });

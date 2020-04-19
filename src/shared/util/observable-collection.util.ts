@@ -1,5 +1,4 @@
 import { BehaviorSubject, Subject } from "rxjs";
-import { ctorName } from "../helpers/ctor-name.helper";
 
 export class ObservableCollection<T> {
   get all(): T[] { return this.all$.getValue(); }

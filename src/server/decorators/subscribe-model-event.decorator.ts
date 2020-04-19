@@ -1,16 +1,16 @@
 import { ClassType } from "class-transformer/ClassTransformer";
-import { SeModelEventHandlerMetadata } from "../global/metadata-container/metadata/se.model-event-handler.method.metadata";
+import { SeModelEventHandlerMetadata } from "../global/metadata-container/metadata/model-event-handler.method.metadata";
 import { Logger } from "../../shared/helpers/class-logger.helper";
-import { IModel } from "../../shared/interfaces/interface.model";
 import { Constructor } from "../../shared/types/constructor.type";
 import { Prototype } from "../../shared/types/prototype.type";
 import Container from "typedi";
-import { ServerMetadataContainer } from "../global/metadata-container/server-metadata-container";
+import { MetadataContainer } from "../global/metadata-container/metadata-container";
+import { BaseModel } from "../base/base.model";
 
 const _log = new Logger(SubscribeModelEvent);
 
 export function SubscribeModelEvent(
-  TargetModelCtor: ClassType<IModel>,
+  TargetModelCtor: ClassType<BaseModel>,
   type: 'created' | 'updated' | 'deleted',
 ): MethodDecorator {
   /**
@@ -40,7 +40,7 @@ export function SubscribeModelEvent(
       propertyKey: propertyKey,
     });
 
-    Container.get(ServerMetadataContainer).registerMethodMetadata({
+    Container.get(MetadataContainer).registerMethodMetadata({
       Ctor: prototype.constructor as Constructor,
       propertyKey: propertyKey,
       metadata: actionableMetadata,
